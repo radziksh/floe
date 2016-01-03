@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Web Player &mdash; User Manual: Blend4Web vv15.12</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="author" title="About these documents"
+              href="about.html"/>
+    <link rel="top" title="User Manual: Blend4Web vv15.12" href="index.html"/>
+        <link rel="next" title="The Add-on" href="addon.html"/>
+        <link rel="prev" title="Scene Viewer" href="viewer.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> Blend4Web. User Manual
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              v15.12
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_steps.html">Quick Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Installing the SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="viewer.html">Scene Viewer</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Web Player</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">Navigation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">Control Panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#webplayer-attributes">Attributes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#wp-title">Scene Name as Title</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id7">Scene Errors</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="addon.html">The Add-on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="objects.html">Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="camera.html">Camera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="materials.html">Materials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="textures.html">Textures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="node_materials.html">Node Materials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lighting.html">Lighting, Shadows and Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postprocessing_effects.html">Postprocessing Effects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particles.html">Particle System. Fluids</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particles_instancing.html">Particle System. Instancing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="animation.html">Animation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="outdoor_rendering.html">Outdoor Rendering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_alpha.html">Gamma and Alpha</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio.html">Audio System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="physics.html">Physics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nla.html">Non-Linear Animation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Visual Programming</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers.html">For Application Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers_advanced.html">For Engine Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="git_short_manual.html">Team Work. Using Git</a></li>
+<li class="toctree-l1"><a class="reference internal" href="problems_and_solutions.html">Problems and Solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Blend4Web. User Manual</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Web Player</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="web-player">
+<span id="index-0"></span><span id="id1"></span><h1>Web Player<a class="headerlink" href="#web-player" title="Permalink to this headline">¶</a></h1>
+<p>The web player is a special application for rendering models and scenes in a demonstration mode.</p>
+<p>Desktop version:</p>
+<a class="reference internal image-reference" href="_images/web_player_example.jpg"><img alt="_images/web_player_example.jpg" class="align-center" src="_images/web_player_example.jpg" style="width: 100%;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p>Mobile version:</p>
+<a class="reference internal image-reference" href="_images/web_player_example_mobile.jpg"><img alt="_images/web_player_example_mobile.jpg" class="align-center" src="_images/web_player_example_mobile.jpg" style="width: 100%;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<div class="section" id="id2">
+<h2>Usage<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<p>You can copy the directory containing the web player files, namely <code class="docutils literal"><span class="pre">deploy/apps/webplayer</span></code>, from the Blend4Web SDK distribution and deploy it on your web site. You can place the exported scene files on your web site and specify the path to them (absolute or relative) with the <code class="docutils literal"><span class="pre">load</span></code> web player parameter.</p>
+<p>When you export into a single HTML file the web player interface is integrated automatically into it.</p>
+</div>
+<div class="section" id="id3">
+<h2>Navigation<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h2>
+<p>The camera (in the <code class="docutils literal"><span class="pre">Target</span></code> and <code class="docutils literal"><span class="pre">Eye</span></code> modes) is controlled by the mouse with it&#8217;s button pressed or with the keys: <code class="docutils literal"><span class="pre">W</span></code>, <code class="docutils literal"><span class="pre">A</span></code>, <code class="docutils literal"><span class="pre">S</span></code>, <code class="docutils literal"><span class="pre">D</span></code>, <code class="docutils literal"><span class="pre">R</span></code>, <code class="docutils literal"><span class="pre">F</span></code> (forward, left, back, right, up, down). The <code class="docutils literal"><span class="pre">numpad</span></code> keys are also supported.</p>
+</div>
+<div class="section" id="id4">
+<h2>Control Panel<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h2>
+<p>The web player&#8217;s control panel is shown below.</p>
+<a class="reference internal image-reference" href="_images/web_player_interface.jpg"><img alt="_images/web_player_interface.jpg" class="align-center" src="_images/web_player_interface.jpg" style="width: 100%;" /></a>
+<ol class="arabic simple">
+<li><p class="first">show / hide control panel;</p>
+</li>
+<li><p class="first">fullscreen mode on / off;</p>
+</li>
+<li><p class="first">set the scene quality;</p>
+</li>
+<li><p class="first">sound on / off;</p>
+</li>
+<li><p class="first">camera auto rotation mode on / off;</p>
+</li>
+<li><p class="first">run / stop the engine;</p>
+</li>
+<li><p class="first">open the help window;</p>
+</li>
+<li><p class="first">tweet;</p>
+</li>
+<li><p class="first">share via Facebook;</p>
+</li>
+<li><p class="first">share via Google+;</p>
+</li>
+<li><p class="first">share via VK.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="webplayer-attributes">
+<span id="id5"></span><h2>Attributes<a class="headerlink" href="#webplayer-attributes" title="Permalink to this headline">¶</a></h2>
+<p>Web player accepts attributes from the browser address line:</p>
+<a class="reference internal image-reference" href="_images/player_params.jpg"><img alt="_images/player_params.jpg" class="align-center" src="_images/player_params.jpg" style="width: 100%;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ol class="arabic simple">
+<li><p class="first">the special attribute <code class="docutils literal"><span class="pre">load</span></code> is used to load the scene, this attribute contains relative path to a JSON file.</p>
+</li>
+<li><p class="first">in case of a WebGL error the optional <code class="docutils literal"><span class="pre">fallback_image</span></code> attribute is used to setup the background image instead of 3D content.</p>
+</li>
+<li><p class="first">in case of a WebGL error the optional <code class="docutils literal"><span class="pre">fallback_video</span></code> attribute is used to setup the background video instead of 3D content. Can be used many times to add more video formats.</p>
+</li>
+<li><p class="first">the optional <code class="docutils literal"><span class="pre">show_fps</span></code> attribute is used to display the FPS counter in the player&#8217;s top right corner.</p>
+</li>
+<li><p class="first">optional parameter <code class="docutils literal"><span class="pre">autorotate</span></code> is used to enable automatic camera rotation just after the scene loads.</p>
+</li>
+<li><p class="first">the <code class="docutils literal"><span class="pre">compressed_textures</span></code> optional parameter is used to enable loading of minified and compressed textures (in DDS format).</p>
+</li>
+<li><p class="first">optional <code class="docutils literal"><span class="pre">alpha</span></code> parameter is used to enable transparency for the rendering area.</p>
+</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If both <code class="docutils literal"><span class="pre">fallback_image</span></code> and <code class="docutils literal"><span class="pre">fallback_video</span></code> parameters are specified, the <code class="docutils literal"><span class="pre">fallback_image</span></code> parameter is used.</p>
+</div>
+</div>
+<div class="section" id="wp-title">
+<span id="id6"></span><h2>Scene Name as Title<a class="headerlink" href="#wp-title" title="Permalink to this headline">¶</a></h2>
+<p>By default the Web Player has the <code class="docutils literal"><span class="pre">Blend4Web</span> <span class="pre">Web</span> <span class="pre">Player</span></code> title. Assigning the meta tag <code class="docutils literal"><span class="pre">title</span></code> on the scene in Blender you can change that value to something else.</p>
+<a class="reference internal image-reference" href="_images/title.jpg"><img alt="_images/title.jpg" class="align-center" src="_images/title.jpg" style="width: 100%;" /></a>
+</div>
+<div class="section" id="id7">
+<h2>Scene Errors<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h2>
+<p>If the player is used incorrectly it displays the corresponding errors.</p>
+<ol class="arabic simple">
+<li><p class="first">the <code class="docutils literal"><span class="pre">load</span></code> attribute specifies a wrong path to the JSON file or the file is corrupt;</p>
+</li>
+</ol>
+<a class="reference internal image-reference" href="_images/error_wrong_json_path.jpg"><img alt="_images/error_wrong_json_path.jpg" class="align-center" src="_images/error_wrong_json_path.jpg" style="width: 100%;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p class="first">the <code class="docutils literal"><span class="pre">load</span></code> attribute is not found or is void;</p>
+</li>
+</ol>
+<a class="reference internal image-reference" href="_images/error_not_load_attr.jpg"><img alt="_images/error_not_load_attr.jpg" class="align-center" src="_images/error_not_load_attr.jpg" style="width: 100%;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p class="first">WebGL initialization error.</p>
+</li>
+</ol>
+<a class="reference internal image-reference" href="_images/error_webgl.jpg"><img alt="_images/error_webgl.jpg" class="align-center" src="_images/error_webgl.jpg" style="width: 100%;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="addon.html" class="btn btn-neutral float-right" title="The Add-on" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="viewer.html" class="btn btn-neutral" title="Scene Viewer" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Triumph LLC.
+      Last updated on 2015-12-22.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'v15.12',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

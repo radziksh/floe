@@ -1,0 +1,329 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Workflow &mdash; User Manual: Blend4Web vv15.12</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="author" title="About these documents"
+              href="about.html"/>
+    <link rel="top" title="User Manual: Blend4Web vv15.12" href="index.html"/>
+        <link rel="next" title="Scene Viewer" href="viewer.html"/>
+        <link rel="prev" title="Installing the SDK" href="setup.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="index.html" class="icon icon-home"> Blend4Web. User Manual
+        
+
+        
+        </a>
+
+        
+          
+          
+            <div class="version">
+              v15.12
+            </div>
+          
+        
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="first_steps.html">Quick Install</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Installing the SDK</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#authoring-scenes">Authoring Scenes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#export-scene">Exporting Scenes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#assets-json">Displaying Scenes in the Viewer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">Application Development</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="viewer.html">Scene Viewer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="web_player.html">Web Player</a></li>
+<li class="toctree-l1"><a class="reference internal" href="addon.html">The Add-on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="objects.html">Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="camera.html">Camera</a></li>
+<li class="toctree-l1"><a class="reference internal" href="materials.html">Materials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="textures.html">Textures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="node_materials.html">Node Materials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="lighting.html">Lighting, Shadows and Background</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postprocessing_effects.html">Postprocessing Effects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particles.html">Particle System. Fluids</a></li>
+<li class="toctree-l1"><a class="reference internal" href="particles_instancing.html">Particle System. Instancing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="animation.html">Animation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="outdoor_rendering.html">Outdoor Rendering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gamma_alpha.html">Gamma and Alpha</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio.html">Audio System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="physics.html">Physics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nla.html">Non-Linear Animation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Visual Programming</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers.html">For Application Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="developers_advanced.html">For Engine Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="git_short_manual.html">Team Work. Using Git</a></li>
+<li class="toctree-l1"><a class="reference internal" href="problems_and_solutions.html">Problems and Solutions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="release_notes.html">Release Notes</a></li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Blend4Web. User Manual</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Workflow</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="working-process-stages">
+<span id="id1"></span><h1>Workflow<a class="headerlink" href="#working-process-stages" title="Permalink to this headline">¶</a></h1>
+<p>Developing any product is a creative process with many participants who have different skills and experience. However no matter how complex it is and what is the target it&#8217;s always possible to separate the production stage in which the bulk of assets and source code is authored.</p>
+<p>When using Blend4Web the workflow is the following:</p>
+<ol class="arabic simple">
+<li><p class="first">Authoring 3D scenes in Blender.</p>
+</li>
+<li><p class="first">Exporting scenes.</p>
+</li>
+<li><p class="first">Running, tweaking and debugging scenes in the Viewer.</p>
+</li>
+<li><p class="first">Creating the target application.</p>
+</li>
+</ol>
+<div class="section" id="authoring-scenes">
+<span id="id2"></span><h2>Authoring Scenes<a class="headerlink" href="#authoring-scenes" title="Permalink to this headline">¶</a></h2>
+<p>Besides the usual stages such as modeling, texturing, animation etc a scene should be prepared for working in the engine.</p>
+<p>General recommendations:</p>
+<ol class="arabic simple">
+<li><p class="first">We strongly recommend to save your blend files in the <code class="docutils literal"><span class="pre">blender/project_name</span></code> directory. Auxiliary files which are not intended for loading in your app (for example, references), should be located there as well.</p>
+</li>
+<li><p class="first">Images and media files should be external and located in the <code class="docutils literal"><span class="pre">deploy/assets/project_name</span></code> directory.</p>
+</li>
+<li><p class="first">Files from which you export should contain resources which are actually required in your application (objects, materials, textures, animation etc).</p>
+</li>
+<li><p class="first">Scene components should have distinct names. They should not be named &#8220;Cube.001&#8221;, &#8220;Material&#8221; or &#8220;Armature&#8221;.</p>
+</li>
+<li><p class="first">We recommend you to practice linking components from other files (libraries).</p>
+</li>
+</ol>
+</div>
+<div class="section" id="export-scene">
+<span id="index-0"></span><span id="id3"></span><h2>Exporting Scenes<a class="headerlink" href="#export-scene" title="Permalink to this headline">¶</a></h2>
+<p>In order to load scenes authored in Blender into the engine you have to transform them into the format suitable for reading by a browser. At the moment text files with <code class="file docutils literal"><span class="pre">.json</span></code> extension are used in which exported data structures are saved in the JSON (JavaScript Object Notation) format. In turn, this file refers to a single binary file with a <code class="file docutils literal"><span class="pre">.bin</span></code> extension (which contains geometry and animation data) and to external resources (textures, audio and video files).</p>
+<p>While the <code class="docutils literal"><span class="pre">.json</span></code> and <code class="docutils literal"><span class="pre">.bin</span></code> files are created upon export, textures and media files are normally placed by hand. Resources embedded in <code class="docutils literal"><span class="pre">.blend</span></code> files are automatically placed near the exported scene.</p>
+<p>Export can be performed by choosing the <code class="docutils literal"><span class="pre">Blend4Web</span> <span class="pre">(.json)</span></code> option from the <code class="docutils literal"><span class="pre">File</span> <span class="pre">&gt;</span> <span class="pre">Export</span></code> menu. For quick access, search for <code class="docutils literal"><span class="pre">b4w</span> <span class="pre">export</span></code> (hot key <code class="docutils literal"><span class="pre">SPACE</span></code>).</p>
+<p>It is recommended to export your scenes in the directory intended for deploying applications, for example <code class="docutils literal"><span class="pre">deploy/assets/project_name</span></code>.</p>
+<p>It is required to use relative filepaths for external assets (normally this is by default). If this is not the case, run the <code class="docutils literal"><span class="pre">File</span> <span class="pre">&gt;</span> <span class="pre">External</span> <span class="pre">Data</span> <span class="pre">&gt;</span> <span class="pre">Make</span> <span class="pre">All</span> <span class="pre">Paths</span> <span class="pre">Relative</span></code> operator. Using absolute filepaths instead of relative ones may result in errors upon loading <code class="docutils literal"><span class="pre">.blend</span></code> and <code class="docutils literal"><span class="pre">.json</span></code> files on other computers.</p>
+<p>Upon export, the scene is checked for Blender features not supported by the engine. In such cases an error message is generated. The list of possible export errors is specified in the <a class="reference internal" href="addon.html#export-errors"><span>corresponding section</span></a>.</p>
+<p>Export options are described in detail in the <a class="reference internal" href="addon.html#export-opts"><span>corresponding section</span></a>.</p>
+</div>
+<div class="section" id="assets-json">
+<span id="index-1"></span><span id="id4"></span><h2>Displaying Scenes in the Viewer<a class="headerlink" href="#assets-json" title="Permalink to this headline">¶</a></h2>
+<p>When using the <a class="reference internal" href="setup.html#local-development-server"><span>local development server</span></a> it&#8217;s possible to preview current scene using <code class="docutils literal"><span class="pre">Fast</span> <span class="pre">Preview</span></code> button, located on the <code class="docutils literal"><span class="pre">Scene-&gt;Development</span> <span class="pre">Server</span></code> panel in Blender. In this case the scene will be exported inside some temporary storage and loaded in the Viewer app.</p>
+<p>The other method is using <a class="reference internal" href="addon.html#run-in-viewer"><span>Run in Viewer</span></a> export option. In this case the scene will be displayed in the Viewer app immediately after the export.</p>
+<p>For the long-term storage of the scene in the scene list of the viewer, it&#8217;s required to manually add the entry to the <code class="docutils literal"><span class="pre">apps_dev/viewer/assets.json</span></code> text file. This file is opened automatically in Blender if you are using Blend4Web SDK.</p>
+<p>Use the &#8220;Text Editor&#8221; to modify it:</p>
+<img alt="_images/text_editor.png" class="align-center" src="_images/text_editor.png" />
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p>Then select the <code class="docutils literal"><span class="pre">assets.json</span></code> file in the window to edit it:</p>
+<img alt="_images/assets_json.png" class="align-center" src="_images/assets_json.png" />
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p>To add a new scene you need to know the category in which it should be displayed. The category normally corresponds to the project name and to the name of the directory where the corresponding files are stored.</p>
+<div class="section" id="id5">
+<h3>Example<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<p>For example below you can see a part of <code class="docutils literal"><span class="pre">assets.json</span></code>. In this file there are two projects - &#8220;Capri&#8221; and &#8220;Fridge&#8221; each with corresponding scenes:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="n">name</span><span class="p">:</span> <span class="s">&quot;Capri&quot;</span><span class="p">,</span>
+    <span class="n">items</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="s">&quot;Baken&quot;</span><span class="p">,</span>
+            <span class="n">load_file</span> <span class="p">:</span> <span class="s">&quot;capri/props/baken/baken.json&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="s">&quot;Terrain&quot;</span><span class="p">,</span>
+            <span class="n">load_file</span> <span class="p">:</span> <span class="s">&quot;capri/landscape/terrain/terrain.json&quot;</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">},</span>
+<span class="p">{</span>
+    <span class="n">name</span><span class="p">:</span> <span class="s">&quot;Fridge&quot;</span><span class="p">,</span>
+    <span class="n">items</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="s">&quot;Apple&quot;</span><span class="p">,</span>
+            <span class="n">load_file</span> <span class="p">:</span> <span class="s">&quot;fridge/fruits/apple/apple.json&quot;</span>
+        <span class="p">},</span>
+        <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="s">&quot;Mango&quot;</span><span class="p">,</span>
+            <span class="n">load_file</span> <span class="p">:</span> <span class="s">&quot;fridge/fruits/mango/mango.json&quot;</span>
+        <span class="p">}</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>To add a new scene you can copy and paste a similar scene&#8217;s description to the required category and then edit its name and path to the exported file.</p>
+<p>A successfully added scene should appear in the scenes&#8217; list of the viewer  in the required category.</p>
+<a class="reference internal image-reference" href="_images/viewer_apple_scene.jpg"><img alt="_images/viewer_apple_scene.jpg" class="align-center" src="_images/viewer_apple_scene.jpg" style="width: 100%;" /></a>
+</div>
+</div>
+<div class="section" id="id6">
+<h2>Application Development<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h2>
+<p>At this stage an application is created. Logic for scene loading and user interaction is written using JavaScript. The application developer notes are given in the <a class="reference internal" href="developers.html#developers"><span>corresponding section</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="viewer.html" class="btn btn-neutral float-right" title="Scene Viewer" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="setup.html" class="btn btn-neutral" title="Installing the SDK" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Triumph LLC.
+      Last updated on 2015-12-22.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'v15.12',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
