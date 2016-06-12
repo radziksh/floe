@@ -17,6 +17,7 @@
 #var LAMP_LIGHT_FACT_IND 0
 #var LAMP_FAC_CHANNELS rgb
 #var LAMP_SHADOW_MAP_IND 0
+#var NODE_TEX_ROW 0.0
 
 #define M_PI 3.14159265359
 
@@ -47,6 +48,7 @@
 #import u_node_values
 #import u_refractmap
 #import u_time
+#import u_nodes_texture
 
 // functions
 #import apply_mirror
@@ -88,7 +90,7 @@ float HALF_VALUE_NODES = 0.5;
 vec3 refraction_node(in vec3 normal_in, in float refr_bump) {
     vec3 refract_color = vec3(ZERO_VALUE_NODES);
 # if USE_REFRACTION
-    refract_color = material_refraction(v_tex_pos_clip, normal_in.xz * refr_bump);
+    refract_color = material_refraction(v_tex_pos_clip, normal_in.xy * refr_bump);
 # else
     refract_color = texture2D(u_refractmap, v_tex_pos_clip.xy/v_tex_pos_clip.z).rgb;
     srgb_to_lin(refract_color);
@@ -193,6 +195,7 @@ vec2 vec_to_uv(vec3 vec)
 
 #node GEOMETRY_OR
     #node_out vec3 orco
+
     orco = 2.0 * v_orco_tex_coord - vec3(UNITY_VALUE_NODES);
 #endnode
 
@@ -394,11 +397,11 @@ vec2 vec_to_uv(vec3 vec)
 #endnode
 
 #node B4W_VECTOR_VIEW
-    #node_in vec3 normal_in
-    #node_out vec3 normal
+    #node_in vec3 vec_world
+    #node_out vec3 vec_view
 
     // NOTE: (-) mimic blender behavior
-    normal = -(nin_view_matrix * vec4(normal_in, ZERO_VALUE_NODES)).xyz;
+    vec_view = -(nin_view_matrix * vec4(vec_world, ZERO_VALUE_NODES)).xyz;
 #endnode
 
 #node BSDF_ANISOTROPIC
@@ -605,10 +608,35 @@ vec2 vec_to_uv(vec3 vec)
 
 #node VECT_TRANSFORM
     #node_in vec3 vec_in
-    #node_out vec3 vec
-    vec[0] = vec[1] = vec[2] = ZERO_VALUE_NODES;
-    // NOTE: using unused variable to pass shader verification
-    vec_in;
+    #node_out vec3 vec_out
+#node_if CONVERT_TYPE == VT_WORLD_TO_WORLD  || CONVERT_TYPE == VT_OBJECT_TO_OBJECT || CONVERT_TYPE == VT_CAMERA_TO_CAMERA
+    vec_out = vec_in;
+#node_else
+# node_if VECTOR_TYPE == VT_POINT
+    vec4 vec_from = vec4(vec_in, UNITY_VALUE_NODES);
+# node_else
+    vec4 vec_from = vec4(vec_in, ZERO_VALUE_NODES);
+# node_endif
+
+# node_if CONVERT_TYPE == VT_WORLD_TO_CAMERA
+    vec_out = (nin_zup_view_matrix * vec_from).xyz;
+# node_elif CONVERT_TYPE == VT_WORLD_TO_OBJECT
+    vec_out = (nin_zup_model_matrix_inverse * vec_from).xyz;
+# node_elif CONVERT_TYPE == VT_OBJECT_TO_WORLD
+    vec_out = (nin_zup_model_matrix * vec_from).xyz;
+# node_elif CONVERT_TYPE == VT_OBJECT_TO_CAMERA
+    vec_out = (nin_zup_view_matrix * nin_zup_model_matrix * vec_from).xyz;
+# node_elif CONVERT_TYPE == VT_CAMERA_TO_WORLD
+    vec_out = (nin_zup_view_matrix_inverse * vec_from).xyz;
+# node_elif CONVERT_TYPE == VT_CAMERA_TO_OBJECT
+    vec_out = (nin_zup_model_matrix_inverse * nin_zup_view_matrix_inverse * vec_from).xyz;
+# node_endif
+
+# node_if VECTOR_TYPE == VT_NORMAL
+    vec_out = normalize(vec_out);
+# node_endif
+
+#node_endif
 #endnode
 
 #node BLACKBODY
@@ -849,12 +877,12 @@ vec2 vec_to_uv(vec3 vec)
     #node_out vec3 uv_cycles
     #node_param varying vec2 v_uv
 
-# node_if USE_OUT_uv_geom
+#node_if USE_OUT_uv_geom
     uv_geom = uv_to_vec(v_uv);
-# node_endif
-# node_if USE_OUT_uv_cycles
+#node_endif
+#node_if USE_OUT_uv_cycles
     uv_cycles = vec3(v_uv, ZERO_VALUE_NODES);
-# node_endif
+#node_endif
 #endnode
 
 #node TEX_COORD_UV
@@ -900,6 +928,7 @@ vec2 vec_to_uv(vec3 vec)
 #node UVMAP
     #node_out vec3 uv
     #node_param varying vec2 v_uv
+
     uv = vec3(v_uv, ZERO_VALUE_NODES);
 #endnode
 
@@ -911,6 +940,7 @@ vec2 vec_to_uv(vec3 vec)
     #node_out float size
     #node_out vec3 velocity
     #node_out vec3 angular_velocity
+
     index = ZERO_VALUE_NODES;
     age = ZERO_VALUE_NODES;
     lifetime = ZERO_VALUE_NODES;
@@ -996,18 +1026,56 @@ vec2 vec_to_uv(vec3 vec)
     #node_in float factor
     #node_in vec3 vec_in
     #node_out vec3 vec
+
     vec = vec_in;
-    // NOTE: using unused variable to pass shader verification
-    factor;
+#node_if READ_R
+    vec.r = (texture2D(u_nodes_texture, vec2(0.5 * vec_in.r + 0.5, NODE_TEX_ROW)).r - 0.5) * 2.0;
+#node_endif
+
+#node_if READ_G
+    vec.g = (texture2D(u_nodes_texture, vec2(0.5 * vec_in.g + 0.5, NODE_TEX_ROW)).g - 0.5) * 2.0;
+#node_endif
+
+#node_if READ_B
+    vec.b = (texture2D(u_nodes_texture, vec2(0.5 * vec_in.b + 0.5, NODE_TEX_ROW)).b - 0.5) * 2.0;
+#node_endif
+    vec = mix(vec_in, vec, factor);
 #endnode
 
 #node CURVE_RGB
     #node_in float factor
     #node_in vec3 vec_in
     #node_out vec3 vec
-    vec = vec_in;
-    // NOTE: using unused variable to pass shader verification
-    factor;
+
+#node_if READ_A
+    float r = texture2D(u_nodes_texture, vec2(vec_in.r, NODE_TEX_ROW)).a;
+    float g = texture2D(u_nodes_texture, vec2(vec_in.g, NODE_TEX_ROW)).a;
+    float b = texture2D(u_nodes_texture, vec2(vec_in.b, NODE_TEX_ROW)).a;
+#node_else
+    float r = vec_in.r;
+    float g = vec_in.g;
+    float b = vec_in.b;
+#node_endif
+
+#node_if READ_R
+    vec.r = texture2D(u_nodes_texture, vec2(r, NODE_TEX_ROW)).r;
+#node_else
+    vec.r = r;
+#node_endif
+
+#node_if READ_G
+    vec.g = texture2D(u_nodes_texture, vec2(g, NODE_TEX_ROW)).g;
+#node_else
+    vec.g = g;
+#node_endif
+
+#node_if READ_B
+    vec.b = texture2D(u_nodes_texture, vec2(b, NODE_TEX_ROW)).b;
+#node_else
+    vec.b = b;
+#node_endif
+
+    vec = mix(vec_in, vec, factor);
 #endnode
 
 // ColorRamp node
@@ -1015,8 +1083,9 @@ vec2 vec_to_uv(vec3 vec)
     #node_in float factor
     #node_out vec3 color
     #node_out float alpha
-    color[0] = color[1] = color[2] = clamp(factor, ZERO_VALUE_NODES, UNITY_VALUE_NODES);
-    alpha = color[0];
+    vec4 texval = texture2D(u_nodes_texture, vec2(factor, NODE_TEX_ROW));
+    color = texval.rgb;
+    alpha = texval.a;
 #endnode
 
 #node MAPPING
@@ -2133,11 +2202,11 @@ vec2 vec_to_uv(vec3 vec)
     #node_out vec3 normal
     #node_out float value
 
-#node_if USE_OUT_value
+#node_if USE_OUT_color
     color[2] = color[1] = color[0] = ZERO_VALUE_NODES;
 #node_endif
 
-#node_if USE_OUT_value
+#node_if USE_OUT_normal
     normal[2] = normal[1] = normal[0] = ZERO_VALUE_NODES;
 #node_endif
 
@@ -2490,6 +2559,10 @@ vec2 vec_to_uv(vec3 vec)
 
 void nodes_main(in vec3 nin_eye_dir,
         in mat4 nin_view_matrix,
+        in mat4 nin_zup_view_matrix,
+        in mat4 nin_zup_view_matrix_inverse,
+        in mat4 nin_zup_model_matrix,
+        in mat4 nin_zup_model_matrix_inverse,
         out vec3 nout_color,
         out vec3 nout_specular_color,
         out vec3 nout_normal,

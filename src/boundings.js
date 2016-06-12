@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,12 +28,25 @@ b4w.module["__boundings"] = function(exports, require) {
 var m_tsr  = require("__tsr");
 var m_util = require("__util");
 var m_vec3 = require("__vec3");
+var m_math = require("__math");
+var m_mat3 = require("__mat3");
+var m_quat = require("__quat");
 
 
 var _bb_corners_cache = new Float32Array(3 * 8);
 var _vec3_tmp = new Float32Array(3);
 var _vec3_tmp2 = new Float32Array(3);
 var _vec3_tmp3 = new Float32Array(3);
+var _vec3_tmp4 = new Float32Array(3);
+
+var _mat3_tmp = new Float32Array(9);
+var _mat3_tmp2 = new Float32Array(9);
+var _mat3_tmp3 = new Float32Array(9);
+var _mat3_tmp4 = new Float32Array(9);
+
+var ELL_EPS = 0.000000001;
+var MATRIX_PRES = 0.0005;
+var MIN_SEMIAXIS_LEN = 0.00000001;
 
 exports.copy_bb = function(bb_from, bb_to) {
     bb_to.min_x = bb_from.min_x;
@@ -74,6 +87,24 @@ exports.zero_bounding_box = function(dest) {
     dest.min_z = 0;
 
     return dest;
+}
+
+/**
+ * Finds the smallest side of the bounding box
+ */
+exports.calc_min_bb_side = function(bb) {
+
+    var min = bb.max_x - bb.min_x;
+
+    var y_size = bb.max_y - bb.min_y;
+    if (y_size < min)
+        min = y_size;
+
+    var z_size = bb.max_z - bb.min_z;
+    if (z_size < min)
+        min = z_size;
+
+    return min;
 }
 
 /**
@@ -299,6 +330,7 @@ exports.zero_bounding_sphere = function() {
     };
 }
 
+exports.zero_bounding_ellipsoid = zero_bounding_ellipsoid;
 function zero_bounding_ellipsoid() {
     return {
         axis_x: new Float32Array(3),
@@ -307,8 +339,8 @@ function zero_bounding_ellipsoid() {
         center: new Float32Array([0, 0, 0])
     };
 }
-
-exports.create_bounding_ellipsoid = function(axis_x, axis_y, axis_z, center) {
+exports.create_bounding_ellipsoid = create_bounding_ellipsoid;
+function create_bounding_ellipsoid(axis_x, axis_y, axis_z, center, quat) {
     return {
         axis_x: new Float32Array(axis_x),
         axis_y: new Float32Array(axis_y),
@@ -360,6 +392,171 @@ exports.expand_bounding_sphere = function(bs, bs_exp) {
     bs.center = m_vec3.scale(m_vec3.add(min, max, m_vec3.create()), 0.5,
             m_vec3.create());
     bs.radius = m_vec3.length(m_vec3.subtract(max, min, m_vec3.create())) / 2;
+}
+/**
+ * see Lengyel E. - Mathematics for 3D Game Programming and Computer Graphics,
+ * Third Edition. Chapter 8.1.4 Bounding Ellipsoid Construction
+ **/
+exports.create_bounding_ellipsoid_by_bb = create_bounding_ellipsoid_by_bb;
+function create_bounding_ellipsoid_by_bb(points, use_rotation) {
+
+    var center = m_math.calk_average_position(points, _vec3_tmp4);
+    if (use_rotation)
+        var cov_matrix = m_math.calc_covariance_matrix(points, center, _mat3_tmp2);
+    else
+        var cov_matrix = m_mat3.identity(_mat3_tmp2);
+
+    var t_mat = m_math.find_eigenvectors(cov_matrix, MATRIX_PRES, _mat3_tmp);
+
+    m_vec3.copy(points, _vec3_tmp);
+    m_vec3.transformMat3(_vec3_tmp, t_mat, _vec3_tmp);
+
+    var max_dot_x = _vec3_tmp[0];
+    var min_dot_x = max_dot_x;
+    var max_dot_y = _vec3_tmp[1];
+    var min_dot_y = max_dot_y;
+    var max_dot_z = _vec3_tmp[2];
+    var min_dot_z = max_dot_z;
+
+    var max_x = 0;
+    var min_x = 0;
+    var max_y = 0;
+    var min_y = 0;
+    var max_z = 0;
+    var min_z = 0;
+
+    for (var i = 3; i < points.length; i = i + 3) {
+
+        _vec3_tmp[0] = points[i];
+        _vec3_tmp[1] = points[i + 1];
+        _vec3_tmp[2] = points[i + 2];
+        m_vec3.transformMat3(_vec3_tmp, t_mat, _vec3_tmp);
+
+        var dot_x = _vec3_tmp[0];
+        var dot_y = _vec3_tmp[1];
+        var dot_z = _vec3_tmp[2];
+
+        if (dot_x > max_dot_x) {
+            max_dot_x = dot_x;
+            max_x = i;
+        }
+        if (dot_x < min_dot_x) {
+            min_dot_x = dot_x;
+            min_x = i;
+        }
+
+        if (dot_y > max_dot_y) {
+            max_dot_y = dot_y;
+            max_y = i;
+        }
+        if (dot_y < min_dot_y) {
+            min_dot_y = dot_y;
+            min_y = i;
+        }
+
+        if (dot_z > max_dot_z) {
+            max_dot_z = dot_z;
+            max_z = i;
+        }
+        if (dot_z < min_dot_z) {
+            min_dot_z = dot_z;
+            min_z = i;
+        }
+    }
+
+    var a = max_dot_x - min_dot_x;
+    var b = max_dot_y - min_dot_y;
+    var c = max_dot_z - min_dot_z;
+
+    a = Math.max(a, ELL_EPS);
+    b = Math.max(b, ELL_EPS);
+    c = Math.max(c, ELL_EPS);
+
+    var max_semi_axis = Math.max(a, b, c);
+    if (max_semi_axis == a) {
+        var max_lm = max_x;
+        var min_lm = min_x;
+    } else if (max_semi_axis == b) {
+        var max_lm = max_y;
+        var min_lm = min_y;
+    } else {
+        var max_lm = max_z;
+        var min_lm = min_z;
+    }
+
+    var scale_mat = m_mat3.identity(_mat3_tmp2);
+    scale_mat[0] = a != 0.0 ? 1 / a : 1 / MIN_SEMIAXIS_LEN;
+    scale_mat[4] = b != 0.0 ? 1 / b : 1 / MIN_SEMIAXIS_LEN;
+    scale_mat[8] = c != 0.0 ? 1 / c : 1 / MIN_SEMIAXIS_LEN;
+    m_mat3.transpose(t_mat, _mat3_tmp3);
+    // transform vertex set into cube
+
+    _vec3_tmp[0] = points[0];
+    _vec3_tmp[1] = points[1];
+    _vec3_tmp[2] = points[2];
+
+    m_vec3.transformMat3(_vec3_tmp, _mat3_tmp3, _vec3_tmp);
+    m_vec3.transformMat3(_vec3_tmp, scale_mat, _vec3_tmp);
+    m_vec3.transformMat3(_vec3_tmp, t_mat, _vec3_tmp);
+
+    var max_x = _vec3_tmp[0], min_x = _vec3_tmp[0];
+    var max_y = _vec3_tmp[1], min_y = _vec3_tmp[1]
+    var max_z = _vec3_tmp[2], min_z = _vec3_tmp[2]
+
+    for (var i = 3; i < points.length; i = i + 3) {
+        _vec3_tmp[0] = points[i];
+        _vec3_tmp[1] = points[i + 1];
+        _vec3_tmp[2] = points[i + 2];
+        m_vec3.transformMat3(_vec3_tmp, _mat3_tmp3, _vec3_tmp);
+        m_vec3.transformMat3(_vec3_tmp, scale_mat, _vec3_tmp);
+        m_vec3.transformMat3(_vec3_tmp, t_mat, _vec3_tmp);
+
+        max_x = Math.max(max_x, _vec3_tmp[0]);
+        min_x = Math.min(min_x, _vec3_tmp[0]);
+
+        max_y = Math.max(max_y, _vec3_tmp[1]);
+        min_y = Math.min(min_y, _vec3_tmp[1]);
+
+        max_z = Math.max(max_z, _vec3_tmp[2]);
+        min_z = Math.min(min_z, _vec3_tmp[2]);
+    }
+    var r = Math.sqrt((max_x - min_x) * (max_x - min_x)
+            + (max_y - min_y) * (max_y - min_y)
+            + (max_z - min_z) * (max_z - min_z)) / 2;
+
+    r = Math.min(r, 1.0);
+    _vec3_tmp3[0] = (max_x + min_x) / 2;
+    _vec3_tmp3[1] = (max_y + min_y) / 2;
+    _vec3_tmp3[2] = (max_z + min_z) / 2;
+    var s_center = _vec3_tmp3;
+
+    var scale_mat = m_mat3.identity(_mat3_tmp2);
+    scale_mat[0] = a;
+    scale_mat[4] = b;
+    scale_mat[8] = c;
+
+    m_vec3.transformMat3(s_center, _mat3_tmp3, s_center);
+    m_vec3.transformMat3(s_center, scale_mat, s_center);
+    m_vec3.transformMat3(s_center, t_mat, s_center);
+
+    var axis_x = [t_mat[0], t_mat[3], t_mat[6]];
+    var axis_y = [t_mat[1], t_mat[4], t_mat[7]];
+    var axis_z = [t_mat[2], t_mat[5], t_mat[8]];
+
+    m_vec3.scale(axis_x, a * r, axis_x);
+    m_vec3.scale(axis_y, b * r, axis_y);
+    m_vec3.scale(axis_z, c * r, axis_z);
+
+    return create_bounding_ellipsoid(axis_x, axis_y, axis_z, s_center);
+}
+
+exports.calc_be_local_by_tsr = function(be_world, world_tsr) {
+    var be_local = m_util.clone_object_r(be_world);
+
+    var trans = m_tsr.get_trans_value(world_tsr, _vec3_tmp4);
+    m_vec3.subtract(be_local.center, trans, be_local.center);
+
+    return be_local;
 }
 
 /**
@@ -461,6 +658,8 @@ exports.check_bb_intersection = function(bb1, bb2) {
 exports.recalculate_mesh_boundings = function(mesh) {
 
     var max_x = 0, max_y = 0, max_z = 0, min_x = 0, min_y = 0, min_z = 0;
+    var sub_max_x = 0, sub_max_y = 0, sub_max_z = 0;
+    var sub_min_x = 0, sub_min_y = 0, sub_min_z = 0;
     var srad = 0;
     var crad = 0;
 
@@ -480,6 +679,10 @@ exports.recalculate_mesh_boundings = function(mesh) {
 
         var positions = submesh["position"];
 
+        sub_max_x = sub_min_x = submesh["position"][0];
+        sub_max_y = sub_min_y = submesh["position"][1];
+        sub_max_z = sub_min_z = submesh["position"][2];
+
         for (var j = 0; j < positions.length / 3; j++) {
             var x = positions[3*j];
             var y = positions[3*j + 1];
@@ -493,9 +696,40 @@ exports.recalculate_mesh_boundings = function(mesh) {
             min_y = Math.min(y, min_y);
             min_z = Math.min(z, min_z);
 
+            sub_max_x = Math.max(x, sub_max_x);
+            sub_max_y = Math.max(y, sub_max_y);
+            sub_max_z = Math.max(z, sub_max_z);
+
+            sub_min_x = Math.min(x, sub_min_x);
+            sub_min_y = Math.min(y, sub_min_y);
+            sub_min_z = Math.min(z, sub_min_z);
+
             srad = Math.max(Math.sqrt(x * x + y * y + z * z), srad);
             crad = Math.max(Math.sqrt(x * x + z * z), crad);
         }
+        var sub_bb = submesh["boundings"]["bounding_box"];
+        sub_bb["max_x"] = sub_max_x;
+        sub_bb["min_x"] = sub_min_x;
+        sub_bb["max_y"] = sub_max_y;
+        sub_bb["min_y"] = sub_min_y;
+        sub_bb["max_z"] = sub_max_z;
+        sub_bb["min_z"] = sub_min_z;
+
+        var bb_points = _bb_corners_cache;
+
+        bb_points[0] = sub_min_x; bb_points[1] = sub_min_y; bb_points[2] = sub_min_z;
+        bb_points[3] = sub_max_x; bb_points[4] = sub_min_y; bb_points[5] = sub_min_z;
+        bb_points[6] = sub_max_x; bb_points[7] = sub_max_y; bb_points[8] = sub_min_z;
+        bb_points[9] = sub_min_x; bb_points[10]= sub_max_y; bb_points[11]= sub_min_z;
+        bb_points[12]= sub_min_x; bb_points[13]= sub_min_y; bb_points[14]= sub_max_z;
+        bb_points[15]= sub_max_x; bb_points[16]= sub_min_y; bb_points[17]= sub_max_z;
+        bb_points[18]= sub_max_x; bb_points[19]= sub_max_y; bb_points[20]= sub_max_z;
+        bb_points[21]= sub_min_x; bb_points[22]= sub_max_y; bb_points[23]= sub_max_z;
+
+        var be_local = create_bounding_ellipsoid_by_bb(bb_points, false);
+        submesh["boundings"]["bounding_ellipsoid_center"] = be_local.center;
+        submesh["boundings"]["bounding_ellipsoid_axes"] = [be_local.axis_x[0],
+                be_local.axis_y[1], be_local.axis_z[2]];
     }
 
     mesh["b4w_bounding_box"]["max_x"] = max_x;
@@ -515,6 +749,21 @@ exports.recalculate_mesh_boundings = function(mesh) {
 
     mesh["b4w_bounding_sphere_radius"]  = srad;
     mesh["b4w_bounding_cylinder_radius"] = crad;
+
+    var bb_points = _bb_corners_cache;
+    bb_points[0] = min_x; bb_points[1] = min_y; bb_points[2] = min_z;
+    bb_points[3] = max_x; bb_points[4] = min_y; bb_points[5] = min_z;
+    bb_points[6] = max_x; bb_points[7] = max_y; bb_points[8] = min_z;
+    bb_points[9] = min_x; bb_points[10]= max_y; bb_points[11]= min_z;
+    bb_points[12]= min_x; bb_points[13]= min_y; bb_points[14]= max_z;
+    bb_points[15]= max_x; bb_points[16]= min_y; bb_points[17]= max_z;
+    bb_points[18]= max_x; bb_points[19]= max_y; bb_points[20]= max_z;
+    bb_points[21]= min_x; bb_points[22]= max_y; bb_points[23]= max_z;
+
+    var be_local = create_bounding_ellipsoid_by_bb(bb_points, false);
+    mesh["b4w_bounding_ellipsoid_center"] = be_local.center;
+    mesh["b4w_bounding_ellipsoid_axes"] = [be_local.axis_x[0],
+            be_local.axis_y[1], be_local.axis_z[2]];
 
 }
 

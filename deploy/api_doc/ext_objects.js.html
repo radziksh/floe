@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: ext/objects.js</title>
+    <title>Source: ext/objects.js | Blend4Web API Reference</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -37,14 +37,14 @@ b4w.module["objects"] = function(exports, require) {
 
 var m_geom     = require("__geometry");
 var m_obj      = require("__objects");
+var m_batch    = require("__batch");
 var m_obj_util = require("__obj_util");
 var m_print    = require("__print");
 var m_scenes   = require("__scenes");
-var m_util     = require("__util");
 
 /**
  * @typedef ObjectMetaTags
- * @type {Object3D}
+ * @type {Object}
  * @property {String} title The title meta tag.
  * @property {String} description The description meta tag.
  * @property {String} category The category meta tag.
@@ -106,13 +106,32 @@ exports.copy = function(obj, name, deep_copy) {
  */
 exports.set_nodemat_value = function(obj, name_list, value) {
 
-    if (!m_obj_util.is_mesh(obj)) {
+    if (!m_obj_util.is_dynamic_mesh(obj)) {
         m_print.error("The type of the object \"" + obj.name +
-            "\" is not \"MESH\".");
+            "\" is not \"MESH\" or it is not dynamic.");
         return;
     }
 
-    m_obj.set_nodemat_value(obj, name_list, value)
+    m_batch.set_nodemat_value(obj, name_list, value)
+}
+
+/**
+ * Get value of the Value node in the object's material.
+ * @method module:objects.get_nodemat_value
+ * @param {Object3D} obj Object 3D
+ * @param {String[]} name_list List consisting of the material name, the names of
+ * nested node groups (if any) and the name of the Value node itself
+ * @returns {Number} Value.
+ */
+exports.get_nodemat_value = function(obj, name_list) {
+
+    if (!m_obj_util.is_dynamic_mesh(obj)) {
+        m_print.error("The type of the object \"" + obj.name +
+            "\" is not \"MESH\" or it is not dynamic.");
+        return null;
+    }
+
+    return m_batch.get_nodemat_value(obj, name_list);
 }
 
 /**
@@ -127,14 +146,38 @@ exports.set_nodemat_value = function(obj, name_list, value) {
  */
 exports.set_nodemat_rgb = function(obj, name_list, r, g, b) {
 
-    if (!m_obj_util.is_mesh(obj)) {
+    if (!m_obj_util.is_dynamic_mesh(obj)) {
         m_print.error("The type of the object \"" + obj.name +
-            "\" is not \"MESH\".");
+            "\" is not \"MESH\" or it is not dynamic.");
         return;
     }
 
-    m_obj.set_nodemat_rgb(obj, name_list, r, g, b)
+    m_batch.set_nodemat_rgb(obj, name_list, r, g, b);
 }
+
+/**
+ * Get color of the RGB node in the object's material.
+ * @method module:objects.get_nodemat_rgb
+ * @param {Object3D} obj Object 3D
+ * @param {String[]} name_list List consisting of the material name, the names of
+ * nested node groups (if any) and the name of the RGB node itself
+ * @param {Vec3} [dest] Destination color
+ * @returns {Vec3} Destination color
+ */
+exports.get_nodemat_rgb = function(obj, name_list, dest) {
+
+    if (!m_obj_util.is_dynamic_mesh(obj)) {
+        m_print.error("The type of the object \"" + obj.name +
+            "\" is not \"MESH\" or it is not dynamic.");
+        return null;
+    }
+
+    if (!dest)
+        dest = new Float32Array(3);
+
+    return m_batch.get_nodemat_rgb(obj, name_list, dest);
+}
+
 /**
  * Update object's boundings (box, cone, cylinder, ellipsoid, sphere, capsule).
  * @method module:objects.update_boundings
@@ -221,6 +264,22 @@ exports.is_lamp = m_obj_util.is_lamp;
 exports.is_empty = m_obj_util.is_empty;
 
 /**
+ * Check if the object is a LINE.
+ * @method module:objects.is_line
+ * @param {Object3D} obj Object 3D
+ * @returns {Boolean} Checking result.
+ */
+exports.is_line = m_obj_util.is_line;
+
+/**
+ * Check if the object is a WORLD.
+ * @method module:objects.is_world
+ * @param {Object3D} obj Object 3D
+ * @returns {Boolean} Checking result.
+ */
+exports.is_world = m_obj_util.is_world;
+
+/**
  * Get all scene selectable objects.
  * @method module:objects.get_selectable_objects
  * @returns {Object3D[]} Array with selectable objects.
@@ -250,13 +309,47 @@ exports.get_outlining_objects = function() {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gp_conf.html">gp_conf</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hmd_conf.html">hmd_conf</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-input.html">input</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-logic_nodes.html">logic_nodes</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-math.html">math</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Dec 22 2015 20:09:38 GMT+0300 (MSK)
+    Blend4Web API Reference (generated by JSDoc 3.4.0 on Tue May 31 2016 15:33:56 GMT+0300 (MSK))
+    <a href="https://www.blend4web.com">www.blend4web.com</a>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+  (function() {
+    if (window.document.domain != "www.blend4web.com")
+      return;
+
+    (function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter24512171 = new Ya.Metrika({
+                    id:24512171,
+                    clickmap:false,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");
+  })();
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/24512171" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
 </footer>
 
 <script> prettyPrint(); </script>

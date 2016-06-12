@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
  */
 b4w.module["tsr"] = function(exports, require) {
 
-var m_mat3  = require("__mat3");
 var m_mat4  = require("__mat4");
 var m_print = require("__print");
 var m_tsr   = require("__tsr");
@@ -118,7 +117,7 @@ exports.set_scale = m_tsr.set_scale;
 /**
  * Set TSR translation and scale from vec4.
  * @method module:tsr.set_transcale
- * @param {vec4} transcale Translation+Scale vector
+ * @param {Vec4} transcale Translation+Scale vector
  * @param {TSR} dest Destination TSR vector
  */
 exports.set_transcale = m_tsr.set_transcale ;

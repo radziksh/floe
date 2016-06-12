@@ -1,19 +1,3 @@
-# Copyright (C) 2014-2015 Triumph LLC
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 import copy
 import bpy
 from bpy.types import NodeTree, Node, NodeSocket
@@ -34,16 +18,15 @@ _("Child Node:"), _("Dupli Child:")
 # for converting from slots
 slot_node_joint_props = ['param_marker_start', 'param_marker_end',
              'param_register1', 'param_register2', 'param_register_dest',
-             'param_number1', 'param_number2', 'param_register_flag1',
-             'param_register_flag2', 'param_operation', 'param_condition',
-             'param_url', 'param_name']
+             'param_register_flag1', 'param_register_flag2',
+             'param_operation', 'param_condition', 'param_name']
 
 # result
 node_props = ['param_marker_start', 'param_marker_end',
-             'param_var1', 'param_var2', 'param_var_dest', 'param_var_define',
-             'param_number1', 'param_number2', 'param_var_flag1',
-             'param_var_flag2', 'param_operation', 'param_condition',
-             'param_url', 'param_name', 'param_anim_name']
+              'param_var_define', 'param_var_flag1', 'param_var_flag2',
+              'param_operation', 'param_condition',
+              'param_name', 'param_anim_name', 'param_variable_type',
+              'param_string_operation', 'param_json_operation']
 
 reg_items = [
         ("R8", "R8", "Register 8"),
@@ -67,6 +50,17 @@ send_request_type_items = [
         ("POST", _("POST"), _("POST Request")),
     ]
 
+variable_type_items = [
+        ("NUMBER", _("Number"), _("Numeric variable")),
+        ("STRING", _("String"), _("String variable"))
+    ]
+
+space_type_items =[
+        ("WORLD", _("World"), _("World space")),
+        ("PARENT", _("Parent"), _("Parent space")),
+        ("LOCAL", _("Local"), _("Local space"))
+    ]
+
 slot_type_enum = [
         ("NOOP", _("Noop"), _("No operation"), 0),
         ("PAGEPARAM", _("Page Param"), _("Store numeric page parameter to a " +
@@ -79,7 +73,7 @@ slot_type_enum = [
         ("CONDJUMP", _("Conditional Jump"), _("Conditional jump"), 3),
         ("JUMP", _("Jump"), _("Jump to the slot by label"), 4),
         ("SELECT_PLAY", _("Select & Play Timeline (Deprecated)"), _("Select an object then play timeline"), 5),
-        ("SELECT", _("Select (Derecated)"), _("Select an object"), 6),
+        ("SELECT", _("Select (Deprecated)"), _("Select an object"), 6),
         ("PLAY", _("Play Timeline"), _("Play NLA animation"), 7),
         ("ENTRYPOINT", _("Entry Point"), _("Entry Point"), 8),
         ("PLAY_ANIM", _("Play Animation"), _("Play Object Animation"), 13),
@@ -99,6 +93,12 @@ slot_type_enum = [
         ("STOP_TIMELINE", _("Stop Timeline"), _("Stop Timeline"), 27),
         ("MOVE_TO", _("Move To"), _("Move to"), 28),
         ("CONSOLE_PRINT", _("Console Print"), _("Console Print"), 29),
+        ("TRANSFORM_OBJECT", _("Transform Object"), _("Transform Object"), 30),
+        ("STRING", _("String Operation"), _("Perform a string operation"), 31),
+        ("GET_TIMELINE", _("Get Timeline"), _("Get timeline current frame"), 32),
+        ("JSON", _("JSON"), _("Perform a JSON operation"), 33),
+        ("JS_CALLBACK", _("JS Callback"), _("Perform custom JavaScipt callback"), 34),
+        ("EMPTY", _("Empty"), _("Empty node for rerouting"), 35)
     ]
 
 operation_type_enum = [
@@ -109,7 +109,20 @@ operation_type_enum = [
             ("RAND", _("Random"), _("Random"))
         ]
 
-condition_type_enum =[
+string_operation_type_enum = [
+            ("JOIN", _("Join"), _("Join")),
+            ("FIND", _("Find"), _("Find")),
+            ("REPLACE", _("Replace"), _("Replace")),
+            ("SPLIT", _("Split"), _("Split")),
+            ("COMPARE", _("Compare"), _("Compare"))
+        ]
+
+json_operation_type_enum = [
+        ("PARSE", _("PARSE"), _("Parse json")),
+        ("ENCODE", _("ENCODE"), _("Encode json")),
+]
+
+condition_type_enum = [
             ("GEQUAL", _("Greater Than or Equal (>=)"), _("Greater than or equal")),
             ("LEQUAL", _("Less Than or Equal (<=)"), _("Less than or equal")),
             ("GREATER", _("Greater Than (>)"), _("Greater than")),
@@ -118,14 +131,34 @@ condition_type_enum =[
             ("EQUAL", _("Equal (=)"), _("Equal"))
         ]
 
+js_cb_param_type_enum = [
+    ("OBJECT", _("Object"), _("Object parameter")),
+    ("VARIABLE", _("Variable"), _("Variable parameter")),
+]
+
 order_socket_color = (1.0, 1.0, 0.216, 0.5)
 dummy_socket_color = (0.0, 0.0, 0.0, 0.0)
 
 no_var_source_msg = _("No var source")
 
-def tree_vars_update(tree):
+def tree_vars_update(tree, pure_locals = False):
+    # set pure_locals to true during export
+    # to keep local scope clean from global variables
+
     if not "subtrees" in tree:
         return
+
+    # Fill global variables
+    tree.variables.clear()
+    for node in tree.nodes:
+        if node.type in ["REGSTORE"]:
+            # need checking if "gl" in bools because
+            # logic_nodetree_reform may be not called yet
+            if "gl" in node.bools and node.bools["gl"].bool:
+                if not node.param_var_define in tree.variables:
+                    tree.variables.add()
+                    tree.variables[-1].name = node.param_var_define
+    # Fill local variables
     for st in tree["subtrees"].keys():
         if st in tree.nodes:
             ep = tree.nodes[st]
@@ -133,25 +166,32 @@ def tree_vars_update(tree):
             for i in range(1,9):
                 ep.variables.add()
                 ep.variables[-1].name = "R%s" % i
+            if not pure_locals:
+                for gl in tree.variables:
+                    if not gl.name in ep.variables:
+                        ep.variables.add()
+                        ep.variables[-1].name = gl.name
             for nname in tree["subtrees"][st]:
                 if nname not in tree.nodes:
                     continue
                 node = tree.nodes[nname]
                 if node.type in ["REGSTORE"]:
                     if node.param_var_define != "" and node.param_var_flag1:
-                        if not node.param_var_define in ep.variables:
-                            ep.variables.add()
-                            ep.variables[-1].name = node.param_var_define
-                if node.type in ["SEND_REQ"]:
-                    for s in node.parse_resp_list:
-                        if not node.param_var_define in ep.variables:
+                        #NOTE: second condition for backwards compatibility
+                        if ("gl" in node.bools and not node.bools["gl"].bool) or (not "gl" in node.bools):
+                            if not node.param_var_define in ep.variables:
+                                ep.variables.add()
+                                ep.variables[-1].name = node.param_var_define
+                if node.type in ["JSON"]:
+                    for s in node.parse_json_list:
+                        if not s.name in ep.variables:
                             ep.variables.add()
                             ep.variables[-1].name = s.name
 
-def send_req_find_node_and_tree(gr):
+def json_find_node_and_tree(gr):
     def node_have_target_prop(propgr, node):
-        if node.type == "SEND_REQ":
-            for gr in node.parse_resp_list:
+        if node.type == "JSON":
+            for gr in node.parse_json_list:
                 if gr == propgr:
                     return True
         return False
@@ -178,13 +218,13 @@ def send_req_find_node_and_tree(gr):
     return node, found_tree
 
 
-def update_parse_req_list_item(self, context):
-    node, tree = send_req_find_node_and_tree(self)
+def update_parse_json_list_item(self, context):
+    node, tree = json_find_node_and_tree(self)
     if tree:
         tree_vars_update(tree)
 
-def update_send_req_list_item(self, context):
-    node, tree = send_req_find_node_and_tree(self)
+def update_encode_json_list_item(self, context):
+    node, tree = json_find_node_and_tree(self)
     if node:
         check_node(node)
 
@@ -192,6 +232,10 @@ def update_send_req_list_item(self, context):
 class B4W_ParseRespUIList(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         layout.prop(item, "name", text="", emboss=False, icon_value=icon)
+
+class B4W_ParseRespPathUIList(UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        layout.prop(item, "path", text="", emboss=False, icon_value=icon)
 
 class B4W_StringWrap(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty(name = "name")
@@ -208,7 +252,8 @@ def check_node(node):
             if id in node.objects_paths:
                 item = node.objects_paths[id]
                 ob = object_by_bpy_collect_path(bpy.data.objects, item.path_arr)
-                if not ob:
+                wd = object_by_bpy_collect_path(bpy.data.worlds, item.path_arr)
+                if not ob and not wd:
                     node.add_error_message(err_msgs, _("Bad object field!"))
             else:
                 # case when objects_paths is not filled yet (type_init not invoked yet)
@@ -219,29 +264,36 @@ def check_node(node):
             node.add_error_message(err_msgs, _("Page param field is empty!"))
 
     if node.type == "REDIRECT":
-        if node.param_url == "":
-            node.add_error_message(err_msgs, _("Url field is empty!"))
+        if "url" in node.bools:
+            if node.bools["url"].bool:
+                if node.variables_names["url"].variable == "":
+                    node.add_error_message(err_msgs, _("URL field is empty!"))
+            else:
+                if node.strings["url"].string == "":
+                    node.add_error_message(err_msgs, _("URL field is empty!"))
 
     if node.type == "REGSTORE":
         if node.param_var_flag1: # define var
             if node.param_var_define == "":
                 node.add_error_message(err_msgs, _("New var. field is empty!"))
         else:
-            if node.param_var_dest == "":
-                node.add_error_message(err_msgs, _("Destination field is empty!"))
+            if "vd" in node.variables_names:
+                if node.variables_names["vd"].variable == "":
+                    node.add_error_message(err_msgs, _("Destination field is empty!"))
 
     if node.type in ["CONDJUMP", "MATH"]:
         if node.param_var_flag1:
-            if node.param_var1 == "":
+            if node.variables_names["v1"].variable == "":
                 node.add_error_message(err_msgs, _("Operand 1 field is empty!"))
         if node.param_var_flag2:
-            if node.param_var2 == "":
+            if node.variables_names["v2"].variable == "":
                 node.add_error_message(err_msgs, _("Operand 2 field is empty!"))
 
     if node.type in ["MATH"]:
         if node.param_var_flag1:
-            if node.param_var_dest == "":
-                node.add_error_message(err_msgs, _("Destination field is empty!"))
+            if "vd" in node.variables_names:
+                if node.variables_names["vd"].variable == "":
+                    node.add_error_message(err_msgs, _("Destination field is empty!"))
 
     if node.type == "INHERIT_MAT":
         all_bad = False
@@ -330,7 +382,14 @@ def check_node(node):
 
             ob = object_by_bpy_collect_path(bpy.data.objects, node.objects_paths["id1"].path_arr)
             if not ob:
-                node.add_error_message(err_msgs, "Destination field is not correct!")                
+                node.add_error_message(err_msgs, "Destination field is not correct!")
+
+    if node.type == "TRANSFORM_OBJECT":
+        if "id0" in node.objects_paths:
+            ob = object_by_bpy_collect_path(bpy.data.objects, node.objects_paths["id0"].path_arr)
+            if not ob:
+                node.add_error_message(err_msgs, "Object field is not correct!")
+
 
     if node.type in ["SPEAKER_PLAY", "SPEAKER_STOP"]:
         id = "id0"
@@ -376,6 +435,11 @@ def check_node(node):
         if var_err:
             node.add_error_message(err_msgs, _("Bad variable field!"))
 
+    if node.type in ["GET_TIMELINE"]:
+        if "vd" in node.variables_names:
+            if node.variables_names["vd"].variable == "":
+                    node.add_error_message(err_msgs, _("Destination field is empty!"))
+
     if node.type in ["NOOP"]:
         node.add_error_message(err_msgs, _("Node is not supported."))
         node.add_error_message(err_msgs, _("It could be outdated or created"))
@@ -388,7 +452,7 @@ def check_node(node):
 
 def find_node(node_name, tree_name, find_item, type, node_types =
 ["INHERIT_MAT", "SET_SHADER_NODE_PARAM", "HIDE", "SHOW", "SELECT_PLAY", "PLAY_ANIM", "SELECT_PLAY_ANIM",
- "MOVE_CAMERA", "MOVE_TO", "SPEAKER_PLAY","SPEAKER_STOP", "SWITCH_SELECT", "STOP_ANIM"]):
+ "MOVE_CAMERA", "MOVE_TO", "TRANSFORM_OBJECT", "SPEAKER_PLAY","SPEAKER_STOP", "SWITCH_SELECT", "STOP_ANIM"]):
     node_found = None
     ng = bpy.data.node_groups
     if tree_name in bpy.data.node_groups:
@@ -430,8 +494,9 @@ def update_named_material_str(self, context):
 def update_object_path(self, context):
     arr = self.path.split(">")
     ob = object_by_path(bpy.data.objects, arr)
+    wd = object_by_path(bpy.data.worlds, arr)
     self.path_arr.clear()
-    if ob:
+    if ob or wd:
         for s in arr:
             self.path_arr.add()
             self.path_arr[-1].name = s
@@ -443,19 +508,19 @@ def update_object_path(self, context):
                     s.label_text = node_found.objects_paths[s.name].path
         check_node(node_found)
     else:
-        print(_("can't find a node: %s:%s") %(self.tree_name, self.node_name))
+        print(_("can't find a node") + ": %s:%s" %(self.tree_name, self.node_name))
 
 def update_common_usage_names(self, context):
     node_found = find_node(self.node_name, self.tree_name, self, self.name, ["APPLY_SHAPE_KEY", "CONSOLE_PRINT"])
     if node_found:
         check_node(node_found)
     else:
-        print(_("can't find a node: %s:%s") %(self.tree_name, self.node_name))
+        print(_("can't find a node") + ": %s:%s" %(self.tree_name, self.node_name))
 
 def update_node_path(self, context):
     node_found = find_node(self.node_name, self.tree_name, self, "nd", ["SET_SHADER_NODE_PARAM"])
     if not node_found:
-        print(_("can't find a node: %s:%s") %(self.tree_name, self.node_name))
+        print(_("can't find a node") + ": %s:%s" %(self.tree_name, self.node_name))
         return
     arr = self.path.split(">")
     self.path_arr.clear()
@@ -477,13 +542,26 @@ class B4W_LogicNodeFloatWrap(bpy.types.PropertyGroup):
 class B4W_LogicNodeDurationWrap(bpy.types.PropertyGroup):
     float = bpy.props.FloatProperty(name="float", subtype = "TIME", unit="TIME", min = 0)
 
+class B4W_LogicNodeAngleWrap(bpy.types.PropertyGroup):
+    float = bpy.props.FloatProperty(name="float", subtype = "ANGLE", unit="ROTATION", step=10, precision=1)
+
+def update_bool(self, context):
+    #update vars if var scope was changed
+    if self.name == "gl":
+        for nodetree in bpy.data.node_groups:
+            force_update_variables(nodetree)
+
 class B4W_LogicNodeBoolWrap(bpy.types.PropertyGroup):
-    bool = bpy.props.BoolProperty(name="bool")
+    bool = bpy.props.BoolProperty(name="bool", update = update_bool)
+
+class B4W_LogicNodeStringWrap(bpy.types.PropertyGroup):
+    string = bpy.props.StringProperty(name="string")
 
 def update_variable(self, context):
     node = find_node(self.node_name,self.tree_name, self, "vr", ["SET_SHADER_NODE_PARAM", "CONSOLE_PRINT"])
     if node:
         check_node(node)
+
 class B4W_LogicNodeVariableWrap(bpy.types.PropertyGroup):
     tree_name = bpy.props.StringProperty(name="tree_name")
     node_name = bpy.props.StringProperty(name="node_name")
@@ -516,15 +594,20 @@ class B4W_NodePathWrap(bpy.types.PropertyGroup):
 class B4W_LogicEditorErrTextWrap(bpy.types.PropertyGroup):
     message = bpy.props.StringProperty(name="name")
 
-class B4W_ParseRespStringWrap(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(name = "name", update = update_parse_req_list_item)
+class B4W_ParseJsonStringWrap(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty(name = "name", update = update_parse_json_list_item)
+    path = bpy.props.StringProperty(name = "path")
     tree_name = bpy.props.StringProperty(name = "tree_name")
     node_name = bpy.props.StringProperty(name = "node_name")
 
-class B4W_PostReqStringWrap(bpy.types.PropertyGroup):
-    name = bpy.props.StringProperty(name = "name", update = update_send_req_list_item)
+class B4W_EncodeJsonStringWrap(bpy.types.PropertyGroup):
+    name = bpy.props.StringProperty(name = "name", update = update_encode_json_list_item)
+    path = bpy.props.StringProperty(name = "path")
     tree_name = bpy.props.StringProperty(name = "tree_name")
     node_name = bpy.props.StringProperty(name = "node_name")
+
+class B4W_JSCbParamWrap(bpy.types.PropertyGroup):
+    type = bpy.props.EnumProperty(name="type", items=js_cb_param_type_enum, default="OBJECT")
 
 class B4W_LogicEditorErrors(bpy.types.PropertyGroup):
     prop_err = bpy.props.CollectionProperty(name="prop_err", type= B4W_LogicEditorErrTextWrap)
@@ -537,6 +620,8 @@ def object_by_path(objects, path):
         return None
     ob = objects[path[0]]
     for i in range(1,len(path)):
+        if not ob.dupli_group:
+            return None
         if not path[i] in ob.dupli_group.objects:
             return None
         ob = ob.dupli_group.objects[path[i]]
@@ -601,9 +686,31 @@ class B4W_LogicNodeTree(NodeTree):
     bl_description = _('Blend4Web logic nodes')
     bl_icon = 'NODETREE'
 
+    # contains global variables
+    variables = bpy.props.CollectionProperty(
+        name = _("B4W: Global Variables"),
+        description = _("Global Variables"),
+        type = B4W_StringWrap,
+    )
+
     @classmethod
     def poll(self, context):
         return context.scene.render.engine == 'BLEND4WEB'
+
+    def update_connectivity(self):
+        entrypoints = check_entry_point(self)
+        if entrypoints:
+            clear_links_err(self)
+            check_connectivity(self, entrypoints)
+        tree_vars_update(self)
+
+    def update(self):
+        self.update_connectivity()
+        # limit reroute links to reduce trees overlapping
+        for n in self.nodes:
+            if n.bl_idname == "NodeReroute":
+                n.outputs[0].link_limit = 1
+                n.inputs[0].link_limit = 1
 
     def collect_errors(self):
         if not "errors" in self:
@@ -624,6 +731,15 @@ class B4W_LogicNodeTree(NodeTree):
             del self["errors"]
 
     def get_tree(self):
+
+        def is_global(ntree, node, var_name):
+            ret = False
+            if "entryp" in node:
+                if var_name in ntree.nodes[node["entryp"]].variables:
+                    ret = False
+                elif var_name in ntree.variables:
+                    ret = True
+            return ret
 
         def get_node_desc(ntree, node):
             ret = {}
@@ -649,7 +765,8 @@ class B4W_LogicNodeTree(NodeTree):
                 ret[p] = getattr(node, p)
             ret["mute"] = node.mute
 
-            ret["parse_resp_list"] = []
+            ret["parse_json_vars"] = []
+            ret["parse_json_paths"] = []
             ret["objects_paths"] = {}
             for o in node.objects_paths:
                 arr = []
@@ -659,19 +776,19 @@ class B4W_LogicNodeTree(NodeTree):
             ret["materials_names"] = {}
             for o in node.materials_names:
                 ret["materials_names"][o.name] = o.str
-            for s in node.parse_resp_list:
-                ret["parse_resp_list"].append(s.name)
+            for s in node.parse_json_list:
+                ret["parse_json_vars"].append(s.name)
+                ret["parse_json_paths"].append(s.path)
             ret["nodes_paths"] = {}
             for o in node.nodes_paths:
                 arr = []
                 for s in o.path_arr:
                     arr.append(s.name)
                 ret["nodes_paths"][o.name] = arr
-
             ret["variables_names"] = {}
             for o in node.variables_names:
-                ret["variables_names"][o.name] = o.variable
-            ret["bools"] = {}
+                ret["variables_names"][o.name] = [is_global(ntree, node, o.variable), o.variable]
+
             ret["common_usage_names"] = {}
             for o in node.common_usage_names:
                 ret["common_usage_names"][o.name] = o.str
@@ -679,6 +796,13 @@ class B4W_LogicNodeTree(NodeTree):
             ret["common_usage_names"]["camera_move_style"] = node.param_camera_move_style
             ret["common_usage_names"]["request_type"] = node.param_request_type
             ret["common_usage_names"]["param_anim_behavior"] = node.param_anim_behavior
+            ret["common_usage_names"]["space_type"] = node.param_space_type
+            ret["common_usage_names"]["json_operation"] = node.param_json_operation
+            ret["common_usage_names"]["variable_type"] = node.param_variable_type
+            ret["common_usage_names"]["condition"] = node.param_condition
+            ret["common_usage_names"]["js_cb_params"] = {}
+            for o in node.js_cb_params:
+                ret["common_usage_names"]["js_cb_params"][o.name] = o.type
             ret["bools"] = {}
             for o in node.bools:
                 ret["bools"][o.name] = o.bool
@@ -694,6 +818,12 @@ class B4W_LogicNodeTree(NodeTree):
                 ret["floats"][f.name] = f.float
             for f in node.durations:
                 ret["floats"][f.name] = f.float
+            for f in node.angles:
+                ret["floats"][f.name] = f.float
+
+            ret["strings"] = {}
+            for o in node.strings:
+                ret["strings"][o.name] = o.string
 
             if ret["type"] == "SWITCH_SELECT":
                 links = {}
@@ -705,10 +835,11 @@ class B4W_LogicNodeTree(NodeTree):
                             links[sock.name] = target_n.label2
                 ret["links"] = links
 
-            v_list = []
-            ret["send_req_vars_list"] = v_list
-            for v in node.send_req_list:
-                v_list.append(v.name)
+            ret["encode_json_vars"] = []
+            ret["encode_json_paths"] = []
+            for s in node.encode_json_list:
+                ret["encode_json_vars"].append(s.name)
+                ret["encode_json_paths"].append(s.path)
 
             return ret
 
@@ -719,6 +850,9 @@ class B4W_LogicNodeTree(NodeTree):
         subtrees = check_tree(ntree)
         self.collect_errors()
 
+        # Keep global and local variables separated
+        # for further scope detection
+        tree_vars_update(ntree, True);
         scripts = []
         ind_added = 0
         if subtrees:
@@ -748,6 +882,9 @@ class B4W_LogicNodeTree(NodeTree):
                         s["link_jump"] = play_anim["label"]
                         del s["objects_paths"]["id1"]
                         script.append(play_anim)
+
+        # Reset local variables: mix with global
+        tree_vars_update(ntree, False);
 
         return (scripts, self["errors"])
 
@@ -933,7 +1070,8 @@ class B4W_LogicNodeOrderSocket(NodeSocket):
             if self.name in ["Order_Output_Socket"]:
                 layout.label(_("Miss"))
             if self.type == "DynOutputJump":
-                layout.label(self.label_text + _(" Hit"))
+                label_text = bpy.app.translations.pgettext_tip(_("%s Hit"))
+                layout.label(label_text%self.label_text)
                 o = layout.operator("node.b4w_logic_remove_dyn_jump_sock", icon='ZOOMOUT', text="")
                 o.node_tree = node.id_data.name
                 o.node = node.name
@@ -969,47 +1107,39 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
 
     def update_var_def_callback(self, context):
         # If variable source node name changed
-        entrypoints = check_entry_point(self.id_data)
-        if entrypoints:
-            check_connectivity(self.id_data, entrypoints)
-        tree_vars_update(self.id_data)
+        self.id_data.update_connectivity()
         check_node(self)
 
     def update(self):
-        clear_links_err(self.id_data)
-        entrypoints = check_entry_point(self.id_data)
-        if entrypoints:
-            check_connectivity(self.id_data, entrypoints)
         check_node(self)
-        self.update_var_def_callback(bpy.context)
-        for n in self.id_data.nodes:
-            if n.bl_idname == "NodeReroute":
-                n.outputs[0].link_limit = 1
-                n.inputs[0].link_limit = 1
 
     def type_init(self, context):
         # update vars always when new node was added
 
         if self.type in ["SELECT_PLAY", "PLAY", "HIDE", "SHOW", "SELECT", "PLAY_ANIM", "DELAY",
-                         "MOVE_CAMERA", "MOVE_TO", "SPEAKER_PLAY", "SPEAKER_STOP", "SWITCH_SELECT", "STOP_ANIM"
-                         "STOP_TIMELINE"]:
+                         "MOVE_CAMERA", "MOVE_TO", "TRANSFORM_OBJECT", "SPEAKER_PLAY", "SPEAKER_STOP", "SWITCH_SELECT", "STOP_ANIM"
+                         "STOP_TIMELINE", "GET_TIMELINE"]:
             self.width = 190
-        if self.type in ["PAGE_PARAM"]:
-            self.width = 150
+        if self.type in ["PAGEPARAM"]:
+            self.width = 220
         if self.type in ["REDIRECT"]:
             self.width = 250
         if self.type in ["MATH", "CONDJUMP", "SEND_REQ", "APPLY_SHAPE_KEY", "OUTLINE"]:
             self.width = 250
         if self.type in ["REGSTORE"]:
-            self.width = 180
-        if self.type in ["JUMP"]:
+            self.width = 200
+        if self.type in ["JUMP", "EMPTY"]:
             self.width = 100
+        if self.type in ["STRING", "JSON", "JS_CALLBACK"]:
+            self.width = 280
 
         self.update_var_def_callback(context)
         if self.type == "ENTRYPOINT":
             if not "Order_Output_Socket" in self.outputs:
                 s = self.outputs.new('SlotOrderSocketType', "Order_Output_Socket")
                 s.link_limit = 1
+            self.bools.add()
+            self.bools[-1].name = "js"
             return
 
         if self.type in ["SWITCH_SELECT"]:
@@ -1089,7 +1219,7 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
                 self.variables_names.add()
                 self.variables_names[-1].name = "id%s"%i
 
-        if self.type == "DELAY":
+        if self.type in ["DELAY"]:
             self.durations.add()
             self.durations[-1].name = "dl"
             self.bools.add()
@@ -1111,8 +1241,15 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
             self.bools[-1].name = "not_wait"
             if self.type == "SPEAKER_PLAY":
                 self.bools[-1].bool = True
+            if self.type == "PLAY_ANIM":
+                self.bools.add()
+                self.bools[-1].name = "env"
 
-        if self.type == "SELECT_PLAY_ANIM":
+        if self.type in ["STOP_ANIM"]:
+            self.bools.add()
+            self.bools[-1].name = "env"
+
+        if self.type in ["SELECT_PLAY_ANIM"]:
             name = "id1"
             self.objects_paths.add()
             item = self.objects_paths[-1]
@@ -1133,7 +1270,7 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
             self.variables_names.add()
             self.variables_names[-1].name = "skv"
 
-        if self.type == "OUTLINE":
+        if self.type in ["OUTLINE"]:
             # add intensity
             self.floats.add()
             self.floats[-1].name = "in"
@@ -1170,7 +1307,68 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
             self.bools.add()
             self.bools[-1].name = "dur"
             self.variables_names.add()
-            self.variables_names[-1].name = "dur"            
+            self.variables_names[-1].name = "dur"
+
+        if self.type in ["TRANSFORM_OBJECT"]:
+            name = "id0"
+            self.objects_paths.add()
+            item = self.objects_paths[-1]
+            item.tree_name = self.id_data.name
+            item.node_name = self.name
+            item.name = name
+            #translation
+            self.floats.add()
+            self.floats[-1].name = "trx"
+            self.bools.add()
+            self.bools[-1].name = "trx"
+            self.variables_names.add()
+            self.variables_names[-1].name = "trx"
+            self.floats.add()
+            self.floats[-1].name = "try"
+            self.bools.add()
+            self.bools[-1].name = "try"
+            self.variables_names.add()
+            self.variables_names[-1].name = "try"
+            self.floats.add()
+            self.floats[-1].name = "trz"
+            self.bools.add()
+            self.bools[-1].name = "trz"
+            self.variables_names.add()
+            self.variables_names[-1].name = "trz"
+            #rotation
+            self.angles.add()
+            self.angles[-1].name = "rox"
+            self.bools.add()
+            self.bools[-1].name = "rox"
+            self.variables_names.add()
+            self.variables_names[-1].name = "rox"
+            self.angles.add()
+            self.angles[-1].name = "roy"
+            self.bools.add()
+            self.bools[-1].name = "roy"
+            self.variables_names.add()
+            self.variables_names[-1].name = "roy"
+            self.angles.add()
+            self.angles[-1].name = "roz"
+            self.bools.add()
+            self.bools[-1].name = "roz"
+            self.variables_names.add()
+            self.variables_names[-1].name = "roz"
+            #scale
+            self.floats.add()
+            self.floats[-1].name = "sc"
+            self.floats[-1].float = 1
+            self.bools.add()
+            self.bools[-1].name = "sc"
+            self.variables_names.add()
+            self.variables_names[-1].name = "sc"
+            #duration
+            self.durations.add()
+            self.durations[-1].name = "dur"
+            self.bools.add()
+            self.bools[-1].name = "dur"
+            self.variables_names.add()
+            self.variables_names[-1].name = "dur"
 
         if self.type in ["SPEAKER_PLAY", "SPEAKER_STOP"]:
             name = "id0"
@@ -1190,7 +1388,86 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
             self.common_usage_names.add()
             self.common_usage_names[-1].name = "msg"
 
+        if self.type in ["STRING"]:
+            for i in range(3):
+                self.strings.add()
+                self.strings[-1].name = "id%s"%i
+                self.bools.add()
+                self.bools[-1].name = "id%s"%i
+                self.variables_names.add()
+                self.variables_names[-1].name = "id%s"%i
+            self.variables_names.add()
+            self.variables_names[-1].name = "dst"
+            self.variables_names.add()
+            self.variables_names[-1].name = "dst1"
 
+        if self.type in ["SEND_REQ", "REDIRECT"]:
+            self.strings.add()
+            self.strings[-1].name = "url"
+            self.strings[-1].string = "https://www.blend4web.com"
+            self.bools.add()
+            self.bools[-1].name = "url"
+            self.variables_names.add()
+            self.variables_names[-1].name = "url"
+
+        if self.type in ["SEND_REQ"]:
+            self.variables_names[-1].name = "dst"
+            self.variables_names.add()
+            self.variables_names[-1].name = "dst1"
+            self.bools.add()
+            self.bools[-1].name = "ct"
+            self.strings.add()
+            self.strings[-1].name = "ct"
+
+        if self.type in ["PAGEPARAM"]:
+            self.bools.add()
+            self.bools[-1].name = "hsh"
+
+        if self.type in ["MATH", "CONDJUMP", "PAGEPARAM", "REGSTORE"]:
+            self.variables_names.add()
+            self.variables_names[-1].name = "v1"
+            self.variables_names.add()
+            self.variables_names[-1].name = "v2"
+            self.variables_names.add()
+            self.variables_names[-1].name = "vd"
+            if self.type in ["MATH", "CONDJUMP", "REGSTORE"]:
+                self.floats.add()
+                self.floats[-1].name = "inp1"
+            if self.type in ["MATH", "CONDJUMP"]:
+                self.floats.add()
+                self.floats[-1].name = "inp2"
+            if self.type in ["REGSTORE"]:
+                self.strings.add()
+                self.strings[-1].name = "inp1"
+                self.bools.add()
+                self.bools[-1].name = "gl"
+            if self.type in ["CONDJUMP"]:
+                self.bools.add()
+                self.bools[-1].name = "str"
+                self.bools[-1].description = "AAA"
+                self.strings.add()
+                self.strings[-1].name = "inp1"
+                self.strings.add()
+                self.strings[-1].name = "inp2"
+
+        if self.type in ["GET_TIMELINE"]:
+            self.variables_names.add()
+            self.variables_names[-1].name = "vd"
+            self.bools.add()
+            self.bools[-1].name = "nla"
+            self.bools[-1].bool = True
+
+        if self.type in ["JSON"]:
+            self.variables_names.add()
+            self.variables_names[-1].name = "jsn"
+
+        if self.type in ["JS_CALLBACK"]:
+            self.strings.add()
+            self.strings[-1].name = "cb"
+            self.bools.add()
+            self.bools[-1].name = "cb"
+            self.variables_names.add()
+            self.variables_names[-1].name = "cb"
 
     type = bpy.props.EnumProperty(name="type",items=slot_type_enum, update=type_init)
 
@@ -1212,43 +1489,10 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
         default = "",
         update = update_prop_callback
     )
-
-    param_var1 = bpy.props.StringProperty(
-        name = _("Var 1"),
-        description = _("Variable name"),
-        default = "R1",
-        update = update_prop_callback
-    )
-    param_var2 = bpy.props.StringProperty(
-        name = _("Var 2"),
-        description = _("Variable name"),
-        default = "R1",
-        update = update_prop_callback
-    )
-    param_var_dest = bpy.props.StringProperty(
-        name = _("Destination Var"),
-        description = _("Variable name"),
-        default = "R1",
-        update = update_prop_callback
-    )
     param_var_define = bpy.props.StringProperty(
         name = _("Define Var"),
         description = _("Variable name"),
         update = update_var_def_callback
-    )
-    param_number1 = bpy.props.FloatProperty(
-        name = _("Num"),
-        description = _("First numeric operand"),
-        default = 0,
-        step = 100,
-        update = update_prop_callback
-    )
-    param_number2 = bpy.props.FloatProperty(
-        name = _("Num"),
-        description = _("Second numeric operand"),
-        default = 0,
-        step = 100,
-        update = update_prop_callback
     )
     param_var_flag1 = bpy.props.BoolProperty(
         name = _("Variable"),
@@ -1291,19 +1535,13 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
         name = _("Method"),
         description = _("Request method"),
         default = "GET",
-        items = send_request_type_items,
+        items = send_request_type_items
     )
     param_condition = bpy.props.EnumProperty(
         name = _("Condition"),
         description = _("Conditonal operator"),
         default = "EQUAL",
         items = condition_type_enum,
-        update = update_prop_callback
-    )
-    param_url = bpy.props.StringProperty(
-        name = _("URL"),
-        description = _("Target URL"),
-        default = "https://www.blend4web.com",
         update = update_prop_callback
     )
     param_name = bpy.props.StringProperty(
@@ -1329,7 +1567,7 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
         default = ""
     )
     # used only in entry points
-    # contain variables for current thread
+    # contains variables for current thread
     variables = bpy.props.CollectionProperty(
         name = _("B4W: Variables"),
         description = _("Variables for current thread"),
@@ -1366,10 +1604,22 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
         type = B4W_LogicNodeDurationWrap
     )
 
+    angles = bpy.props.CollectionProperty(
+        name = _("B4W: angle array"),
+        description = _("Contain angles"),
+        type = B4W_LogicNodeAngleWrap
+    )
+
     bools = bpy.props.CollectionProperty(
         name = _("B4W: bools array"),
         description = _("Contain bools"),
         type = B4W_LogicNodeBoolWrap
+    )
+
+    strings = bpy.props.CollectionProperty(
+        name = _("B4W: string array"),
+        description = _("Contain strings"),
+        type = B4W_LogicNodeStringWrap
     )
 
     variables_names = bpy.props.CollectionProperty(
@@ -1384,11 +1634,48 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
         type = B4W_CommonUsageNames
     )
 
-    parse_resp_list = bpy.props.CollectionProperty(type=B4W_ParseRespStringWrap, name="B4W: parse response list")
-    parse_resp_list_active_index = bpy.props.IntProperty(name="B4W: parse response list index")
+    js_cb_params = bpy.props.CollectionProperty(
+        name = _("B4W: JS callback params"),
+        description = _("Contain params for custom JS callback"),
+        type = B4W_JSCbParamWrap
+    )
 
-    send_req_list = bpy.props.CollectionProperty(type=B4W_ParseRespStringWrap, name="B4W: request items list")
-    send_req_list_active_index = bpy.props.IntProperty(name="B4W: request items list index")
+    param_variable_type = bpy.props.EnumProperty(
+        name = _("Variable type"),
+        description = _("Variable type"),
+        default = "NUMBER",
+        items = variable_type_items,
+        update = update_prop_callback
+    )
+
+    param_string_operation = bpy.props.EnumProperty(
+        name = _("String operation"),
+        description = _("String operation to perform on input operands"),
+        default = "JOIN",
+        items = string_operation_type_enum,
+        update = update_prop_callback
+    )
+
+    param_space_type = bpy.props.EnumProperty(
+        name = _("Space type"),
+        description = _("Space type"),
+        default = "WORLD",
+        items = space_type_items,
+        update = update_prop_callback
+    )
+
+    param_json_operation = bpy.props.EnumProperty(
+        name = _("JSON operation"),
+        description = _("JSON operation"),
+        default = "PARSE",
+        items = json_operation_type_enum
+    )
+
+    parse_json_list = bpy.props.CollectionProperty(type=B4W_ParseJsonStringWrap, name="B4W: parse json list")
+    parse_json_list_active_index = bpy.props.IntProperty(name="B4W: parse json list index")
+
+    encode_json_list = bpy.props.CollectionProperty(type=B4W_ParseJsonStringWrap, name="B4W: encode json items list")
+    encode_json_list_active_index = bpy.props.IntProperty(name="B4W: encode json items list index")
 
     def add_error_message(self, list, message):
         found = False
@@ -1442,9 +1729,9 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
         self.draw_marker(col, "param_marker_start", "Start Marker:")
         self.draw_marker(col, "param_marker_end", "End Marker:")
 
-    # common method to draw object/material/node selector
-    # Dict used for optimazation. If dict is not None it must contain object,
-    # material and node values ('ob', 'mt', 'nd')
+    # common method to draw object/world/material/node selector
+    # Dict used for optimazation. If dict is not None it must contain
+    # object, world, material and node values ('ob', 'wd', mt', 'nd')
     def draw_selector(self, layout, index, name, dict, type = "ob", icon=None):
         no_source = None
         child_str = _("Child")
@@ -1452,12 +1739,18 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
             ob = dict["ob"]
             nd = dict["nd"]
             mt = dict["mt"]
+            wd = dict["wd"]
         else:
-            ob = nd = mt = None
+            ob = nd = mt = wd = None
         key = "id"
         if type == "ob":
             storage_name = "objects_paths"
             default_search = "objects"
+            default_src = bpy.data
+            child_str = _("Dupli Child")
+        elif type == "wd":
+            storage_name = "objects_paths"
+            default_search = "worlds"
             default_src = bpy.data
             child_str = _("Dupli Child")
         elif type == "nd":
@@ -1499,7 +1792,7 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
                     row.prop_search(item, "str", ob, 'material_slots', text='')
             else:
                 row.label(_('Object is not selected'))
-            return {"ob": ob, "mt": mt, "nd": nd}
+            return {"ob": ob, "mt": mt, "nd": nd, "wd": wd}
 
         storage = getattr(self, storage_name)
         item = storage["%s%s"%(key,index)]
@@ -1517,7 +1810,9 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
                     row.prop_search(item, "path", default_src, default_search, text='')
             else:
                 row.prop(item, "path", text = '')
-
+            if type == "wd":
+                wd, child_src = self.get_child_src(item, index, wd, type)
+                return {"ob": ob, "mt": mt, "nd": nd, "wd": wd}
             ob, child_src = self.get_child_src(item, index, ob, type)
             l = self.get_selector_list_len(type, index)
             if (l == 1 and child_src) or (l > 1):
@@ -1544,7 +1839,7 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
                     col1.prop_search(item, "cur_dir", child_src, default_search, text='')
                 else:
                     col1.label(_("No child elements"))
-        return {"ob": ob, "mt": mt, "nd": nd}
+        return {"ob": ob, "mt": mt, "nd": nd, "wd": wd}
     def get_selector_list_len(self, type, index):
         if type == "ob":
             return len(self.objects_paths["id%s"%index].path_arr)
@@ -1581,6 +1876,11 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
                                 obj_list_src = None
             else:
                 obj_list_src = None
+            return o, obj_list_src
+        if type == "wd":
+            if not o:
+                o = object_by_bpy_collect_path(bpy.data.worlds, item.path_arr)
+            obj_list_src = None
             return o, obj_list_src
 
     def check_shapekey_store(self, ob):
@@ -1624,7 +1924,11 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
             col.prop(slot.bools["not_wait"], "bool", text="Do Not Wait")
 
         elif slot.type == "PLAY_ANIM":
-            self.draw_selector(col, 0, "Object:", None, "ob")
+            col.prop(slot.bools["env"], "bool", text="Environment Anim.")
+            if not self.bools["env"].bool:
+                self.draw_selector(col, 0, "Object:", None, "ob")
+            else:
+                self.draw_selector(col, 0, "World:", None, "wd")
             col.prop(slot, "param_anim_name")
             row = col.row()
             row.label("Behavior:")
@@ -1632,7 +1936,11 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
             col.prop(slot.bools["not_wait"], "bool", text=_("Do Not Wait"))
 
         elif slot.type == "STOP_ANIM":
-            self.draw_selector(col, 0, "Object:", None, "ob")
+            col.prop(slot.bools["env"], "bool", text="Environment Anim.")
+            if not self.bools["env"].bool:
+                self.draw_selector(col, 0, "Object:", None, "ob")
+            else:
+                self.draw_selector(col, 0, "World:", None, "wd")
             col.prop(self.bools["rst"], "bool", text="Set First Frame")
 
         elif slot.type == "STOP_TIMELINE":
@@ -1692,119 +2000,149 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
             row.label(_("Operand1:"))
             if slot.param_var_flag1:
                 if "entryp" in self:
-                    row.prop_search(self, "param_var1", self.id_data.nodes[self["entryp"]], 'variables', text='')
+                    row.prop_search(self.variables_names["v1"], "variable",
+                                    self.id_data.nodes[self["entryp"]], 'variables', text='')
                 else:
                     row.label(no_var_source_msg)
+            elif self.bools["str"].bool:
+                row.prop(self.strings["inp1"], "string", text='')
             else:
-                row.prop(slot, "param_number1")
+                row.prop(self.floats["inp1"], "float", text='')
             row.prop(slot, "param_var_flag1")
 
             row = col.row()
             row.label(_("Operand2:"))
             if slot.param_var_flag2:
                 if "entryp" in self:
-                    row.prop_search(self, "param_var2", self.id_data.nodes[self["entryp"]], 'variables', text='')
+                    row.prop_search(self.variables_names["v2"], "variable",
+                                    self.id_data.nodes[self["entryp"]], 'variables', text='')
                 else:
                     row.label(no_var_source_msg)
+            elif self.bools["str"].bool:
+                row.prop(self.strings["inp2"], "string", text='')
             else:
-                row.prop(slot, "param_number2")
+                row.prop(self.floats["inp2"], "float", text='')
             row.prop(slot, "param_var_flag2")
 
-        elif slot.type == "REGSTORE":
-
             row = col.row()
-            row.prop(slot, "param_var_flag1", text=_("New variable"))
+            row.prop(self.bools["str"], "bool", text=_("String Operands"))
+
+        elif slot.type == "REGSTORE":
+            row1 = col.row()
+            row1.prop(slot, "param_var_flag1", text=_("New Variable"))
             col = layout.column(align=True)
             row = col.row()
             if slot.param_var_flag1:
                 row.prop(slot, "param_var_define", text=_("New var."))
+                row1.prop(slot.bools["gl"], "bool", text=_("Global"))
             else:
                 if "entryp" in self:
-                    row.prop_search(self, "param_var_dest",
+                    row.prop_search(self.variables_names["vd"], "variable",
                                     self.id_data.nodes[self["entryp"]], 'variables', text=_('Var. name'))
                 else:
                     row.label(no_var_source_msg)
             row = col.row()
-            row.prop(slot, "param_number1")
+            row.prop(slot, "param_variable_type", text=_("Var. type"))
+            if slot.param_variable_type == "NUMBER":
+                row = col.row()
+                row.prop(self.floats["inp1"], "float", text='')
+            else:
+                row = col.row()
+                row.prop(self.strings["inp1"], "string", text='')
 
         elif slot.type == "MATH":
-
             col.prop(slot, "param_operation")
 
             row = col.row()
             row.label(_("Operand1:"))
             if slot.param_var_flag1:
                 if "entryp" in self:
-                    row.prop_search(self, "param_var1", self.id_data.nodes[self["entryp"]], 'variables', text='')
+                    row.prop_search(self.variables_names["v1"], "variable",
+                                    self.id_data.nodes[self["entryp"]], 'variables', text='')
                 else:
                     row.label(no_var_source_msg)
             else:
-                row.prop(slot, "param_number1")
+                row.prop(self.floats["inp1"], "float", text='')
             row.prop(slot, "param_var_flag1")
 
             row = col.row()
             row.label(_("Operand2:"))
             if slot.param_var_flag2:
                 if "entryp" in self:
-                    row.prop_search(self, "param_var2", self.id_data.nodes[self["entryp"]], 'variables', text='')
+                    row.prop_search(self.variables_names["v2"], "variable",
+                                    self.id_data.nodes[self["entryp"]], 'variables', text='')
                 else:
                     row.label(no_var_source_msg)
             else:
-                row.prop(slot, "param_number2")
+                row.prop(self.floats["inp2"], "float", text='')
             row.prop(slot, "param_var_flag2")
 
             row = col.row()
             row.label(_("Destination:"))
             if "entryp" in self:
-                    row.prop_search(self, "param_var_dest", self.id_data.nodes[self["entryp"]], 'variables', text='')
+                    row.prop_search(self.variables_names["vd"], "variable",
+                                    self.id_data.nodes[self["entryp"]], 'variables', text='')
             else:
                 row.label(no_var_source_msg)
             row.label("")
 
         elif slot.type == "REDIRECT":
             row = col.row()
+            row.prop(self.bools["url"], "bool", text = _("Variable URL"))
+            row = col.row()
             spl = row.split(percentage=0.10)
             spl.label(_("Url:"))
-            spl.prop(slot, "param_url", text="")
+            if not self.bools["url"].bool:
+                spl.prop(self.strings["url"], "string", text = "")
+            else:
+                if "entryp" in self:
+                    spl.prop_search(self.variables_names["url"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    spl.label(no_var_source_msg)
 
         elif slot.type == "SEND_REQ":
             row = col.row()
             col1 = col
             row.prop(self, "param_request_type")
             row = col.row()
+            row.prop(self.bools["url"], "bool", text = _("Variable URL"))
+            row = col.row()
             spl = row.split(percentage=0.10)
             spl.label(_("Url:"))
-            spl.prop(slot, "param_url", text="")
+            if not self.bools["url"].bool:
+                spl.prop(self.strings["url"], "string", text = "")
+            else:
+                if "entryp" in self:
+                    spl.prop_search(self.variables_names["url"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    spl.label(no_var_source_msg)
             row = col.row()
-            row.label(_("Decode Response Params:"))
             row = col.row()
-            row.template_list("B4W_ParseRespUIList", "", slot, "parse_resp_list",
-                              slot, "parse_resp_list_active_index", rows=2)
-            col = row.column(align=True)
-            op = col.operator("node.b4w_logic_parse_resp_list_add", icon='ZOOMIN', text="")
-            op.node_tree = self.id_data.name
-            op.node = self.name
-            op.list_id = "response"
-            op = col.operator("node.b4w_logic_parse_resp_list_remove", icon='ZOOMOUT', text="")
-            op.node_tree = self.id_data.name
-            op.node = self.name
-            op.list_id = "response"
+            row.label(_("Response Params:"))
+            row = col.row()
+            row.prop(self.bools["ct"], "bool", text=_("Content-Type:"))
+            if self.bools["ct"].bool:
+                row.prop(self.strings["ct"], "string", text="")
+            else:
+                row.label("Auto")
+            row = col.row()
+            if "entryp" in self:
+                row.prop_search(self.variables_names["dst"], "variable",
+                            self.id_data.nodes[self["entryp"]], "variables", text = "")
+            else:
+                row.label(no_var_source_msg)
 
             if slot.param_request_type == "POST":
                 row = col1.row()
-                row.label(_("Encode Request Params:"))
+                row.label(_("Request Params:"))
                 row = col1.row()
-                row.template_list("B4W_ParseRespUIList", "", slot, "send_req_list",
-                                  slot, "send_req_list_active_index", rows=2)
-                col = row.column(align=True)
-                op = col.operator("node.b4w_logic_parse_resp_list_add", icon='ZOOMIN', text="")
-                op.node_tree = self.id_data.name
-                op.node = self.name
-                op.list_id = "request"
-                op = col.operator("node.b4w_logic_parse_resp_list_remove", icon='ZOOMOUT', text="")
-                op.node_tree = self.id_data.name
-                op.node = self.name
-                op.list_id = "request"
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["dst1"], "variable",
+                            self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
 
         elif slot.type == "INHERIT_MAT":
             names = ["Source:", "Destination:"]
@@ -1872,9 +2210,15 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
             spl = row.split(percentage=0.50)
             spl.label(_("Destination:"))
             if "entryp" in self:
-                spl.prop_search(self, "param_var1", self.id_data.nodes[self["entryp"]], 'variables', text='')
+                spl.prop_search(self.variables_names["v1"], "variable",
+                                self.id_data.nodes[self["entryp"]], 'variables', text='')
             else:
                 spl.label(no_var_source_msg)
+
+            row = col.row()
+            row.prop(slot, "param_variable_type", text=_("Param type"))
+            row = col.row()
+            row.prop(self.bools["hsh"], "bool", text = _("Hash param"))
 
         elif slot.type == "MOVE_CAMERA":
             self.draw_selector(col, 0, _("Camera:"), None, "ob", icon="OUTLINER_OB_CAMERA")
@@ -1907,7 +2251,100 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
                 else:
                     row.label(no_var_source_msg)
 
-            row.prop(self.bools["dur"], "bool", text = _("Variable"))            
+            row.prop(self.bools["dur"], "bool", text = _("Variable"))
+
+        elif slot.type == "TRANSFORM_OBJECT":
+            self.draw_selector(col, 0, _("Object:"), None, "ob")
+            row = col.row()
+            row.prop(self, "param_space_type", text = _("Space"))
+
+            col.label(_("Location:"))
+            row = col.row()
+            if not self.bools["trx"].bool:
+                row.prop(self.floats["trx"], "float", text = _("x"))
+            else:
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["trx"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
+            row.prop(self.bools["trx"], "bool", text = _("Variable"))
+            row = col.row()
+            if not self.bools["try"].bool:
+                row.prop(self.floats["try"], "float", text = _("y"))
+            else:
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["try"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
+            row.prop(self.bools["try"], "bool", text = _("Variable"))
+            row = col.row()
+            if not self.bools["trz"].bool:
+                row.prop(self.floats["trz"], "float", text = _("z"))
+            else:
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["trz"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
+            row.prop(self.bools["trz"], "bool", text = _("Variable"))
+
+            col.label(_("Rotation:"))
+            row = col.row()
+            if not self.bools["rox"].bool:
+                row.prop(self.angles["rox"], "float", text = _("x"))
+            else:
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["rox"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
+            row.prop(self.bools["rox"], "bool", text = _("Variable"))
+            row = col.row()
+            if not self.bools["roy"].bool:
+                row.prop(self.angles["roy"], "float", text = _("y"))
+            else:
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["roy"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
+            row.prop(self.bools["roy"], "bool", text = _("Variable"))
+            row = col.row()
+            if not self.bools["roz"].bool:
+                row.prop(self.angles["roz"], "float", text = _("z"))
+            else:
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["roz"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
+            row.prop(self.bools["roz"], "bool", text = _("Variable"))
+
+            col.label(_("Scale:"))
+            row = col.row(align=True)
+            if not self.bools["sc"].bool:
+                row.prop(self.floats["sc"], "float", text = "")
+            else:
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["sc"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
+            row.prop(self.bools["sc"], "bool", text = _("Variable"))
+
+            col.label(_("Duration:"))
+            row = col.row(align=True)
+            if not self.bools["dur"].bool:
+                row.prop(self.durations["dur"], "float", text = "")
+            else:
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["dur"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
+            row.prop(self.bools["dur"], "bool", text = _("Variable"))
 
         elif slot.type == "SET_CAMERA_MOVE_STYLE":
             col.label(_("Camera Style:"))
@@ -1941,6 +2378,181 @@ class B4W_LogicNode(Node, B4W_LogicEditorNode):
             op.node_tree = self.id_data.name
             op.node = self.name
 
+        elif slot.type == "STRING":
+            col.prop(self, "param_string_operation", text=_("Operation"))
+            if self.param_string_operation == "COMPARE":
+                row = col.row()
+                col.prop(self, "param_condition", text = _("Condition"))
+            for i in range(2):
+                col.label("Operand%s"%str(i+1))
+                row = col.row(align=True)
+                if not self.bools["id%s"%i].bool:
+                    col.prop(self.strings["id%s"%i], "string", text = "")
+                else:
+                    if "entryp" in self:
+                        row.prop_search(self.variables_names["id%s"%i], "variable",
+                                self.id_data.nodes[self["entryp"]], "variables", text = "")
+                    else:
+                        row.label(no_var_source_msg)
+                col.prop(self.bools["id%s"%i], "bool", text = _("Variable"))
+            if self.param_string_operation == "REPLACE":
+                col.label("Operand3")
+                row = col.row(align=True)
+                if not self.bools["id2"].bool:
+                    col.prop(self.strings["id2"], "string", text = "")
+                else:
+                    if "entryp" in self:
+                        row.prop_search(self.variables_names["id2"], "variable",
+                                self.id_data.nodes[self["entryp"]], "variables", text = "")
+                    else:
+                        row.label(no_var_source_msg)
+                col.prop(self.bools["id2"], "bool", text = _("Variable"))
+            col.label("Destination")
+            row = col.row(align=True)
+            if "entryp" in self:
+                row.prop_search(self.variables_names["dst"], "variable",
+                                self.id_data.nodes[self["entryp"]], "variables", text = "")
+            else:
+                row.label(no_var_source_msg)
+            if self.param_string_operation == "SPLIT":
+                col.label("Destination2")
+                row = col.row(align=True)
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["dst1"], "variable",
+                                self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
+
+        elif slot.type == "GET_TIMELINE":
+            row = col.row()
+            row.prop(self.bools["nla"], "bool", text = _("NLA Timeline"))
+            col.label("Destination:")
+            row = col.row(align=True)
+            if "entryp" in self:
+                row.prop_search(self.variables_names["vd"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+            else:
+                row.label(no_var_source_msg)
+
+        elif slot.type == "JSON":
+            row = col.row()
+            if "entryp" in self:
+                row.prop_search(self.variables_names["jsn"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "JSON")
+            else:
+                row.label(no_var_source_msg)
+            row = col.row()
+            row.prop(self, "param_json_operation")
+
+            row = col.row()
+            split = row.split()
+            if self.param_json_operation == "PARSE":
+                col = split.column()
+                col.label("Paths:")
+                col.template_list("B4W_ParseRespPathUIList", "", slot, "parse_json_list",
+                              slot, "parse_json_list_active_index", rows=3)
+                col = split.column()
+                col.label("Variables:")
+                col.template_list("B4W_ParseRespUIList", "", slot, "parse_json_list",
+                              slot, "parse_json_list_active_index", rows=3)
+                col = row.column(align=True)
+                col.label("")
+                col.scale_x = 0.1
+                op = col.operator("node.b4w_logic_parse_json_list_add", icon='ZOOMIN', text="")
+                op.node_tree = self.id_data.name
+                op.node = self.name
+                op.list_id = "parse"
+                op = col.operator("node.b4w_logic_parse_json_list_remove", icon='ZOOMOUT', text="")
+                op.node_tree = self.id_data.name
+                op.node = self.name
+                op.list_id = "parse"
+            else:
+                col = split.column()
+                col.label("Paths:")
+                col.template_list("B4W_ParseRespPathUIList", "", slot, "encode_json_list",
+                              slot, "encode_json_list_active_index", rows=3)
+                col = split.column()
+                col.label("Variables:")
+                col.template_list("B4W_ParseRespUIList", "", slot, "encode_json_list",
+                              slot, "encode_json_list_active_index", rows=3)
+                col = row.column(align=True)
+                col.label("")
+                col.scale_x = 0.1
+                op = col.operator("node.b4w_logic_parse_json_list_add", icon='ZOOMIN', text="")
+                op.node_tree = self.id_data.name
+                op.node = self.name
+                op.list_id = "encode"
+                op = col.operator("node.b4w_logic_parse_json_list_remove", icon='ZOOMOUT', text="")
+                op.node_tree = self.id_data.name
+                op.node = self.name
+                op.list_id = "encode"
+
+        elif slot.type == "JS_CALLBACK":
+            col.label(_("Callback ID:"))
+            row = col.row()
+            if not self.bools["cb"].bool:
+                row.prop(self.strings["cb"], "string", text ="")
+            else:
+                if "entryp" in self:
+                    row.prop_search(self.variables_names["cb"], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = "")
+                else:
+                    row.label(no_var_source_msg)
+            row.prop(self.bools["cb"], "bool", text = _("Variable"))
+            col.label("In Params:")
+            row = col.row()
+
+            keys = (param.name for param in self.variables_names if param.name[:2] == "id")
+            for key in keys:
+                index = key[2:]
+                if self.js_cb_params[key].type == "OBJECT":
+                    self.draw_selector(row, index, str(index) + ":", None, "ob")
+                else:
+                    if "entryp" in self:
+                        row.prop_search(self.variables_names[key], "variable",
+                                        self.id_data.nodes[self["entryp"]], "variables", text = str(index))
+                    else:
+                        row.label(no_var_source_msg)
+                row.prop(self.js_cb_params[key], "type", text="")
+                op = row.operator("node.b4w_js_cb_param_remove", icon='ZOOMOUT', text="")
+                op.node_tree = self.id_data.name
+                op.node = self.name
+                op.list_id = "in"
+                op.param_key = key
+                row = col.row()
+
+            row = col.row()
+            op = col.operator("node.b4w_js_cb_param_add", icon='ZOOMIN', text="")
+            op.node_tree = self.id_data.name
+            op.node = self.name
+            op.list_id = "in"
+
+            col.label("Out Params:")
+            row = col.row()
+            keys = (param.name for param in self.variables_names if param.name[:3] == "out")
+            for key in keys:
+                index = key[3:]
+                if "entryp" in self:
+                    row.prop_search(self.variables_names[key], "variable",
+                                    self.id_data.nodes[self["entryp"]], "variables", text = str(index))
+                else:
+                    row.label(no_var_source_msg)
+                op = row.operator("node.b4w_js_cb_param_remove", icon='ZOOMOUT', text="")
+                op.node_tree = self.id_data.name
+                op.node = self.name
+                op.list_id = "out"
+                op.param_key = key
+                row = col.row()
+
+            row = col.row()
+            op = col.operator("node.b4w_js_cb_param_add", icon='ZOOMIN', text="")
+            op.node_tree = self.id_data.name
+            op.node = self.name
+            op.list_id = "out"
+
+        elif slot.type == "ENTRYPOINT":
+            col.prop(self.bools["js"], "bool", text = _("Run From Script"))
+
     def draw_label(self):
         for t in slot_type_enum:
             if t[0] == self.type:
@@ -1954,42 +2566,66 @@ class B4W_LogicNodeCategory(NodeCategory):
         return context.space_data.tree_type == 'B4WLogicNodeTreeType'
 
 node_categories = [
-    B4W_LogicNodeCategory("Logic Nodes", _("Logic Nodes"), items=[
+    B4W_LogicNodeCategory("Control Flow", _("Control Flow"), items=[
         NodeItem("B4W_logic_node", label=_("Entry Point"),settings={"type": repr("ENTRYPOINT")}),
+        NodeItem("B4W_logic_node", label=_("Switch Select"),settings={"type": repr("SWITCH_SELECT")}),
+        NodeItem("B4W_logic_node", label=_("Delay"),settings={"type": repr("DELAY")}),
+        #NodeItem("B4W_logic_node", label=_("Jump"),settings={"type": repr("JUMP")}),
+        NodeItem("B4W_logic_node", label=_("Conditional Jump"),settings={"type": repr("CONDJUMP")}),
+        NodeItem("B4W_logic_node", label=_("JS Callback"),settings={"type": repr("JS_CALLBACK")}),
+    ]),
+    B4W_LogicNodeCategory("Animation", _("Animation"), items=[
         NodeItem("B4W_logic_node", label=_("Play Timeline"),settings={"type": repr("PLAY")}),
         NodeItem("B4W_logic_node", label=_("Stop Timeline"),settings={"type": repr("STOP_TIMELINE")}),
+        NodeItem("B4W_logic_node", label=_("Get Timeline"),settings={"type": repr("GET_TIMELINE")}),
         NodeItem("B4W_logic_node", label=_("Play Animation"),settings={"type": repr("PLAY_ANIM")}),
         NodeItem("B4W_logic_node", label=_("Stop Animation"),settings={"type": repr("STOP_ANIM")}),
-        NodeItem("B4W_logic_node", label=_("Page Param"),settings={"type": repr("PAGEPARAM")}),
-        NodeItem("B4W_logic_node", label=_("Hide Object"),settings={"type": repr("HIDE")}),
-        NodeItem("B4W_logic_node", label=_("Show Object"),settings={"type": repr("SHOW")}),
-        NodeItem("B4W_logic_node", label=_("Page Redirect"),settings={"type": repr("REDIRECT")}),
-        NodeItem("B4W_logic_node", label=_("Math Operation"),settings={"type": repr("MATH")}),
-        NodeItem("B4W_logic_node", label=_("Variable Store"),settings={"type": repr("REGSTORE")}),
-        NodeItem("B4W_logic_node", label=_("Conditional Jump"),settings={"type": repr("CONDJUMP")}),
-        NodeItem("B4W_logic_node", label=_("Switch Select"),settings={"type": repr("SWITCH_SELECT")}),
-        NodeItem("B4W_logic_node", label=_("Select & Play Timeline (Deprecated)"),settings={"type": repr("SELECT_PLAY")}),
-        NodeItem("B4W_logic_node", label=_("Select & Play Animation (Deprecated)"),settings={"type": repr("SELECT_PLAY_ANIM")}),
-        NodeItem("B4W_logic_node", label=_("Select (Deprecated)"),settings={"type": repr("SELECT")}),
-        NodeItem("B4W_logic_node", label=_("Send Request"),settings={"type": repr("SEND_REQ")}),
-        NodeItem("B4W_logic_node", label=_("Inherit Material"),settings={"type": repr("INHERIT_MAT")}),
-        NodeItem("B4W_logic_node", label=_("Set Shader Node Param"),settings={"type": repr("SET_SHADER_NODE_PARAM")}),
-        NodeItem("B4W_logic_node", label=_("Delay"),settings={"type": repr("DELAY")}),
-        NodeItem("B4W_logic_node", label=_("Apply Shape Key"),settings={"type": repr("APPLY_SHAPE_KEY")}),
-        NodeItem("B4W_logic_node", label=_("Outline"),settings={"type": repr("OUTLINE")}),
+    ]),
+    B4W_LogicNodeCategory("Camera", _("Camera"), items=[
         NodeItem("B4W_logic_node", label=_("Move Camera"),settings={"type": repr("MOVE_CAMERA")}),
-        NodeItem("B4W_logic_node", label=_("Move To"),settings={"type": repr("MOVE_TO")}),
         # disabled until there is a collision with app.js
         # NodeItem("B4W_logic_node", label=_("Set Camera Move Style"),settings={"type": repr("SET_CAMERA_MOVE_STYLE")}),
+    ]),
+    B4W_LogicNodeCategory("Object", _("Object"), items=[
+        NodeItem("B4W_logic_node", label=_("Show Object"),settings={"type": repr("SHOW")}),
+        NodeItem("B4W_logic_node", label=_("Hide Object"),settings={"type": repr("HIDE")}),
+        NodeItem("B4W_logic_node", label=_("Transform Object"),settings={"type": repr("TRANSFORM_OBJECT")}),
+        NodeItem("B4W_logic_node", label=_("Move To"),settings={"type": repr("MOVE_TO")}),
+        NodeItem("B4W_logic_node", label=_("Apply Shape Key"),settings={"type": repr("APPLY_SHAPE_KEY")}),
+        NodeItem("B4W_logic_node", label=_("Outline"),settings={"type": repr("OUTLINE")}),
+        NodeItem("B4W_logic_node", label=_("Set Shader Node Param"),settings={"type": repr("SET_SHADER_NODE_PARAM")}),
+        NodeItem("B4W_logic_node", label=_("Inherit Material"),settings={"type": repr("INHERIT_MAT")}),
+    ]),
+    B4W_LogicNodeCategory("Operations", _("Operations"), items=[
+        NodeItem("B4W_logic_node", label=_("Variable Store"),settings={"type": repr("REGSTORE")}),
+        NodeItem("B4W_logic_node", label=_("Math Operation"),settings={"type": repr("MATH")}),
+        NodeItem("B4W_logic_node", label=_("String Operation"),settings={"type": repr("STRING")}),
+    ]),
+    B4W_LogicNodeCategory("Sound", _("Sound"), items=[
         NodeItem("B4W_logic_node", label=_("Play Sound"),settings={"type": repr("SPEAKER_PLAY")}),
         NodeItem("B4W_logic_node", label=_("Stop Sound"),settings={"type": repr("SPEAKER_STOP")}),
-        NodeItem("B4W_logic_node", label=_("Console Print"),settings={"type": repr("CONSOLE_PRINT")}),
-        ]),
+    ]),
+    B4W_LogicNodeCategory("Network", _("Network"), items=[
+        NodeItem("B4W_logic_node", label=_("Send Request"),settings={"type": repr("SEND_REQ")}),
+        NodeItem("B4W_logic_node", label=_("JSON"),settings={"type": repr("JSON")}),
+        NodeItem("B4W_logic_node", label=_("Page Param"),settings={"type": repr("PAGEPARAM")}),
+        NodeItem("B4W_logic_node", label=_("Page Redirect"),settings={"type": repr("REDIRECT")}),
+    ]),
+    B4W_LogicNodeCategory("Debug", _("Debug"), items=[
+        NodeItem("B4W_logic_node", label=_("Console Print"),settings={"type": repr("CONSOLE_PRINT")})
+    ]),
+    B4W_LogicNodeCategory("Deprecared", _("Deprecated"), items=[
+        NodeItem("B4W_logic_node", label=_("Select (Deprecated)"),settings={"type": repr("SELECT")}),
+        NodeItem("B4W_logic_node", label=_("Select & Play Timeline (Deprecated)"),settings={"type": repr("SELECT_PLAY")}),
+        NodeItem("B4W_logic_node", label=_("Select & Play Animation (Deprecated)"),settings={"type": repr("SELECT_PLAY_ANIM")}),
+    ]),
     B4W_LogicNodeCategory("Layout", _("Layout"), items=[
         NodeItem("NodeFrame"),
         NodeItem("NodeReroute"),
+        NodeItem("B4W_logic_node", label=_("Empty"),settings={"type": repr("EMPTY")}),
     ])
     ]
+
 
 def get_link_by_TO_socket(ntree, socket):
     for l in ntree.links:
@@ -2064,7 +2700,6 @@ def check_conn(ntree, node, connected):
                         check_conn(ntree, n, connected)
 
 def check_connectivity(ntree, entrypoints):
-    err = False
     if len(ntree.nodes) == 0:
         if "errors" not in ntree:
             ntree["errors"] = []
@@ -2095,22 +2730,19 @@ def check_connectivity(ntree, entrypoints):
                 if n in st:
                     not_connected = None
             if not_connected:
+                if "entryp" in n:
+                    del n["entryp"]
                 n.add_error_message(n.error_messages.link_err, _("No path from Entry point!"))
-                err = True
     # check subtrees overlap
     arr = []
     for st in subtrees.values():
         for n in st:
             if n in arr:
                 n.add_error_message(n.error_messages.link_err, _("Subtrees overlapping is not allowed!"))
-                err = True
             else:
                 arr.append(n)
 
-    if err:
-        return None
-    else:
-        return subtrees.values()
+    return subtrees.values()
 
 def check_tree(ntree):
     subtrees = None
@@ -2156,6 +2788,8 @@ def copy_slot_to_node(slot, node):
                         setattr(node, p, t[0])
             elif p in ["param_operation"]:
                 setattr(node, p, operation_type_enum[slot[p]][0])
+            elif p in ["param_string_operation"]:
+                setattr(node, p, string_operation_type_enum[slot[p]][0])
             elif p in ["param_condition"]:
                 setattr(node, p, condition_type_enum[slot[p]][0])
             elif p in ['param_register_flag1', 'param_register_flag2']:
@@ -2200,9 +2834,9 @@ def force_update_variables(nodetree):
         check_connectivity(nodetree, entrypoints)
     tree_vars_update(nodetree)
 
-class OperatorLogicParseRespListAdd(bpy.types.Operator):
-    bl_idname = "node.b4w_logic_parse_resp_list_add"
-    bl_label = p_("Parse response list add item", "Operator")
+class OperatorLogicParseJsonListAdd(bpy.types.Operator):
+    bl_idname = "node.b4w_logic_parse_json_list_add"
+    bl_label = p_("Parse json list add item", "Operator")
     node_tree = bpy.props.StringProperty(
         name = _("Node tree"),
     )
@@ -2211,7 +2845,7 @@ class OperatorLogicParseRespListAdd(bpy.types.Operator):
     )
     list_id = bpy.props.StringProperty(
         name = "Node name",
-        default = "response"
+        default = "parse"
     )
     def invoke(self, context, event):
         def gen_var_name(list):
@@ -2228,17 +2862,21 @@ class OperatorLogicParseRespListAdd(bpy.types.Operator):
             if nodetree.name == self.node_tree:
                 for node in nodetree.nodes:
                     if node.name == self.node:
-                        if self.list_id == "response":
-                            node.parse_resp_list.add()
-                            node.parse_resp_list[-1].name = gen_var_name(node.parse_resp_list)
-                            node.parse_resp_list[-1].tree_name = self.node_tree
-                            node.parse_resp_list[-1].node_name = node.name
+                        if self.list_id == "parse":
+                            node.parse_json_list.add()
+                            new_name = gen_var_name(node.parse_json_list)
+                            node.parse_json_list[-1].name = new_name
+                            node.parse_json_list[-1].path = new_name
+                            node.parse_json_list[-1].tree_name = self.node_tree
+                            node.parse_json_list[-1].node_name = node.name
                             force_update_variables(nodetree)
                         else:
-                            node.send_req_list.add()
-                            node.send_req_list[-1].name = gen_var_name(node.send_req_list)
-                            node.send_req_list[-1].tree_name = self.node_tree
-                            node.send_req_list[-1].node_name = node.name
+                            node.encode_json_list.add()
+                            new_name = gen_var_name(node.encode_json_list)
+                            node.encode_json_list[-1].name = new_name
+                            node.encode_json_list[-1].path = new_name
+                            node.encode_json_list[-1].tree_name = self.node_tree
+                            node.encode_json_list[-1].node_name = node.name
 
         return {'FINISHED'}
 
@@ -2378,9 +3016,9 @@ class OperatorLogicAddDynJumpSock(bpy.types.Operator):
 
         return {'FINISHED'}
 
-class OperatorLogicParseRespListRemove(bpy.types.Operator):
-    bl_idname = "node.b4w_logic_parse_resp_list_remove"
-    bl_label = p_("Parse response list remove item", "Operator")
+class OperatorLogicParseJsonListRemove(bpy.types.Operator):
+    bl_idname = "node.b4w_logic_parse_json_list_remove"
+    bl_label = p_("Parse json list remove item", "Operator")
     node_tree = bpy.props.StringProperty(
         name = "Node tree",
     )
@@ -2389,18 +3027,18 @@ class OperatorLogicParseRespListRemove(bpy.types.Operator):
     )
     list_id = bpy.props.StringProperty(
         name = "Node name",
-        default = "response"
+        default = "parse"
     )
     def invoke(self, context, event):
         for nodetree in bpy.data.node_groups:
             if nodetree.name == self.node_tree:
                 for node in nodetree.nodes:
                     if node.name == self.node:
-                        if self.list_id == "response":
-                            node.parse_resp_list.remove(node.parse_resp_list_active_index)
+                        if self.list_id == "parse":
+                            node.parse_json_list.remove(node.parse_json_list_active_index)
                             force_update_variables(nodetree)
                         else:
-                            node.send_req_list.remove(node.send_req_list_active_index)
+                            node.encode_json_list.remove(node.encode_json_list_active_index)
 
         return {'FINISHED'}
 
@@ -2488,12 +3126,112 @@ class OperatorLogicNodesEditObjectItemLevel(bpy.types.Operator):
                                 nd_item.cur_dir = ""
         return {'FINISHED'}
 
+class OperatorLogicJSCallbackParamAdd(bpy.types.Operator):
+    bl_idname = "node.b4w_js_cb_param_add"
+    bl_label = p_("JS callback params add item", "Operator")
+    node_tree = bpy.props.StringProperty(
+        name = _("Node tree"),
+    )
+    node = bpy.props.StringProperty(
+        name = _("Node name"),
+    )
+    list_id = bpy.props.StringProperty(
+        name = "Node name",
+        default = "in"
+    )
+    def invoke(self, context, event):
+        for nodetree in bpy.data.node_groups:
+            if nodetree.name == self.node_tree:
+                for node in nodetree.nodes:
+                    if node.name == self.node:
+                        if self.list_id == "in":
+                            coll = node.objects_paths
+                            cnt = 0
+                            for p in coll:
+                                if p.name == "id" + str(cnt):
+                                    cnt+=1
+
+                            name = "id"+str(cnt)
+                            p = node.objects_paths.add()
+                            p.name = name
+                            p = node.variables_names.add()
+                            p.name = name
+                            p = node.js_cb_params.add()
+                            p.name = name
+
+                            return{'FINISHED'}
+                        elif self.list_id == "out":
+                            coll = node.variables_names
+                            cnt = 0
+                            for p in coll:
+                                if p.name == "out" + str(cnt):
+                                    cnt+=1
+
+                            name = "out"+str(cnt)
+                            p = node.variables_names.add()
+                            p.name = name
+
+                            return{'FINISHED'}
+        return {'FINISHED'}
+
+class OperatorLogicJSCallbackParamRemove(bpy.types.Operator):
+    bl_idname = "node.b4w_js_cb_param_remove"
+    bl_label = p_("JS callback params remove item", "Operator")
+    node_tree = bpy.props.StringProperty(
+        name = "Node tree",
+    )
+    node = bpy.props.StringProperty(
+        name = "Node name",
+    )
+    list_id = bpy.props.StringProperty(
+        name = "Node name",
+        default = "in"
+    )
+    param_key= bpy.props.StringProperty(
+        name = "Node name",
+    )
+    def invoke(self, context, event):
+        def shift_coll_keys(coll_generator, prefix):
+            i = 0
+            for param in coll_generator:
+                param.name = prefix + str(i)
+                i += 1
+
+        for nodetree in bpy.data.node_groups:
+            if nodetree.name == self.node_tree:
+                for node in nodetree.nodes:
+                    if node.name == self.node:
+                        if self.list_id == "in":
+                            ind = index_by_key(node.objects_paths, self.param_key)
+                            node.objects_paths.remove(ind)
+                            ind = index_by_key(node.variables_names, self.param_key)
+                            node.variables_names.remove(ind)
+                            ind = index_by_key(node.js_cb_params, self.param_key)
+                            node.js_cb_params.remove(ind)
+                            #correct indexes in collections
+                            in_coll = (param for param in node.objects_paths if param.name[:2] == "id")
+                            shift_coll_keys(in_coll, "id")
+                            in_coll = (param for param in node.variables_names if param.name[:2] == "id")
+                            shift_coll_keys(in_coll, "id")
+                            in_coll = (param for param in node.js_cb_params if param.name[:2] == "id")
+                            shift_coll_keys(in_coll, "id")
+
+                            return{'FINISHED'}
+                        elif self.list_id == "out":
+                            ind = index_by_key(node.variables_names, self.param_key)
+                            node.variables_names.remove(ind)
+                            #correct indexes in collections
+                            out_coll = (param for param in node.variables_names if param.name[:3] == "out")
+                            shift_coll_keys(out_coll, "out")
+
+                            return{'FINISHED'}
+        return {'FINISHED'}
+
 def menu_func(self, context):
     self.layout.operator(OperatorMuteNode.bl_idname)
 addon_keymaps = []
 
 def register_hotkey():
-    bpy.utils.register_class(OperatorMuteNode)
     bpy.types.NODE_MT_node.append(menu_func)
 
     # handle the keymap
@@ -2505,7 +3243,6 @@ def register_hotkey():
         addon_keymaps.append(km)
 
 def unregister_hotkey():
-    bpy.utils.unregister_class(OperatorMuteNode)
     bpy.types.NODE_MT_node.remove(menu_func)
 
     # handle the keymap
@@ -2517,58 +3254,9 @@ def unregister_hotkey():
         del addon_keymaps[:]
 
 def register():
-    bpy.utils.register_class(B4W_LogicEditorErrTextWrap)
-    bpy.utils.register_class(B4W_LogicEditorErrors)
-    bpy.utils.register_class(B4W_ParseRespStringWrap)
-    bpy.utils.register_class(B4W_CommonUsageNames)
-    bpy.utils.register_class(B4W_StringWrap)
-    bpy.utils.register_class(B4W_LogicNodeNamedMaterialNameWrap)
-    bpy.utils.register_class(B4W_LogicNodeBoolWrap)
-    bpy.utils.register_class(B4W_LogicNodeFloatWrap)
-    bpy.utils.register_class(B4W_LogicNodeDurationWrap)
-    bpy.utils.register_class(B4W_LogicNodeVariableWrap)
-    bpy.utils.register_class(B4W_ObjectPathWrap)
-    bpy.utils.register_class(B4W_NodePathWrap)
-    bpy.utils.register_class(B4W_LogicNodeTree)
-    bpy.utils.register_class(B4W_LogicNode)
-    bpy.utils.register_class(B4W_LogicNodeJumpSocket)
-    bpy.utils.register_class(B4W_LogicNodeOrderSocket)
-    bpy.utils.register_class(B4W_ParseRespUIList)
-    bpy.utils.register_class(OperatorLogicParseRespListAdd)
-    bpy.utils.register_class(OperatorLogicParseRespListRemove)
-    bpy.utils.register_class(OperatorLogicNodesEditObjectItemLevel)
-    bpy.utils.register_class(OperatorLogicRemoveDynJumpSock)
-    bpy.utils.register_class(OperatorLogicAddDynJumpSock)
-    bpy.utils.register_class(OperatorLogicConsolePrintAddVar)
-    bpy.utils.register_class(OperatorLogicConsolePrintRemoveVar)
     nodeitems_utils.register_node_categories("B4W_LOGIC_CUSTOM_NODES", node_categories)
     register_hotkey()
 
 def unregister():
     nodeitems_utils.unregister_node_categories("B4W_LOGIC_CUSTOM_NODES")
-
-    bpy.utils.unregister_class(B4W_LogicNodeTree)
-    bpy.utils.unregister_class(B4W_ParseRespStringWrap)
-    bpy.utils.unregister_class(B4W_StringWrap)
-    bpy.utils.unregister_class(B4W_CommonUsageNames)
-    bpy.utils.unregister_class(B4W_LogicNodeNamedMaterialNameWrap)
-    bpy.utils.unregister_class(B4W_LogicNodeBoolWrap)
-    bpy.utils.unregister_class(B4W_LogicNodeFloatWrap)
-    bpy.utils.unregister_class(B4W_LogicNodeDurationWrap)
-    bpy.utils.unregister_class(B4W_LogicNodeVariableWrap)
-    bpy.utils.unregister_class(B4W_LogicNode)
-    bpy.utils.unregister_class(B4W_LogicNodeOrderSocket)
-    bpy.utils.unregister_class(B4W_LogicNodeJumpSocket)
-    bpy.utils.unregister_class(B4W_LogicEditorErrors)
-    bpy.utils.unregister_class(B4W_LogicEditorErrTextWrap)
-    bpy.utils.unregister_class(B4W_ParseRespUIList)
-    bpy.utils.unregister_class(OperatorLogicParseRespListAdd)
-    bpy.utils.unregister_class(OperatorLogicParseRespListRemove)
-    bpy.utils.unregister_class(B4W_ObjectPathWrap)
-    bpy.utils.unregister_class(B4W_NodePathWrap)
-    bpy.utils.unregister_class(OperatorLogicNodesEditObjectItemLevel)
-    bpy.utils.unregister_class(OperatorLogicRemoveDynJumpSock)
-    bpy.utils.unregister_class(OperatorLogicAddDynJumpSock)
-    bpy.utils.unregister_class(OperatorLogicConsolePrintAddVar)
-    bpy.utils.unregister_class(OperatorLogicConsolePrintRemoveVar)
     unregister_hotkey()

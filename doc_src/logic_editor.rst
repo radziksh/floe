@@ -1,40 +1,35 @@
 .. _logic_editor:
 
-***************************
-Визуальное программирование
-***************************
+***********
+Logic Nodes
+***********
 
-.. contents:: Содержание
-    :depth: 3
+.. contents:: Table of Content
+    :depth: 2
     :backlinks: entry
 
-Редактор логики (Logic Editor)
-==========================================
+Basics
+======
 
-Визуальное программирование осуществляется путем создания нодового дерева логики в окне нодового 
-редактора. С помощью ``Logic Editor`` можно существенно расширить функциональность 
-сцены, не прибегая при этом к программированию.
+Visual programming is performed by creating logic node tree in the node editor area in Blender. These nodes can extend the scene functionality significantly without any coding.
 
-.. image:: src_images/logic_editor/logic_editor_app_example.jpg
+.. image:: src_images/logic_editor/logic_editor_app_example.png
    :align: center
    :width: 100%
 
-Для активации логики, на вкладке настроек сцены 
-Blender необходимо установить галочку ``Logic Editor`` и добавить/выбрать
-активное нодовое дерево:
+To activate logic on the given scene set the ``Logic Editor`` property in the ``Scene`` tab and append/select active node tree.
 
 .. image:: src_images/logic_editor/logic_editor_activation.png
    :align: center
    :width: 100%
 
-Для редактирования дерева логики необходимо перейти в ``Редактор Нод`` 
-(Node Editor) выбрать тип нодового дерева ``Blend4Web logic``:
+To edit logic tree go to the ``Node Editor`` area and select the ``Blend4Web Logic`` tree type:
 
 .. image:: src_images/logic_editor/logic_editor_tree_type.png
    :align: center
    :width: 100%
 
-Затем выбрать дерево для редактирования:
+Then select the required node tree:
 
 .. image:: src_images/logic_editor/logic_editor_select_tree.png
    :align: center
@@ -43,501 +38,937 @@ Blender необходимо установить галочку ``Logic Editor`
    
 |
 
-Создание нод осуществляется привычным для Blender сочетанием клавиш
-``Shift+A``.
+Nodes are created by using standard Blender keyboard shortcut ``Shift+A``.
 
-Ноды  - это логические блоки, выполнение которых начинается с
-``Entry Point``, которая имеет один единственный выход. Почти все остальные 
-ноды помимо одного или двух выходов имеют также входы, таким образом они
-могут быть вставлены в любое место в дереве. Ноды без выходов, например 
-``Page Redirect``, могут быть вставлены только в конец какой-либо ветви.
-Ноды с двумя выходами позволяют ветвить алгоритм в зависимости от
-успеха/провала указанного условия, например ``Conditional Jump``.
+The nodes themselves are logic blocks that are executed from the ``Entry Point`` node which has no inputs and only one output. All other nodes have both inputs and outputs, and can be inserted in any place of a logic tree. The exception is ``Page Redirect`` node, which can be inserted only to the end of the node tree. The nodes which have two outputs allow branching, thus the next leave is selected based on condition specified for such nodes.
 
-Для реализации сложной логики предусмотрены числовые переменные, называемые
-регистрами. Каждый из 8 регистров может хранить в себе одно числовое значение.
-Регистры могут быть использованы для хранения какого-либо состояния сцены
-(например, это может быть счётчик проигрываемых анимаций, количество жизней,
-оставшихся у персонажа и т.д.).
+For implementing complicated logic there are variables that can have either numeric or string values. The variables can be used for storing some scene state (e.g. this can be a counter of animation playbacks, character’s health points etc).
 
-Пример использования Logic Editor:
+Logic Editor usage example:
 
 .. image:: src_images/logic_editor/logic_editor_example.png
    :align: center
    :width: 100%
 
-Ноды
-====
+All available nodes are described below.
 
-Ниже рассмотрены все возможные варианты нод.
+Control Flow
+============
 
 .. _nla_entry:
 
 Entry Point
 -----------
 
-Является точкой начала выполнения скрипта. Использование нескольких точек входа
-позволяет эмулировать многопоточное выполнение.
+This is where the script starts. By using multiple entry points you can create multi-threaded applications.
 
 .. image:: src_images/logic_editor/logic_editor_entry.png
     :align: center
     :width: 100%
 
-Входные параметры
+Input Parameters
+................
+
+None.
+
+Output Parameters
 .................
-
-Отсутствуют.
-
-Выходные параметры
-..................
 
 *Next*
-    Следующая нода.
+    Next node.
 
-Внутренние параметры
-....................
+Internal Parameters
+...................
 
-Отсутствуют.
+*Run From Script*
+    If this parameter is enabled, the entry point can be triggered via API by using the :b4wref:`logic_nodes.run_entrypoint` method.
 
-.. _nla_play_timeline:
+.. _nla_switch_select:
 
-Play Timeline и Stop Timeline
------------------------------
+Switch Select
+-------------
 
-Позволяют управлять NLA анимацией. ``Play Timeline`` проигрывать участок NLA, 
-начиная с кадра, на который указывает маркер.
-Анимация воспроизводится до следующего маркера, либо до конца шкалы времени
-сцены, после чего управление переходит к следующей ноде. ``Stop Timeline``
-останавливает воспроизведение.
+Can be used to trace the selection of any object from the object list.
 
-.. image:: src_images/logic_editor/logic_editor_timeline.png
-   :align: center
-   :width: 100%
+.. image:: src_images/logic_editor/logic_editor_switch_select.png
+    :align: center
+    :width: 100%
 
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
-
-*Next*
-    Следующая нода.
-
-Внутренние параметры
-....................
-
-*Start Marker*
-    Кадр, с которого должна воспроизводиться анимация. Если не указан, анимация воспроизводится с первого кадра и может работать некорректно.
-
-*End Marker*
-    Кадр, на котором проигрывание анимации должно остановиться. Если не указан, анимация воспроизводится до окончания шкалы времени и может работать некорректно.
-   
-
-.. _nla_select_play:
-
-Play Animation
---------------
-Используется для воспроизведения анимации объекта. Проигрываемая анимация может иметь один из трёх типов:
-
-Обычный Action:
-
-.. image:: src_images/logic_editor/play_anim_action.png
-   :align: center
-   :width: 100%
-
-Шейдерный Action:
-
-.. image:: src_images/logic_editor/play_anim_nodetree.png
-   :align: center
-   :width: 100%
-
-Система частиц:
-
-.. image:: src_images/logic_editor/play_anim_particle.png
-   :align: center
-   :width: 100%
-
-Входные параметры
+Output Parameters
 .................
 
-*Previous*
-    Предыдущая нода.
+*<object name> Hit*
+    This parameter will pass the control to the next node if the user selects (with a mouse or by touch) an object mentioned in the parameter’s name. The ``Switch Select`` node has one such parameter by default, but you can add new ones and remove existing ones (the node can even have no such parameters).
 
-Выходные параметры
-..................
+*Miss*
+    This parameter will pass the control to the next node if the user hasn’t selected any of the objects specified in the ``Switch Select`` node.
 
-*Next*
-    Следующая нода.
-
-Внутренние параметры
-....................
+Internal Parameters
+...................
 
 *Object*
-    Имя объекта, анимацию которого следует воспроизвести.
+    One of the objects that the user can select. These parameters are automatically created and deleted when you create or delete a ``Hit`` parameter. The number of such parameters is always equal to the number of the ``Hit`` parameters.
 
-*Anim. Name*
-    Имя анимации, которую следует воспроизвести. В случае, если имя анимации не указано, проигрывается вся временная шкала.
+.. _nla_delay:
 
-*Behavior*
-    Задаёт поведение анимации. Может иметь одно из следующих значений:
+Delay
+-----
 
-    * *Finish Stop* - анимация воспроизводится один раз.
-    * *Finish Reset* - анимация воспроизводится один раз, после её завершения объект возвращается в исходное состояние.
-    * *Loop* - анимация воспроизводится циклически до тех пор, пока не остановлена с помощью ноды ``Stop Animation``.
+Make a delay before going to the next node.
 
-*Do Not Wait*
-    Если этот параметр активирован, нода ``Play Animation`` передаст управление следующей ноде сразу после начала воспроизведения анимации. В противном случае управление будет передано только после окончания анимации.
+.. image:: src_images/logic_editor/logic_editor_delay.png
+    :align: center
+    :width: 100%
 
-.. _nla_stop_anim:
-
-Stop Animation
---------------
-Используется для остановки анимации объекта.
-
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
+Output Parameters
+.................
 
 *Next*
-    Следующая нода.
+    Next node.
 
-Внутренние параметры
-....................
-*Set First Frame*
-    Вернуться к первому кадру после того, как анимация остановлена.
+Internal Parameters
+...................
 
-Select & Play Timeline (Deprecated)
------------------------------------
-.. note::
-
-    Устарел! Не рекомендуется использовать!
-    Взамен следует использовать комбинацию нод ``Switch Select`` и ``Play Timeline``.
-
-Ожидать, когда пользователь выберет объект (с помощью клика мышью в версии
-движка для десктопа, либо нажатия на экране в мобильной версии). Если выбран
-объект, указанный в параметрах ноды, начать играть анимацию аналогично ноде
-``Play Timeline``, если же был выбран любой другой объект - немедленно передать управление
-следующей ноде.
-
-Select & Play Animation (Deprecated)
-------------------------------------
-.. note::
-
-    Устарел! Не рекомендуется использовать!
-    Взамен следует использовать комбинацию нод ``Switch Select`` и ``Play Animation``.
-
-Ожидать, когда пользователь выберет объект (с помощью клика мышью в версии
-движка для десктопа, либо нажатия на экране в мобильной версии). Если выбран
-объект, указанный в параметрах ноды, начать играть анимацию аналогично ноде
-``Play Animation``, если же был выбран любой другой объект - немедленно передать управление
-следующей ноде. 
-
-Select (Deprecated)
--------------------
-.. note::
-
-    Устарел! Не рекомендуется использовать!
-    Взамен следует использовать ноду ``Switch Select``
-
-Аналогично ноде ``Select & Play``, за исключением того, что вместо анимации
-осуществляется переход. Указанная функция позволяет реализовать более сложную
-логику, поскольку появляется возможность распознавания результата выбора
-пользователя.
+*Value*
+    Time (in seconds) that will pass before the activation of the next node. Set to zero by default. Can be set manually or through a variable (if the ``Variable`` parameter is enabled).
 
 .. _nla_jump:
 
 Conditional Jump
 ----------------
 
-Перейти к указанной ноде в случае выполнения выбранного условия. В качестве
-параметров условия (операндов) могут выступать также регистры, которые
-активируются с помощью соответствующих переключателей.
+Go to the specified node if the certain condition is met. The parameters (operands) can also be variables that are activated using the corresponding switches.
 
 .. image:: src_images/logic_editor/logic_editor_conditional_jump.png
     :align: center
     :width: 100%
 
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
+Output Parameters
+.................
 
 *True*
-    Утверждение истинно.
+    Condition is true.
 
 *False*
-    Утверждение ложно.
+    Condition is false.
 
-Внутренние параметры
-....................
+Internal Parameters
+...................
 
 *Condition*
-    Логическое утверждение. Может иметь один из следующих типов:
+    Logical condition. Can have one of the following types:
 
-    * *Equal* - первый операнд равен второму.
-    * *Not Equal* - первый операнд не равен второму.
-    * *Less Than* - первый операнд меньше второго.
-    * *Greater Than* - первый операнд больше второго.
-    * *Less Than Or Equal* - первый операнд меньше либо равен второму.
-    * *Greater Than Or Equal* - первый операнд больше либо равен второму.
+    * *Equal* - first operand is equal to the second.
+    * *Not Equal* - first operand is not equal to the second.
+    * *Less Than* - first operand is less than the second.
+    * *Greater Than* - first operand is greater than the second.
+    * *Less Than Or Equal* - first operand is less than or equal to the second.
+    * *Greater Than Or Equal* - first operand is greater than or equal to the second.
 
 *Operand1*
-    Первый операнд логического выражения. Должен иметь численное значение. Может быть задан в самой ноде либо с помощью ссылки на один из восьми регистров.
+    First operand of the logical condition. Should have a numeric value. Can be specified in the node or can be a link to one of the variables.
 
 *Operand2*
-    Второй операнд логического выражения. Аналогичен первому.
+    Second operand of the logical condition. Works the same way as the first.
 
-.. _nla_var_store:
+JS Callback
+-----------
 
-Variable Store
---------------
+Can be used to call custom JavaScript callback defined in your Blend4Web application.
 
-Записать числовое значение в переменную.
-
-.. image:: src_images/logic_editor/logic_editor_variable_store.png
+.. image:: src_images/logic_editor/logic_editor_js_callback.png
     :align: center
     :width: 100%
 
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
-
-*Next*
-    Следующая нода.
-
-Внутренние параметры
-....................
-
-*Var. n.*
-    Имя переменной. Может быть выбрано из списка восьми регистров либо задано самостоятельно (если включен параметр ``New variable``).
-
-*New variable*
-    Если этот параметр активирован, имя переменной может быть задано самостоятельно (а не выбрано из списка регистров). Может применяться для обмена данными с сервером.
-
-*Num.*
-    Численное значение, присваиваемое переменной. По умолчанию равно нулю.
-
-.. _nla_math:
-
-Math Operation
---------------
-
-Выполнить математическую операцию и сохранить результат в регистр. Любой из
-параметров (операндов) может быть либо числовым значением, либо регистром.
-
-.. image:: src_images/logic_editor/logic_editor_math_operation.png
-    :align: center
-    :width: 100%
-
-Входные параметры
+Output Parameters
 .................
 
-*Previous*
-    Предыдущая нода.
+*Next*
+    Next node.
 
-Выходные параметры
-..................
+Internal Parameters
+...................
+
+*Callback ID*
+    The ID of a JavaScript function that will be called by the node.
+
+*In Params*
+    A list of the input parameters of the function. Each parameter can be either a variable or a link to a scene object. The number of the input parameters can be adjusted. By default, this list is empty.
+    
+    Input parameters are transferred to the callback function as an array that servers as the first argument of the function.
+
+*Param <param_number>*
+    Specifies an input parameter. This parameter can be a variable (``R1`` by default) or a link to a scene object, depending on the value of the ``Type`` parameter (each one of these parameters always has a corresponding ``Type`` parameter).
+
+*Type*
+    The type of the corresponding input parameter. It can have one of the two values: ``Variable`` (in this case, one of the variables will be used as the parameter) and ``Object`` (a link to a scene object).
+
+*Out Params*
+    A list of the output parameters. Empty by default. The number of the output parameters can be adjusted.
+
+    An array that consists of the output parameters serves as the second argument of the callback function.
+
+*Param <param_number>*
+    Specifies one of the variables that will be used as an output parameter. By default, ``R1`` varaible is used.
+
+Animation
+=========
+
+.. _nla_play_timeline:
+
+Play Timeline and Stop Timeline
+-------------------------------
+
+Can be used to control NLA animations. The ``Play Timeline`` node plays NLA fragment starting with a frame specified by the marker. Animation plays until next marker is encountered, or to the end of the scene’s timeline. After that, control passes on to the next node. The ``Stop Timeline`` node stops the playback.
+
+.. image:: src_images/logic_editor/logic_editor_timeline.png
+   :align: center
+   :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
 
 *Next*
-    Следующая нода.
+    Next node.
 
-Внутренние параметры
-....................
+Internal Parameters
+...................
 
-*Operation*
-    Математическая операция, производимая над операндами. Может иметь один из следующих типов:
+*Start Marker*
+    First frame of the animation. If not specified, an animation plays from the start of the timeline and may not work correctly.
 
-    * *Random* - случайный выбор одной из нижеперечисленных операций.
-    * *Add* - сумма операндов.
-    * *Multiply* - произведение операндов.
-    * *Subtract* - разность операндов.
-    * *Divide* - частное операндов.
+*End Marker*
+    Last frame of the animation. If not specified, an animation plays to the end of the timeline and may not work correctly.
 
-*Operand1*
-    Первый операнд. Может представлять собой численное значение либо ссылку на один из регистров (в случае, если активирован параметр ``Variable``).
+.. _nla_get_timeline:
 
-*Operand2*
-    Второй операнд. Аналогичен первому.
+Get Timeline
+------------
+
+This node can be used to get the current frame of an NLA animation or a timeline.
+
+.. image:: src_images/logic_editor/logic_editor_get_timeline.png
+   :align: center
+   :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*NLA Timeline*
+    If this parameter is enabled, the node will return the current frame of an NLA animation. If it is disabled, the node will return the current frame of the timeline. Enabled by default.
 
 *Destination*
-    Регистр, в который помещается результат операции.
+    Specifies a variable to store the number of the current frame. Set to ``R1`` by default.
+
+.. _nla_select_play:
+
+Play Animation
+--------------
+Can be used to play object’s animation. An animation can be one of the following types:
+
+Regular Action:
+
+.. image:: src_images/logic_editor/play_anim_action.png
+   :align: center
+   :width: 100%
+
+Shader Action:
+
+.. image:: src_images/logic_editor/play_anim_nodetree.png
+   :align: center
+   :width: 100%
+
+Particle system:
+
+.. image:: src_images/logic_editor/play_anim_particle.png
+   :align: center
+   :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Object*
+    Name of the object, animation of which will be played.
+
+*Anim. Name*
+    Name of an animation to play. If not specified, the entire timeline will be played.
+
+*Behavior*
+    Specifies animation behavior. Can have one of the following values:
+
+    * *Finish Stop* - animation will be played once.
+    * *Finish Reset* - animation will be played once, then the object will return to the starting point.
+    * *Loop* - animation will be playing repeatedly until it is stopped by the ``Stop Animation`` node.
+
+*Do Not Wait*
+    If this parameter is enabled, the ``Play Animation`` node will pass the control to the next node on starting the animation playback. If it isn’t, the control will be passed to the next node only after playback is finished.
+
+.. _nla_stop_anim:
+
+Stop Animation
+--------------
+Can be used to stop an object’s animation.
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+*Set First Frame*
+    Go back to the first frame after the animation has been stopped.
+
+Camera
+======
+
+.. _nla_move_camera:
+
+Move Camera
+-----------
+
+Can be used to move the camera, including smooth interpolation of its position.
+
+.. image:: src_images/logic_editor/logic_editor_move_camera.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Camera*
+    A camera that will be moved.
+
+*Location*
+    An object to which the camera will move. The camera’s coordinates will be the same as the object’s after the movement is finished.
+
+*Target*
+    The camera will point in the direction of this object after being moved.
+
+*Duration*
+    Time (in seconds) that the camera will spend being moved to a new location. Set to zero by default (and in this case the camera doesn’t actually move, it simply changes its position). It can be specified manually or as a link to a variable (if the ``Variable`` parameter is enabled).
+
+Object
+======
 
 .. _nla_show_object:
 
 Show Object
 -----------
 
-Используется для отображения объектов.
+Can be used to show 3D objects.
 
 .. image:: src_images/logic_editor/logic_editor_show_object.png
     :align: center
     :width: 100%
 
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
+Output Parameters
+.................
 
 *Next*
-    Следующая нода.
+    Next node.
 
-Внутренние параметры
-....................
+Internal Parameters
+...................
 
 *Object*
-    Объект, который нужно отобразить.
+    An object to show.
 
 .. _nla_hide_object:
 
 Hide Object
 -----------
 
-Используется для скрытия объекта.
+Can be used to hide 3D objects.
 
 .. image:: src_images/logic_editor/logic_editor_hide_object.png
     :align: center
     :width: 100%
 
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
+Output Parameters
+.................
 
 *Next*
-    Следующая нода.
+    Next node.
 
-Внутренние параметры
-....................
+Internal Parameters
+...................
 
 *Object*
-    Объект, который нужно скрыть.
+    An object to hide.
 
-.. _nla_page_redirect:
+Transform Object
+----------------
 
-Page Redirect
--------------
+Can be used to transform object’s location, size and rotation angles.
 
-Служит для перенаправления на другие веб-страницы. По этой причине нода всегда находится в конце логической цепочки и не имеет выходных параметров.
-
-.. image:: src_images/logic_editor/logic_editor_page_redirect.png
+.. image:: src_images/logic_editor/logic_editor_transform_object.png
     :align: center
     :width: 100%
 
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
-
-Отсутствуют.
-
-Внутренние параметры
-....................
-
-*Url*
-    Адрес страницы, которя будет открыта. По умолчанию имеет значение "https://www.blend4web.com".
-
-.. _nla_page_param:
-
-Page Param
-----------
-
-Позволяет сохранить произвольный параметр веб-страницы в выбранном числовом регистре.
-
-.. image:: src_images/logic_editor/logic_editor_page_param.png
-    :align: center
-    :width: 100%
-
-Входные параметры
+Output Parameters
 .................
-
-*Previous*
-    Предыдущая нода.
-
-Выходные параметры
-..................
 
 *Next*
-    Следующая нода.
+    Next node.
 
-Внутренние параметры
-....................
+Internal Parameters
+...................
 
-*Param Name*
-    Имя параметра веб-страницы.
+*Object*
+    An object that needs to be translated.
+
+*Space*
+    This parameter defines the coordinate space that will be used to transform the object. It can have one of the following values:
+
+    * ``World`` - global coordinate space.
+    * ``Parent`` - local coordinate system of the parent of the object specified by the ``Object`` parameter. Parent object's origin point is used as the center of coordinates, while its angles of rotation define the directions of the coordinate axes. 
+    * ``Local`` - local coordinate space of the selected object. Similar to the ``Parent`` coordinate space, but in this case, the origin point of the object itelf is used as the origin of coordinates.
+
+    Set to ``World`` by default.
+
+*Location*
+    How the object will move along the ``X``, ``Y`` and ``Z`` axes. By default, all three parameters are set to zero. Values can be specified in the node itself or through the variables (if the ``Variable`` option is enabled).
+
+*Rotation*
+    Object’s rotation around the ``X``, ``Y`` and ``Z`` axes. All three values are set to zero by default. Can be specified directly in the node or through the variables (if the ``Variable`` option is enabled).
+
+*Scale*
+    Object’s size. Can be specified directly or through a variable (if the ``Variable`` parameter is enabled). Set to 1 by default.
+
+*Duration*
+    Time (in seconds) that the transformation will take. It can be specified both directly or with a variable (to do this, the ``Variable`` parameter should be enabled). Set to zero by default.
+
+.. _nla_move_to:
+
+Move To
+-------
+
+Can be used to move objects.
+
+.. image:: src_images/logic_editor/logic_editor_move_to.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Object*
+    An object that you need to move.
 
 *Destination*
-    Регистр, в который следует сохранить параметр.
+    A target (another object or a light source, camera or anything else) to which the selected object will move. The object’s coordinated will be the same as the target’s after the movement is finished.
+
+*Duration*
+    Time (in seconds) that the object will spend moving to the new location. By default, this parameter is set to zero (and in this case, the object doesn’t actually move, it just changes its position in a moment). It can be set manually or with a variable (available only if the ``Variable`` parameter is enabled).
+
+.. _nla_shape_key:
+
+Apply Shape Key
+---------------
+
+Set the Shape Key factor.
+
+.. image:: src_images/logic_editor/logic_editor_apply_shape_key.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Object*
+    An object that needs to be transformed.
+
+*Shape Key*
+    Shape key that will be applied to the object.
+
+*Value*
+    How much the shape key will influence the object. This value can be set directly in the node or using a variable. The value should be between 0 and 1.
+
+.. _nla_outline:
+
+Outline
+-------
+
+Controls object outlining effect.
+
+.. image:: src_images/logic_editor/logic_editor_outline.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Object*
+    Any changes of the outline effect will be applied only to an object specified by this parameter.
+
+*Operation*
+    Specifies an operation that will be done to the object’s outline. This parameter can have one of the following values:
+
+    * *PLAY* enables outline animation
+    * *STOP* disables it
+    * *INTENSITY* can be used to set intensity of the object’s outline
+
+*Intensity*
+    Outline intensity. This parameter is only available if the ``Operation`` parameter is set to ``INTENSITY``. The value can be set manually or via variable (if the ``Variable`` parameter is enabled).
+
+.. _nla_shader_node:
+
+Set Shader Node Param
+---------------------
+
+Can be used to set the value for the shader node. Currently, only ``Value`` and ``RGB`` nodes are supported.
+
+.. image:: src_images/logic_editor/logic_editor_set_shader_node_param.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Object*
+    An object that has material that needs to be edited.
+
+*Material*
+    Material that needs to be edited. It should use nodes.
+
+*Node*
+    A node that has parameters that can be changed. For now, only ``Value`` and ``RGB`` nodes are supported.
+
+*Parameters*
+    Editable parameters of the selected node. They can be set in the node itself or through the variables (if the ``Variable`` parameter is enabled).
+
+.. _nla_inherit_material:
+
+Inherit Material
+----------------
+
+Copy attributes from one material to another.
+
+.. image:: src_images/logic_editor/logic_editor_inherit_material.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Source*
+    An object that has a material that will be inherited.
+
+*Material*
+    The material to inherit.
+
+*Destination*
+    An object that will inherit selected material.
+
+*Material*
+    The material that will be replaced by the inherited one.
+
+Operations
+==========
+
+.. _nla_var_store:
+
+Variable Store
+--------------
+
+Saves numerical or string value to a variable.
+
+.. image:: src_images/logic_editor/logic_editor_variable_store.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Var. name.*
+    Name of the variable. Can be selected from the list of variables or specified manually (if the ``New variable`` parameter is enabled).
+
+*Var. type*
+    Variable’s type. This parameter can have one of two values: ``Number`` (for numerical variables) and ``String`` (for string variables).
+
+*New Variable*
+    If this parameter is enabled, you can manually input a variable’s name and not just select one of the variables. This can be used to transfer the data between the application and the server.
+
+*Global*
+    Enabling this parameter makes the variable global. Available only if the ``New Variable`` parameter has been enabled.
+
+    .. image:: src_images/logic_editor/logic_editor_variable_global.png
+        :align: center
+        :width: 100%
+
+*Num./Str.*
+    Numeric or string (depending on the ``Var. type`` parameter value) value of the variable.
+
+.. _nla_math:
+
+Math Operation
+--------------
+
+Perform a math operation and store the result in the variables. Any of parameters (operands) can be either a numeric value or a variables.
+
+.. image:: src_images/logic_editor/logic_editor_math_operation.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Operation*
+    Mathematical operation. Can have one of the following types:
+
+    * *Random* generates random value greater than the first operand and less than the second.
+    * *Add* sums the operands.
+    * *Multiply* multiplies the operands.
+    * *Subtract* subtracts the second operand from the first.
+    * *Divide* divides first operand by the second.
+
+*Operand1*
+    First operand. It can be specified in the node or it can be a link to one of the variables (if the ``Variable`` parameter is enabled).
+
+*Operand2*
+    Second operand. Works the same way as the first.
+
+*Destination*
+    The result of the operation will be saved in the variable specified by this parameter.
+
+.. _nla_string:
+
+String Operation
+----------------
+
+Can be used to perform an operation with two strings and save the result to a variable.
+
+.. image:: src_images/logic_editor/logic_editor_string.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Operation*
+    An operation that you need to perform with two strings, which can have one of the following values:
+
+    * *Join* - joins two strings into one.
+    * *Find* - writes the index of the first occurrence of the second string in the first string to the variable. If there is no occurrences, the value of -1 will be written. It should be noted that the first symbol of a string has an index of 0, not 1.
+    * *Replace* replaces first occurrence of the second string in the first string with the third one.
+    * *Split* splits the first string in two using the first occurrence of the second string as a splitting mark.
+    * *Compare* compares two strings. For this operation, you need to specify a logical condition. If this condition is met, a value of 1 will be outputted to the ``Destination`` variable, if it isn’t, zero will be outputted.
+
+*Condition*
+    A logical condition to compare two strings. This parameter is available only if the ``Operation`` parameter is set to ``Compare``. Works the same way as the ``Condition`` parameter of the ``Conditional Jump`` node.
+
+*Operand1*
+    The first string. Can be specified in the node itself or with a variable.
+
+*Operand2*
+    The second string. Works the same way as the first.
+
+*Operand3*
+    This parameter is available only if the ``Operation`` parameter is set to ``Replace``. Can be used to specify the third string, which will replace the first occurrence of the second one.
+
+*Destination*
+    A variable to save the operation’s result.
+
+*Destination2*
+    This parameter is available only if the ``Operation`` parameter is set to ``Split``. Specifies the variable to save the second half of the string that has been split (the first half will be saved to the variable specified by the ``Destination`` parameter).
+
+Sound
+=====
+
+.. _nla_play_sound:
+
+Play Sound
+----------
+
+Can be used to play speaker’s sound.
+
+.. image:: src_images/logic_editor/logic_editor_play_sound.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Speaker*
+    A speaker that will be enabled.
+
+*Do Not Wait*
+    If this parameter is enabled, the control will pass to the next node right after sound playback starts. If it isn’t enabled, the control will pass only when the playback is finished.
+
+.. _nla_stop_sound:
+
+Stop Sound
+----------
+
+Can be used to stop speaker’s sound.
+
+.. image:: src_images/logic_editor/logic_editor_stop_sound.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Speaker*
+    A speaker that will be turned off.
+
+Network
+=======
 
 .. _nla_send_request:
 
 Send Request
 ------------
 
-Позволяет отправить HTTP GET запрос на указанный URL и поместить значения полей 
-ответа в переменные.
+Send an HTTP GET request to the specified URL and save the respond’s fields a variable.
 
 .. image:: src_images/logic_editor/logic_editor_send_request.png
     :align: center
     :width: 100%
 
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
+Output Parameters
+.................
 
 *Next*
-    Следующая нода.
+    Next node.
 
-Внутренние параметры
-....................
+Internal Parameters
+...................
 
 *Method*
-    Метод отправки запроса. Может иметь одно из двух значений:
+    Method of the request. Can have one of two values:
 
-    * *GET* - отправляет запрос на получение данных с сервера.
-    * *POST* - отправляет данные на сервер.
+    * *GET* is used to request data from the server.
+    * *POST* is used to send data to the server.
+
+    Set to ``GET`` by default.
 
 *Url*
-    Адрес, на который следует отправить запрос. По умолчанию имеет значение "https://www.blend4web.com".
+    A web address to send request to. Set to “https://www.blend4web.com” by default.
 
-*Decode Response Params*
-    Список переменных, в которые сохраняются параметры, полученные от сервера. Переменные имеют имена вида ``var0``, ``var1`` и т.д., (полученные с сервера параметры должны иметь точно такие же имена) а их количество может быть настроено. На сегодняшний день значения переменных могут быть только численными.
+*Response Params*
+    Specifies the variable to save the data received from the server.
 
 .. note::
-    Информация, полученная с сервера, должна иметь следующий вид:
+    The data received from the server should look like this:
 
     .. code-block:: json
 
@@ -547,405 +978,219 @@ Send Request
         ...
         }
 
-.. _nla_inherit_material:
+*Content-Type*
+    Indicates the media type of the message content. Consists of a type and a subtype, for example: ``text/plain``. Set to ``Auto`` by default. Can be used to reassign the title of the HTTP request.
 
-Inherit Material
-----------------
+*Request Params*
+    Specifies the variable that contains a JSON object that will be sent to the server.  Available only if the ``Method`` parameter is set to ``POST``. Default value is ``R1``.
 
-Позволяет скопировать атрибуты одного материала на другой.
+.. _nla_json:
 
-.. image:: src_images/logic_editor/logic_editor_inherit_material.png
+JSON
+----
+
+This node can be used to encode and decode complex JSON objects.
+
+.. image:: src_images/logic_editor/logic_editor_json.png
     :align: center
     :width: 100%
 
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
+Output Parameters
+.................
 
 *Next*
-    Следующая нода.
+    Next node.
 
-Внутренние параметры
-....................
+Internal Parameters
+...................
 
-*Source*
-    Объект, которому присвоен материал, который требуется скопировать.
+*JSON*
+    A link to a JSON object that you need to decode or encode. Set to ``R1`` by default.
 
-*Material*
-    Материал, который требуется скопировать.
+*JSON Operation*
+    An operation you need to perform with the JSON object specified by the ``JSON`` parameter. Can have one of two values: ``ENCODE`` to encode the JSON object and ``PARSE`` to decode it. Set to ``ENCODE`` by default.
+
+*Members*
+    A list of variables that will be used to either store the decoded data or to encode a JSON object (depending on the value of the ``JSON Operation`` parameter). The variables always have names like ``var0``, ``var1`` and so on, and their quantity can be adjusted.
+
+.. _nla_page_param:
+
+Page Param
+----------
+
+Allows to store any web page parameter in a given variable.
+
+.. image:: src_images/logic_editor/logic_editor_page_param.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Param Name*
+    The name of the web page parameter.
 
 *Destination*
-    Объект, которому требуется присвоить скопированный материал.
+    A variable that will be used to save the parameter.
 
-*Material*
-    Материал, который будет заменен скопированным материалом.
+.. _nla_page_redirect:
 
-.. _nla_shader_node:
-
-Set Shader Node Param
----------------------
-
-Позволяет установить значение одного или нескольких параметров шейдерной ноды. В данный момент поддерживаются ноды ``Value`` и ``RGB``.
-
-.. image:: src_images/logic_editor/logic_editor_set_shader_node_param.png
-    :align: center
-    :width: 100%
-
-Входные параметры
-.................
-
-*Previous*
-    Предыдущая нода.
-
-Выходные параметры
-..................
-
-*Next*
-    Следующая нода.
-
-Внутренние параметры
-....................
-
-*Object*
-    Объект, материал которого нужно отредактировать.
-
-*Material*
-    Материал, параметры которого нужно изменить. Должен использовать ноды.
-
-*Node*
-    Нода, параметры которой нужно изменить. На данный момент поддерживаются только ноды ``Value`` и ``RGB``.
-
-*Parameters*
-    Доступные для редактирования параметры выбранной ноды. Значения этих параметров могут быть заданы непосредственно в самой ноде или взяты из указанных регистров (для этого нужно активировать параметр ``Variable``).
-
-.. _nla_delay:
-
-Delay
------
-
-Позволяет установить задержку перед выполнением следующей ноды.
-
-.. image:: src_images/logic_editor/logic_editor_delay.png
-    :align: center
-    :width: 100%
-
-Входные параметры
-.................
-
-*Previous*
-    Предыдущая нода.
-
-Выходные параметры
-..................
-
-*Next*
-    Следующая нода.
-
-Внутренние параметры
-....................
-
-*Value*
-    Время (в секундах), на которое задерживается передача управления следующей ноде. По умолчанию равно нулю. Может быть задано в явном виде или же взято из регистра (в случае, если активирован параметр ``Variable``).
-
-.. _nla_shape_key:
-
-Apply Shape Key
----------------
-
-Позволяет задать значение параметра Shape Key.
-
-.. image:: src_images/logic_editor/logic_editor_apply_shape_key.png
-    :align: center
-    :width: 100%
-
-Входные параметры
-.................
-
-*Previous*
-    Предыдущая нода.
-
-Выходные параметры
-..................
-
-*Next*
-    Следующая нода.
-
-Внутренние параметры
-....................
-
-*Object*
-    Объект, к которому нужно применить трансформацию.
-
-*Shape Key*
-    Ключ формы, который нужно применить к объекту.
-
-*Value*
-    Степень влияния выбранного ключа формы на объект. Значение может быть задано в самой ноде или взято из регистра. Изменяется в пределах от 0 до 1.
-
-.. _nla_outline:
-
-Outline
--------
-
-Позволяет управлять эффектом обводки объекта.
-
-.. image:: src_images/logic_editor/logic_editor_outline.png
-    :align: center
-    :width: 100%
-
-Входные параметры
-.................
-
-*Previous*
-    Предыдущая нода.
-
-Выходные параметры
-..................
-
-*Next*
-    Следующая нода.
-
-Внутренние параметры
-....................
-
-*Object*
-    Объект, эффект обводки которого требуется настроить.
-
-*Operation*
-    Операция, которую следует произвести с обводкой объекта. Этот параметр может принимать одно из следующих значений:
-
-    * *PLAY* - включает анимацию обводки
-    * *STOP* - выключает её
-    * *INTENSITY* - позволяет настраивать интенсивность обводки
-
-*Intensity*
-    Интенсивность обводки объекта. Этот параметр появляется только если параметр ``Operation`` имеет значение ``INTENSITY``. Интенсивность может быть задана численно или взята из регистра (для этого нужно активировать параметр ``Variable``).
-
-.. _nla_move_camera:
-
-Move Camera
------------
-
-Позволяет перемещать камеру, в том числе с плавной интерполяцией положения.
-
-.. image:: src_images/logic_editor/logic_editor_move_camera.png
-    :align: center
-    :width: 100%
-
-Входные параметры
-.................
-
-*Previous*
-    Предыдущая нода.
-
-Выходные параметры
-..................
-
-*Next*
-    Следующая нода.
-
-Внутренние параметры
-....................
-
-*Camera*
-    Камера, которую необходимо переместить.
-
-*Location*
-    Объект, к которому перемещается камера. После того, как перемещение завершится, координаты камеры и объекта будут совпадать.
-
-*Target*
-    Объект, в направлении которого камера будет развёрнута после перемещения.
-
-*Duration*
-    Время (в секундах), которое займёт перемещение. По умолчанию равно нулю (в этом случае камера перемещается мгновенно). Может быть задано вручную или с помощью ссылки на регистр (эта возможность появляется при активации параметра ``Variable``).
-
-.. _nla_play_sound:
-
-Play Sound
-----------
-
-Позволяет воспроизводить звук спикера.
-
-.. image:: src_images/logic_editor/logic_editor_play_sound.png
-    :align: center
-    :width: 100%
-
-Входные параметры
-.................
-
-*Previous*
-    Предыдущая нода.
-
-Выходные параметры
-..................
-
-*Next*
-    Следующая нода.
-
-Внутренние параметры
-....................
-
-*Speaker*
-    Источник звука, который требуется активировать.
-
-*Do Not Wait*
-    Если этот параметр активирован, управление будет передано следующей ноде сразу же после того, как началось воспроизведение звука. В противном случае это произойдёт только после того, как звук закончится.
-
-.. _nla_stop_sound:
-
-Stop Sound
-----------
-
-Позволяет останавливать звук спикера.
-
-.. image:: src_images/logic_editor/logic_editor_stop_sound.png
-    :align: center
-    :width: 100%
-
-Входные параметры
-.................
-
-*Previous*
-    Предыдущая нода.
-
-Выходные параметры
-..................
-
-*Next*
-    Следующая нода.
-
-Внутренние параметры
-....................
-
-*Speaker*
-    Источник звука, который нужно отключить.
-
-.. _nla_switch_select:
-
-Switch Select
+Page Redirect
 -------------
 
-Позволяет отследить событие выбора какого-либо объекта из списка объектов.
+Can be used to redirect the browser to another page. This node always marks the end of the node tree and doesn’t have any output parameters.
 
-.. image:: src_images/logic_editor/logic_editor_switch_select.png
+.. image:: src_images/logic_editor/logic_editor_page_redirect.png
     :align: center
     :width: 100%
 
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
-
-*<имя объекта> Hit*
-    Этот параметр передаёт управление следующей ноде в случае, если выбран объект, упомянутый в его названии. По умолчанию нода ``Switch Select`` имеет один параметр этого типа, также присутствует возможность создавать новые и удалять уже существующие (нода может и не иметь ни одного такого параметра).
-
-*Miss*
-    Этот параметр передаёт управление следующей ноде в случае, если не выбран ни один объект из списка.
-
-Внутренние параметры
-....................
-
-*Object*
-    Один из объектов, доступных для выбора пользователю. Такие параметры создаются и удаляются автоматически при создании или удалении выходных параметров типа ``Hit``.
-
-.. _nla_move_to:
-
-Move To
--------
-
-Позволяет перемещать объекты.
-
-.. image:: src_images/logic_editor/logic_editor_move_to.png
-    :align: center
-    :width: 100%
-
-Входные параметры
+Output Parameters
 .................
 
-*Previous*
-    Предыдущая нода.
+None.
 
-Выходные параметры
-..................
+Internal Parameters
+...................
 
-*Next*
-    Следующая нода.
+*Url*
+    Web address of a page that will be opened. Set to “https://www.blend4web.com” by default.
 
-Внутренние параметры
-....................
-
-*Object*
-    Объект, который требуется переместить.
-
-*Destination*
-    Цель (объект, источник света, самера и т.п.), к которой перемещается объект. После того, как перемещение завершится, координаты объекта и цели будут совпадать.
-
-*Duration*
-    Время (в секундах), которое займёт перемещение. По умолчанию равно нулю (в этом случае объект не движется, а мгновенно перемещается к точке назначения) Может быть задано как в самой ноде, так и с помощью регистра (если активирован параметр ``Variable``).
+Debug
+=====
 
 .. _nla_console_print:
 
 Console Print
 -------------
 
-Позволяет выводить значения переменных и дополнительную информацию в консоли браузе. Может использоваться для отладки логики.
+This node prints variables’s values and additional text to the web browser console. It can be used for debug purposes.
 
 .. image:: src_images/logic_editor/logic_editor_console_print.png
     :align: center
     :width: 100%
 
-Входные параметры
-.................
+Input Parameters
+................
 
 *Previous*
-    Предыдущая нода.
+    Previous node.
 
-Выходные параметры
-..................
+Output Parameters
+.................
 
 *Next*
-    Следующая нода.
+    Next node.
 
-Внутренние параметры
-....................
+Internal Parameters
+...................
 
 *Message*
-    Сообщение, которые будет напечатано в консоли вместе со значениями переменных.
+    A message that will be printed to the console along with the values.
 
-<имя регистра>
-    Имя одного из регистров, значение которого нужно вывести в консоли. По умолчанию нода ``Console Print`` имеет один параметр такого типа, также имеется возможность создавать новые и удалять уже существующие (нода может и не иметь ни одного параметра этого типа).
+<variable name>
+    A variable that will be printed to the console. By default, a ``Console Print`` node has one such parameter, but you can add new and delete existing ones (the node might not even have such parameters at all).
 
-.. _nla_debug:
+Deprecated
+==========
 
-Отладка
+Select (Deprecated)
+-------------------
+.. note::
+
+    Deprecated! Isn’t recommended to use. Instead, using a ``Switch Select`` node is recommended.
+
+It is similar to the ``Select & Play`` node, except the transition happens instead of animation. This function allows to implement a complicated logic because in this case there is a possibility to identify the user selection results.
+
+Select & Play Timeline (Deprecated)
+-----------------------------------
+.. note::
+
+    Deprecated! Isn’t recommended to use. Instead, using a combination of ``Switch Select`` and ``Play Timeline`` nodes is recommended.
+
+Wait until the user selects an object (on desktops - with a mouse click, on mobile devices - with a touch). If the object, which is specified in this node, is selected - then start the animation similar to the ``Play Timeline`` node. If any other object is selected - then immediately transfer control to the next node.
+
+Select & Play Animation (Deprecated)
+------------------------------------
+.. note::
+
+    Deprecated! Isn’t recommended to use. Instead, using a combination of ``Switch Select`` and ``Play Timeline`` nodes is recommended.
+
+Wait until the user selects an object (on desktops - with a mouse click, on mobile devices - with a touch). If the object, which is specified in this node, is selected - then start the animation similar to the ``Play Animation`` node. If any other object is selected - then immediately transfer control to the next node.
+
+Layout
+======
+
+.. _nla_empty:
+
+Empty
+-----
+
+This is a simple pass-through node that does not perform any operations on its own. It can be used to combine several logic threads into one or simply to make the logic node setup easier to read and understand.
+
+.. image:: src_images/logic_editor/logic_editor_empty.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node (or several nodes).
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+None.
+
+.. _nla_reroute:
+
+Reroute
 -------
 
-Для отладки имеется возможность отключения (muting) нод. Для этого необходимо
-выделить ноду и нажать горячую клавишу ``M``. Отключенная нода не выполняется,
-но при этом передает управление следующей ноде. Если у отключенной ноды имеется
-несколько выходов, то будет происходить выполнение ветки со стороны выхода отрицательного
-результата (``Miss``, ``False``).
+Logic Editor also has ``Reroute`` elements, the nodes that don’t do anything aside from passing the control to the next node or to the next ``Reroute`` element. Such elements can be used to create cyclic structures or to make the node tree easier to read and understand.
 
-.. _nla_other:
-
-Прочие элементы
-===============
-
-В редакторе логики также присутствуют элементы ``Reroute`` - специальные ноды, который не выполняют никаких операций, а только передают управление следующей ноде (или следующему элементу ``Reroute``). Они могут применяться для создания циклических структур или для того, чтобы сделать логическую цепочку более понятной и лёгкой для восприятия.
+Unlike the ``Empty`` node, ``Reroute`` element can only handle a single logic thread.
 
 .. image:: src_images/logic_editor/logic_editor_reroute.png
     :align: center
     :width: 100%
 
 .. note::
-    Выходной параметр не может быть подключён к входному параметру той же ноды.
-    В случае, когда это требуется сделать (например, для того, чтобы зациклить выполнение какой-либо операции), следует использовать ``Reroute``.
+    Output parameter can’t be connected to the same node’s input parameter. If you need to do this (to make a cycle, for example), you should use ``Reroute`` elements.
+
+.. _nla_debug:
+
+Debugging
+=========
+
+For debugging purposes some nodes inside logic tree can be muted. To do that select the required node and press the ``M`` key. Muted nodes are not evaluated and simply pass control to the next ones. If the muted node has two outputs the execution continues from the output with negative result (``Miss``, ``False``).

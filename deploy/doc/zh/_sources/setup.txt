@@ -1,0 +1,129 @@
+
+安装和更新
+**********
+
+
+目录
+^^^^
+
+* 安装和更新
+
+  * 安装顺序
+
+    * 安装Blender
+
+    * 解压缩文件归档
+
+    * 安装Blender
+
+    * Switching to Blend4Web Mode
+
+  * 更新
+
+    * 更新 SDK
+
+    * 导出和查看场景
+
+
+安装顺序
+========
+
+
+安装Blender
+-----------
+
+直接在 Blender 中创作 3D 场景，这是开放源码软件和免费分发软件。
+
+安装之前，请下载并安装兼容的Blender版本，根据此 表.
+
+应使用当前的稳定版本的Blender。它可以从 官方网站 下载 。
+
+[图片]
+
+
+解压缩文件归档
+--------------
+
+稳定版作为压缩包发布 ("blend4web_sdk_free_YY_MM.zip" -- 免费 SDK,
+"blend4web_sdk_pro_YY_MM.zip" -- 商业 SDK). 只要在某处解开这个压缩包。
+
+
+安装Blender
+-----------
+
+1. 打开Blender。
+
+2. 打开用户首选项面板  "File > User Preferences...".
+
+3. 打开 "File" 选项卡。
+
+4. 在 "Scripts" 中设置 SDK 目录的路径。
+
+5. 单击 "Save User Settings" 按钮。
+
+      [图片]
+
+6. 重新启动Blender。
+
+7. 打开用户首选项面板  "File > User Preferences...".
+
+8. 打开 "File" 选项卡。
+
+9. Enable the *Blend4Web* add-on.
+
+10. 单击 "Save User Settings" 按钮。
+
+       [图片]
+
+*验证是否工作:*
+
+在 "File > Export" 菜单 "Blend4Web (.json)" 和 "Blend4Web (.html)" 选
+项应该出现。
+
+注解: 如果您打算使用只用法线编辑器，你可以考虑安装  Blend4Web 插件
+  而不是 SDK。插件只能导出场景到  HTML格式 和有限功能 (例如，它没有
+  项目管理 ，示例场景，用户手册，等等)，但它仍然拥有一切让你可以创建一
+  个简单的 应用程序。它可以和其他  Blender插件  的安装方式相同。
+
+
+
+
+Switching to Blend4Web Mode
+---------------------------
+
+为了查看该引擎设置，从顶部面板菜单中选择Blend4Web：
+
+[图片]
+
+
+更新
+====
+
+
+更新 SDK
+--------
+
+在更新之前，我们建议您使用 project export 工具备份的所有开发中的项目.
+
+有两种方法来更新 SDK。
+
+首先，可以完全删除 SDK 文件夹中，在那之后，提取新版本文件夹并将路径设
+置为它在Blender设置，就像你第一次安装 SDK一样。
+
+第二，你可以简单地使用新的覆盖过时的 SDK 文件。此方法被认为是不太 "纯
+净"，但在大多数情况下，它不应导致任何问题。
+
+完成更新后，您可以使用 项目导入 工具导入所有已保存的项目。
+
+
+导出和查看场景
+--------------
+
+创建的场景可以以 HTML 格式导出。使用 "File > Export > Blend4Web
+(.html)" 或者 "File > Export > Blend4Web (.json)" 菜单选项，然后选择导
+出文件的路径。场景导出完全描述在 自己章节. 可以用任何支持 WebGL的浏览
+器打开生成的 HTML 文件。
+
+参见: WebGL的浏览器支持
+
+

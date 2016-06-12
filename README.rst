@@ -58,7 +58,7 @@ Step 1 - Specifying Blender Scripts Path
 * Go to the **File** tab, choose the path to the **blender_scripts** directory in the **Scripts** field;
 * Click **Save User Settings** and *restart Blender*.
 
-.. image:: https://www.blend4web.com/doc/en/_images/user_preferences_scripts_path.png
+.. image:: https://www.blend4web.com/doc/en/_images/user_preferences_sdk_path.png
     :alt: Specifying Blender Scripts Path
     :align: center
 
@@ -110,12 +110,12 @@ Support
 We are always happy to answer your questions on the `Blend4Web forums <https://www.blend4web.com/en/forums/>`_.
 
 
-.. |latest_version| image:: https://img.shields.io/badge/latest%20version-15.12-blue.svg
+.. |latest_version| image:: https://img.shields.io/badge/latest%20version-16.05-blue.svg
     :target: https://www.blend4web.com/en/downloads/
     :alt: Latest Version of Blend4Web
 
-.. |compatible_blender_version| image:: https://img.shields.io/badge/compatible%20with%20Blender-2.76-orange.svg
-    :target: https://download.blender.org/release/Blender2.76/
+.. |compatible_blender_version| image:: https://img.shields.io/badge/compatible%20with%20Blender-2.77-orange.svg
+    :target: https://download.blender.org/release/Blender2.77/
     :alt: Compatible Blender Version
 
 .. |license| image:: https://img.shields.io/badge/license-GPLv3-lightgrey.svg

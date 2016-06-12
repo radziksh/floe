@@ -1,19 +1,3 @@
-# Copyright (C) 2014-2015 Triumph LLC
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 import bpy
 import imp
 import mathutils
@@ -66,8 +50,6 @@ class B4W_WORLD_PT_world(WorldButtonsPanel, Panel):
         row.column().prop(world, "horizon_color")
         col = row.column()
         col.prop(world, "zenith_color")
-        col.active = sky_is_active and world.use_sky_blend
-        row.column().prop(world, "ambient_color")
 
         row = layout.row()
         row.prop(sky, "reflexible", text=_("Reflect World"))
@@ -81,7 +63,7 @@ class B4W_WORLD_PT_environment_lighting(WorldButtonsPanel, Panel):
 
     def draw_header(self, context):
         light = context.world.light_settings
-        self.layout.prop(light, "use_environment_light", text=_(""))
+        self.layout.prop(light, "use_environment_light", text="")
 
     def draw(self, context):
         layout = self.layout
@@ -92,7 +74,7 @@ class B4W_WORLD_PT_environment_lighting(WorldButtonsPanel, Panel):
 
         split = layout.split()
         split.prop(light, "environment_energy", text=_("Energy"))
-        split.prop(light, "environment_color", text=_(""))
+        split.prop(light, "environment_color", text="")
 
 class B4W_WORLD_PT_mist(WorldButtonsPanel, Panel):
     bl_label = _("Mist")
@@ -101,7 +83,7 @@ class B4W_WORLD_PT_mist(WorldButtonsPanel, Panel):
 
     def draw_header(self, context):
         mist_settings = context.world.mist_settings
-        self.layout.prop(mist_settings, "use_mist", text=_(""))
+        self.layout.prop(mist_settings, "use_mist", text="")
 
     def draw(self, context):
         layout = self.layout
@@ -117,13 +99,13 @@ class B4W_WORLD_PT_mist(WorldButtonsPanel, Panel):
         row.prop(mist_settings, "start", text=_("Start"))
         row.prop(mist_settings, "height", text=_("Height"))
         row = layout.row()
-        row.prop(mist_settings, "falloff", text=_("Fall off"))
+        row.prop(mist_settings, "falloff", text=_("Falloff"))
         row = layout.row()
-        row.prop(world, "b4w_use_custom_color", text=_("Use custom color"))
+        row.prop(world, "b4w_use_custom_color", text=_("Use Custom Color"))
         row.active = not world.b4w_sky_settings.procedural_skydome
         row = layout.row()
         row.active = world.b4w_use_custom_color and (not world.b4w_sky_settings.procedural_skydome)
-        row.prop(world, "b4w_fog_color", text=_("Fog color"))
+        row.prop(world, "b4w_fog_color", text=_("Fog Color"))
 
 class B4W_WorldSky(WorldButtonsPanel, Panel):
     bl_label = _("Procedural Sky")
@@ -133,7 +115,7 @@ class B4W_WorldSky(WorldButtonsPanel, Panel):
     def draw_header(self, context):
         world = context.world
         sky = world.b4w_sky_settings
-        self.layout.prop(sky, "procedural_skydome", text=_(""))
+        self.layout.prop(sky, "procedural_skydome", text="")
 
     def draw(self, context):
         world = context.world
@@ -154,6 +136,21 @@ class B4W_WorldSky(WorldButtonsPanel, Panel):
         layout.prop(sky, "mie_collection_power", text=_("Mie Collection Power"))
         layout.prop(sky, "mie_distribution", text=_("Mie Distribution"))
 
+class B4W_WorldAnimation(WorldButtonsPanel, Panel):
+    bl_label = _("Animation")
+    bl_idname = "WORLD_PT_b4w_animation"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        world = context.world
+
+        layout = self.layout
+        layout.prop(world, "b4w_use_default_animation", text=_("Apply Default Animation"))
+
+        row = layout.row()
+        row.active = world.b4w_use_default_animation
+        row.prop(world, "b4w_anim_behavior", text=_("Behavior"))
+
 class B4W_WorldExportOptions(WorldButtonsPanel, Panel):
     bl_label = _("Export Options")
     bl_idname = "WORLD_PT_b4w_world_export_options"
@@ -166,18 +163,3 @@ class B4W_WorldExportOptions(WorldButtonsPanel, Panel):
         row = layout.row()
         row.prop(world, "b4w_do_not_export", text=_("Do Not Export"))
 
-def register():
-    bpy.utils.register_class(B4W_WORLD_PT_world)
-    bpy.utils.register_class(B4W_WORLD_PT_environment_lighting)
-    bpy.utils.register_class(B4W_WORLD_PT_mist)
-
-    bpy.utils.register_class(B4W_WorldSky)
-    bpy.utils.register_class(B4W_WorldExportOptions)
-
-def unregister():
-    bpy.utils.unregister_class(B4W_WORLD_PT_world)
-    bpy.utils.unregister_class(B4W_WORLD_PT_environment_lighting)
-    bpy.utils.unregister_class(B4W_WORLD_PT_mist)
-
-    bpy.utils.unregister_class(B4W_WorldSky)
-    bpy.utils.unregister_class(B4W_WorldExportOptions)

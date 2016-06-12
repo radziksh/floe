@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,8 +46,6 @@ exports.defaults = {
 
     alpha_sort_threshold       : 0.1,
 
-    alpha_clip_filtering_hack  : false,
-
     min_format_version         : [5, 7],
 
     max_fps                    : 10000, // not accurate
@@ -63,8 +61,6 @@ exports.defaults = {
     fps_callback_interval      : 10,
 
     background_color           : [0.0, 0.0, 0.0, 0.0],
-
-    lod_transition_ratio       : 0.01,
 
     canvas_resolution_factor   : 1.0,
 
@@ -106,7 +102,7 @@ exports.defaults = {
 
     smaa                       : false,
 
-    wireframe_debug            : false,
+    debug_view                 : false,
 
     water_wireframe_debug      : false,
 
@@ -150,8 +146,6 @@ exports.defaults = {
 
     disable_doppler_hack       : false,
 
-    cors_chrome_hack           : false,
-
     init_wa_context_hack       : false,
 
     clear_procedural_sky_hack  : false,
@@ -161,8 +155,6 @@ exports.defaults = {
     seq_video_fallback         : false,
 
     allow_hidpi                : false,
-
-    gyro_use                   : false,
 
     firefox_shadows_slink_hack : false,
 
@@ -177,8 +169,6 @@ exports.defaults = {
     max_vertex_uniform_vectors : 128,
 
     ie11_edge_touchscreen_hack : false,
-
-    ios_depth_hack             : false,
 
     macos_tex_reuse_hack       : false,
 
@@ -200,13 +190,19 @@ exports.defaults = {
 
     resize_cubemap_canvas_hack : false,
 
-    arch_mesa_clear_depth_hack : false,
+    chrome_html_bkg_music_hack : false,
 
     media_auto_activation      : true,
 
     max_cast_lamps             : 4,
 
-    mac_os_shadow_hack         : false
+    mac_os_shadow_hack         : false,
+
+    allow_shaders_debug_ext    : false,
+
+    gl_debug                   : false,
+
+    gamepad_setting_cont       : ""
 }
 
 exports.defaults_save = m_util.clone_object_r(exports.defaults);
@@ -251,6 +247,23 @@ exports.paths = {
 
     smaa_search_texture_path: "",
     smaa_area_texture_path: ""
+}
+
+exports.hmd_params = {
+    "webvr": {
+        distortion_coefs : [0.22, 0.28],
+        chromatic_aberration_coefs : [-0.015, 0.02, 0.025, 0.02]
+    },
+    "nonwebvr": {
+        inter_lens_dist: 0.064,
+        base_line_dist: 0.035,
+        screen_to_lens_dist: 0.039,
+        distortion_coefs : [0.34, 0.55],
+        chromatic_aberration_coefs : [0.0, 0.0, 0.0, 0.0],
+        width_dist: 0.110,
+        height_dist: 0.062,
+        bevel_size: 0.004
+    }
 }
 
 // physics config
@@ -298,7 +311,7 @@ exports.outlining = {
 
 exports.debug_subs = {
     enabled     : false,
-    subs_type   : "DEPTH",
+    subs_type   : "COPY",
     subs_number : 0,
     slink_type  : "COLOR"
 }
@@ -552,8 +565,8 @@ function set(prop, value) {
     case "do_not_load_resources":
         exports.defaults.do_not_load_resources = value;
         break;
-    case "gyro_use":
-        exports.defaults.gyro_use = value;
+    case "gamepad_setting_cont":
+        exports.defaults.gamepad_setting_cont = value;
         break;
     case "stereo":
         exports.defaults.stereo = value;
@@ -576,6 +589,9 @@ function set(prop, value) {
     case "precision":
         exports.defaults.precision = value;
         break;
+    case "prevent_caching":
+        exports.assets.prevent_caching = value;
+        break;
     case "quality":
         exports.defaults.quality = value;
         break;
@@ -597,8 +613,8 @@ function set(prop, value) {
     case "smaa_area_texture_path":
         exports.paths.smaa_area_texture_path = value;
         break;
-    case "wireframe_debug":
-        exports.defaults.wireframe_debug = value;
+    case "debug_view":
+        exports.defaults.debug_view = value;
         break;
     case "enable_selectable":
         exports.defaults.enable_selectable = value;
@@ -614,6 +630,9 @@ function set(prop, value) {
         break;
     case "url_params":
         exports.defaults.url_params = value;
+        break;
+    case "gl_debug":
+        exports.defaults.gl_debug = value;
         break;
     default:
         m_print.error("Unknown config property: " + prop);
@@ -655,8 +674,10 @@ exports.get = function(prop) {
         return exports.defaults.console_verbose;
     case "do_not_load_resources":
         return exports.defaults.do_not_load_resources;
-    case "gyro_use":
-        return exports.defaults.gyro_use;
+    case "gamepad_setting_cont":
+        return exports.defaults.gamepad_setting_cont;
+    case "is_mobile_device":
+        return exports.defaults.is_mobile_device;
     case "stereo":
         return exports.defaults.stereo;
     case "media_auto_activation":
@@ -671,6 +692,8 @@ exports.get = function(prop) {
         return exports.physics.use_workers;
     case "precision":
         return exports.defaults.precision;
+    case "prevent_caching":
+        return exports.assets.prevent_caching;
     case "quality":
         return exports.defaults.quality;
     case "sfx_mix_mode":
@@ -685,8 +708,8 @@ exports.get = function(prop) {
         return exports.paths.smaa_search_texture_path;
     case "smaa_area_texture_path":
         return exports.paths.smaa_area_texture_path;
-    case "wireframe_debug":
-        return exports.defaults.wireframe_debug;
+    case "debug_view":
+        return exports.defaults.debug_view;
     case "enable_selectable":
         return exports.defaults.enable_selectable;
     case "enable_outlining":
@@ -697,6 +720,8 @@ exports.get = function(prop) {
         return exports.defaults.glow_materials;
     case "url_params":
         return exports.defaults.url_params;
+    case "gl_debug":
+        return exports.defaults.gl_debug;
     default:
         m_print.error("Unknown config property: " + prop);
         break;
@@ -735,7 +760,7 @@ exports.set_paths = function() {
             || cfg_pth.smaa_area_texture_path == "") {
         var resources_dir = js_src_dir() + cfg_pth.resources_dir;
 
-        cfg_pth.smaa_search_texture_path = cfg_pth.smaa_search_texture_path || 
+        cfg_pth.smaa_search_texture_path = cfg_pth.smaa_search_texture_path ||
                 resources_dir + "smaa_search_texture.png";
         cfg_pth.smaa_area_texture_path = cfg_pth.smaa_area_texture_path ||
                 resources_dir + "smaa_area_texture.png";
@@ -772,7 +797,7 @@ function js_src_dir() {
     }
 
     if (!src_path) {
-        m_print.warn("Couldn't determine path to ancillary resources, " + 
+        m_print.warn("Couldn't determine path to ancillary resources, " +
                 "fallback to the current page directory");
         src_path = document.location.href;
     }
@@ -789,4 +814,3 @@ exports.get_std_assets_path = function() {
 }
 
 }
-

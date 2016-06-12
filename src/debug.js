@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,13 +26,14 @@
  */
 b4w.module["__debug"] = function(exports, require) {
 
-var m_cfg   = require("__config");
-var m_ext   = require("__extensions");
-var m_print = require("__print");
-var m_tex   = require("__textures");
-var m_time  = require("__time");
-var m_util  = require("__util");
-var m_graph = require("__graph");
+var m_compat = require("__compat");
+var m_cfg    = require("__config");
+var m_ext    = require("__extensions");
+var m_print  = require("__print");
+var m_tex    = require("__textures");
+var m_time   = require("__time");
+var m_util   = require("__util");
+var m_graph  = require("__graph");
 
 var cfg_def = m_cfg.defaults;
 
@@ -47,19 +48,21 @@ var FAKE_LOAD_END_PERCENTAGE   = 100;
 var _gl = null;
 
 // NOTE: possible cleanup needed
-var _check_errors = false;
 var _exec_counters = {};
 var _telemetry_messages = [];
 var _depth_only_issue = -1;
+var _multisample_issue = -1;
 
 var _assert_struct_last_obj = null;
 var _assert_struct_init = false;
 
-exports.WM_NONE = 0;
-exports.WM_OPAQUE_WIREFRAME = 1;
-exports.WM_TRANSPARENT_WIREFRAME = 2;
-exports.WM_FRONT_BACK_VIEW = 3;
-exports.WM_DEBUG_SPHERES = 4;
+exports.DV_NONE = 0;
+exports.DV_OPAQUE_WIREFRAME = 1;
+exports.DV_TRANSPARENT_WIREFRAME = 2;
+exports.DV_FRONT_BACK_VIEW = 3;
+exports.DV_DEBUG_SPHERES = 4;
+exports.DV_CLUSTERS_VIEW = 5;
+exports.DV_BATCHES_VIEW = 6;
 
 /**
  * Setup WebGL context
@@ -89,7 +92,7 @@ exports.setup_context = function(gl) {
  * Get GL error, throw exception if any.
  */
 exports.check_gl = function(msg) {
-    if (!_check_errors)
+    if (!cfg_def.gl_debug)
         return;
 
     var error = _gl.getError();
@@ -108,7 +111,7 @@ exports.check_gl = function(msg) {
  */
 exports.check_bound_fb = function() {
 
-    if (!_check_errors) 
+    if (!cfg_def.gl_debug)
         return true;
 
     switch (_gl.checkFramebufferStatus(_gl.FRAMEBUFFER)) {
@@ -137,7 +140,7 @@ exports.check_bound_fb = function() {
  * found on some old GPUs. (Found on Intel, AMD and NVIDIA)
  */
 exports.check_depth_only_issue = function() {
-    // use cache result
+    // use cached result
     if (_depth_only_issue != -1)
         return _depth_only_issue;
 
@@ -165,6 +168,51 @@ exports.check_depth_only_issue = function() {
     return _depth_only_issue;
 }
 
+/**
+ * Check for issue with failing multisample renderbuffers.
+ * Found on Firefox 46.
+ */
+exports.check_multisample_issue = function() {
+    // use cached result
+    if (_multisample_issue != -1)
+        return _multisample_issue;
+
+    var rb = _gl.createRenderbuffer();
+    _gl.bindRenderbuffer(_gl.RENDERBUFFER, rb);
+    _gl.renderbufferStorageMultisample(_gl.RENDERBUFFER, cfg_def.msaa_samples,
+            _gl.RGBA8, 1, 1);
+
+    var num_samples = _gl.getRenderbufferParameter(_gl.RENDERBUFFER,
+            _gl.RENDERBUFFER_SAMPLES);
+
+    if (num_samples != cfg_def.msaa_samples) {
+        _multisample_issue = true;
+        m_print.warn("multisample issue was found: requested " +
+                cfg_def.msaa_samples + ", got " + num_samples);
+        if (_gl.getError() == _gl.INVALID_OPERATION)
+            m_print.warn("the error from multisample issue detected, ignoring");
+    } else
+        _multisample_issue = false;
+
+    _gl.bindRenderbuffer(_gl.RENDERBUFFER, null);
+
+    return _multisample_issue;
+}
+
+/**
+ * Check for Firefox cubemap issue found on some old GPUs.
+ * (Found on NVIDIA 8000/9000/200 series).
+ */
+exports.check_ff_cubemap_out_of_memory = function() {
+    if (m_compat.check_user_agent("Firefox") 
+            && _gl.getError() == _gl.OUT_OF_MEMORY) {
+        m_print.warn("Firefox/old GPUs cubemap issue was found.");
+        return true;
+    }
+
+    return false;
+
+}
 
 /**
  * Get shader compile status, throw exception if compilation failed.
@@ -175,10 +223,14 @@ exports.check_depth_only_issue = function() {
  */
 exports.check_shader_compiling = function(shader, shader_id, shader_text) {
 
-    if (!_check_errors) 
+    if (!cfg_def.gl_debug)
         return;
 
     if (!_gl.getShaderParameter(shader, _gl.COMPILE_STATUS)) {
+
+        var ext_ds = cfg_def.allow_shaders_debug_ext && m_ext.get_debug_shaders();
+        if (ext_ds)
+            var shader_text = ext_ds.getTranslatedShaderSource(shader);
 
         shader_text = supply_line_numbers(shader_text);
        
@@ -207,30 +259,26 @@ function supply_line_numbers(text) {
 exports.check_shader_linking = function(program, shader_id, vshader, fshader, 
     vshader_text, fshader_text) {
 
-    if (!_check_errors) 
+    if (!cfg_def.gl_debug)
         return;
 
     if (!_gl.getProgramParameter(program, _gl.LINK_STATUS)) {
     
-        var ext_ds = m_ext.get_debug_shaders();
+        var ext_ds = cfg_def.allow_shaders_debug_ext && m_ext.get_debug_shaders();
         if (ext_ds) {
             var vshader_text = ext_ds.getTranslatedShaderSource(vshader);
             var fshader_text = ext_ds.getTranslatedShaderSource(fshader);
         }
-    
+
         vshader_text = supply_line_numbers(vshader_text);
         fshader_text = supply_line_numbers(fshader_text);
-    
+
         m_print.error("shader linking failed:\n" + vshader_text + "\n\n\n" + 
             fshader_text + "\n" + 
             _gl.getProgramInfoLog(program) + " (" + shader_id + ")");
 
         throw "Engine failed: see above for error messages";
     }
-}
-
-exports.set_check_gl_errors = function(val) {
-    _check_errors = val;
 }
 
 /**
@@ -576,16 +624,81 @@ exports.fake_load = function(stageload_cb, interval, start, end, loaded_cb) {
     })
 }
 
-exports.nodegraph_to_dot = function(graph) {
-    var nodes_label_cb = function (id, attr) {
-        return attr.type;
-    }
-    var edges_label_cb = function (id1, id2, attr) {
-        var node1 = m_graph.get_node_attr(graph, id1);
-        var node2 = m_graph.get_node_attr(graph, id2);
-        var out1 = node1.outputs[attr[0]];
-        var in2 = node2.inputs[attr[1]];
-        return out1.identifier + "\n==>\n" + in2.identifier;
+exports.nodegraph_to_dot = function(graph, detailed_print) {
+
+    if (detailed_print) {
+        var get_data_info = function(attr) {
+            var data_info = "";
+            switch (attr.type) {
+            case "GEOMETRY_UV":
+                data_info = "\nuv_layer: " + attr.data.value;
+                break;
+            case "TEXTURE_COLOR":
+            case "TEXTURE_NORMAL":
+                data_info = "\ntexture: " + attr.data.value.name + "\n(" 
+                        + attr.data.value.image.filepath + ")";
+                break;
+            }
+
+            if (data_info == "")
+                data_info = "\n---";
+
+            return data_info;
+        }
+
+        var nodes_label_cb = function (id, attr) {
+            var node_text = attr.type + "(" + attr.name + ")";
+
+            var inputs = attr.inputs;
+            node_text += "\n\nINPUTS:";
+            if (inputs.length)
+                for (var i = 0; i < inputs.length; i++) {
+                    node_text += "\n" + inputs[i].identifier + ": ";
+                    if (inputs[i].is_linked) {
+                        node_text += "linked";
+                    } else
+                        node_text += inputs[i].default_value;
+                }
+            else
+                node_text += "\n---";
+
+            var outputs = attr.outputs;
+            node_text += "\n\nOUTPUTS:";
+            if (outputs.length)
+                for (var i = 0; i < outputs.length; i++) {
+                    node_text += "\n" + outputs[i].identifier + ": ";
+                    if (outputs[i].is_linked) {
+                        node_text += "linked(default " + outputs[i].default_value + ")";
+                    } else
+                        node_text += "not used";
+                }
+            else
+                node_text += "\n---";
+
+            node_text += "\n\nDATA:";
+            node_text += get_data_info(attr);
+
+            return node_text;
+        }
+
+        var edges_label_cb = function (id1, id2, attr) {
+            var node1 = m_graph.get_node_attr(graph, id1);
+            var node2 = m_graph.get_node_attr(graph, id2);
+            var out1 = node1.outputs[attr[0]];
+            var in2 = node2.inputs[attr[1]];
+            return out1.identifier + "\n==>\n" + in2.identifier;
+        }
+    } else {
+        var nodes_label_cb = function (id, attr) {
+            return attr.type;
+        }
+        var edges_label_cb = function (id1, id2, attr) {
+            var node1 = m_graph.get_node_attr(graph, id1);
+            var node2 = m_graph.get_node_attr(graph, id2);
+            var out1 = node1.outputs[attr[0]];
+            var in2 = node2.inputs[attr[1]];
+            return out1.identifier + "\n==>\n" + in2.identifier;
+        }
     }
 
     return m_graph.debug_dot(graph, nodes_label_cb, edges_label_cb);

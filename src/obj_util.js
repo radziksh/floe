@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,8 +53,9 @@ function create_render(type) {
         id: 0,
         type: type,
         data_id: 0,
-        grid_id: [0, 0],
         world_tsr: m_tsr.create_ext(),
+        world_zup_tsr: m_tsr.create_ext(),
+        world_inv_zup_tsr: m_tsr.create_ext(),
         pivot: new Float32Array(3),
         hover_pivot: new Float32Array(3),
         init_dist: 0,
@@ -63,7 +64,7 @@ function create_render(type) {
 
         color_id: null,
         outline_intensity: 0,
-        // correct only for TARGET camera
+        // used only for TARGET camera
         target_cam_upside_down: false,
         vertical_axis: m_vec3.create(),
 
@@ -86,10 +87,10 @@ function create_render(type) {
         hover_vert_trans_limits: null,
         hover_horiz_trans_limits: null,
 
+        // currently only for TARGET camera
+        pivot_limits: null,
+
         enable_hover_hor_rotation: true,
-        hover_zero_level: 0,
-        cameras: null,
-        shadow_cameras: null,
         
         outline_anim_settings_default: {
             outline_duration: 1,
@@ -180,24 +181,14 @@ function create_render(type) {
         arm_rel_trans: null,
         arm_rel_quat: null,
 
-        mats_values: null,
-        mats_value_inds: null,
-        mats_anim_inds: null,
-        mats_rgbs: null,
-        mats_rgb_inds: null,
-        mats_rgb_anim_inds: null,
-
         // bounding volumes properties
         bb_original: null,
         bb_local: null,
         bcyl_local: null,
         bcap_local: null,
         bcon_local: null,
-        bb_world: null,
         bs_local: null,
-        bs_world: null,
-        be_local: null,
-        be_world: null
+        be_local: null
     }
 
     // setting default values
@@ -253,6 +244,7 @@ function create_object(name, type, origin_name) {
         parent_is_dupli: false,
         parent_bone: "",
         viewport_alignment: null,
+        pinverse_tsr: null,
 
         use_obj_physics: false,
         collision_id: "",
@@ -304,6 +296,7 @@ function create_object(name, type, origin_name) {
         actions: [],
 
         need_update_transform: false, // used for armature bones constraints
+        need_inv_zup_tsr: false, // for MESH only, used in some node materials
         meta_objects : []
     };
     return obj;
@@ -314,6 +307,25 @@ exports.copy_bpy_object_props_by_link = function(obj) {
         return obj.slice();
     else
         return obj;
+}
+
+exports.copy_batches_props_by_link_nr = function(batches) {
+    // TODO: remove bounding data from batches
+    var new_batches = [];
+    for (var i = 0; i < batches.length; i++) {
+        var batch = batches[i];
+        var new_batch = {};
+        for (var prop in batch) {
+            if (batch[prop] == batch.bb_world)
+                new_batch.bb_world = copy_object_props_by_value(batch.bb_world);
+            else if (batch[prop] == batch.be_world)
+                new_batch.be_world = copy_object_props_by_value(batch.be_world);
+            else
+                new_batch[prop] = batch[prop];
+        }
+        new_batches.push(new_batch);
+    }
+    return new_batches;
 }
 
 exports.copy_object_props_by_value = copy_object_props_by_value;
@@ -345,9 +357,14 @@ function copy_object_props_by_value(obj) {
     var Constructor = obj.constructor;
 
     switch (Constructor) {
-    case Float32Array:
-    case Uint32Array:
+    case Int8Array:
+    case Uint8Array:
+    case Int16Array:
     case Uint16Array:
+    case Int32Array:
+    case Uint32Array:
+    case Float32Array:
+    case Float64Array:
         obj_clone = new Constructor(obj);
         break;
     case Array:
@@ -447,11 +464,13 @@ function init_scene_data(scene) {
         scene: scene,
         is_active: false,
         batches: [],
-        plane_refl_subs: null,
+        plane_refl_subs: [],
         cube_refl_subs: null,
         shadow_subscenes: [],
         light_index: 0,
-        obj_has_nla_on_scene: false
+        obj_has_nla_on_scene: false,
+        cameras: [],
+        shadow_cameras: []
     }
     return sc_data;
 }
@@ -481,6 +500,40 @@ exports.get_shadow_lamps = function(lamps, use_ssao) {
         return [lamps[0]];
     else
         return [];
+}
+
+
+exports.check_obj_soft_particles_accessibility = function(bpy_obj, pset) {
+
+    if (pset["b4w_enable_soft_particles"] &&
+            pset["b4w_particles_softness"] > 0.0) {
+        var index = pset["material"] - 1;
+        var materials = bpy_obj["data"]["materials"];
+        if (index >= 0 && index < materials.length &&
+            (materials[index]["game_settings"]["alpha_blend"] == "ADD" ||
+            materials[index]["game_settings"]["alpha_blend"] == "ALPHA" ||
+            materials[index]["game_settings"]["alpha_blend"] == "ALPHA_SORT"))
+            return true;
+    }
+
+    return false;
+}
+
+exports.check_inv_zup_tsr_is_needed = function(obj) {
+    var scenes_data = obj.scenes_data;
+    for (var i = 0; i < scenes_data.length; i++) {
+        var batches = scenes_data[i].batches;
+        for (var j = 0; j < batches.length; j++) {
+            var dirs = batches[j].shaders_info.directives;
+            for (var k = 0; k < dirs.length; k++) {
+                var dir = dirs[k];
+                if (dir[0] == "USE_ZUP_MODEL_MATRIX_INVERSE" && dir[1] == "1")
+                    return true;
+            }
+       }
+    }
+
+    return false;
 }
 
 exports.gen_dupli_name = function(dg_parent_name, name) {
@@ -533,6 +586,14 @@ exports.is_lamp = function(obj) {
 
 exports.is_empty = function(obj) {
     return obj.type === "EMPTY";
+}
+
+exports.is_line = function(obj) {
+    return obj.type === "LINE";
+}
+
+exports.is_world = function(obj) {
+    return obj.type === "WORLD";
 }
 
 }

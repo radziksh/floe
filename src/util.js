@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +25,10 @@
  */
 b4w.module["__util"] = function(exports, require) {
 
+var m_bounds= require("__boundings");
 var m_mat3  = require("__mat3");
 var m_mat4  = require("__mat4");
+var m_math  = require("__math");
 var m_print = require("__print");
 var m_tsr   = require("__tsr");
 var m_quat  = require("__quat");
@@ -35,6 +37,8 @@ var m_vec4  = require("__vec4");
 
 var _unique_counter = 0;
 var _unique_name_counters = {};
+
+var PROPER_EULER_ANGLES_LIST = [XYX, YZY, ZXZ, YXY, ZYZ];
 
 // for internal usage
 var _vec3_tmp = new Float32Array(3);
@@ -59,6 +63,19 @@ var AXIS_Z = new Float32Array([0, 0, 1]);
 var AXIS_MX = new Float32Array([-1, 0, 0]);
 var AXIS_MY = new Float32Array([ 0,-1, 0]);
 var AXIS_MZ = new Float32Array([ 0, 0,-1]);
+
+var XYX = 0;
+var YZY = 1;
+var ZXZ = 2;
+var XZX = 3;
+var YXY = 4;
+var ZYZ = 5;
+var XYZ = 6;
+var YZX = 7;
+var ZXY = 8;
+var XZY = 9;
+var YXZ = 10;
+var ZYX = 11;
 
 var DEFAULT_SEED = 50000;
 var RAND_A = 48271;
@@ -90,6 +107,19 @@ exports.AXIS_Z = AXIS_Z;
 exports.AXIS_MX = AXIS_MX;
 exports.AXIS_MY = AXIS_MY;
 exports.AXIS_MZ = AXIS_MZ;
+
+exports.XYX = XYX;
+exports.YZY = YZY;
+exports.ZXZ = ZXZ;
+exports.XZX = XZX;
+exports.YXY = YXY;
+exports.ZYZ = ZYZ;
+exports.XYZ = XYZ;
+exports.YZX = YZX;
+exports.ZXY = ZXY;
+exports.XZY = XZY;
+exports.YXZ = YXZ;
+exports.ZYX = ZYX;
 
 exports.INV_CUBE_VIEW_MATRS = INV_CUBE_VIEW_MATRS;
 
@@ -330,13 +360,193 @@ exports.euler_to_quat = function(euler, quat) {
     var s3 = Math.sin(euler[0]/2);
 
     // xyz
-    quat[0] = s1 * s2 * c3 + c1 * c2 * s3;
+    quat[0] = c1 * c2 * s3 + s1 * s2 * c3;
     quat[1] = s1 * c2 * c3 + c1 * s2 * s3;
     quat[2] = c1 * s2 * c3 - s1 * c2 * s3;
     // w
     quat[3] = c1 * c2 * c3 - s1 * s2 * s3;
 
     return quat;
+}
+
+
+/**
+ * Translate Euler angles in the intrinsic rotation sequence to quaternion
+ * Source: Appendix A of http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf
+ */
+exports.ordered_angles_to_quat = function(angles, order, quat){
+    var alpha   = angles[0];
+    var beta    = angles[1];
+    var gamma   = angles[2];
+
+    var c1 = Math.cos(alpha / 2);
+    var c2 = Math.cos(beta  / 2);
+    var c3 = Math.cos(gamma / 2);
+    var s1 = Math.sin(alpha / 2);
+    var s2 = Math.sin(beta  / 2);
+    var s3 = Math.sin(gamma / 2);
+
+    if (PROPER_EULER_ANGLES_LIST.indexOf(order) > -1) {
+        var c13  = Math.cos((alpha + gamma) / 2);
+        var s13  = Math.sin((alpha + gamma) / 2);
+        var c1_3 = Math.cos((alpha - gamma) / 2);
+        var s1_3 = Math.sin((alpha - gamma) / 2);
+        var c3_1 = Math.cos((gamma - alpha) / 2);
+        var s3_1 = Math.sin((gamma - alpha) / 2);
+    }
+
+    switch(order) {
+    case XYX:
+        quat[0] = c2 * s13;
+        quat[1] = s2 * c1_3;
+        quat[2] = s2 * s1_3;
+        quat[3] = c2 * c13;
+        break;
+    case YZY:
+        quat[0] = s2 * s1_3;
+        quat[1] = c2 * s13;
+        quat[2] = s2 * c1_3;
+        quat[3] = c2 * c13;
+        break;
+    case ZXZ:
+        quat[0] = s2 * c1_3;
+        quat[1] = s2 * s1_3;
+        quat[2] = c2 * s13;
+        quat[3] = c2 * c13;
+        break;
+    case XZX:
+        quat[0] = c2 * s13;
+        quat[1] = s2 * s3_1;
+        quat[2] = s2 * c3_1;
+        quat[3] = c2 * c13;
+        break;
+    case YXY:
+        quat[0] = s2 * c3_1;
+        quat[1] = c2 * s13;
+        quat[2] = s2 * s3_1;
+        quat[3] = c2 * c13;
+        break;
+    case ZYZ:
+        quat[0] = s2 * s3_1;
+        quat[1] = s2 * c3_1;
+        quat[2] = c2 * s13;
+        quat[3] = c2 * c13;
+        break;
+    case XYZ:
+        quat[0] = s1 * c2 * c3 + c1 * s2 * s3;
+        quat[1] = c1 * s2 * c3 - s1 * c2 * s3;
+        quat[2] = c1 * c2 * s3 + s1 * s2 * c3;
+        quat[3] = c1 * c2 * c3 - s1 * s2 * s3;
+        break;
+    case YZX:
+        quat[0] = c1 * c2 * s3 + s1 * s2 * c3;
+        quat[1] = s1 * c2 * c3 + c1 * s2 * s3;
+        quat[2] = c1 * s2 * c3 - s1 * c2 * s3;
+        quat[3] = c1 * c2 * c3 - s1 * s2 * s3;
+        break;
+    case ZXY:
+        quat[0] = c1 * s2 * c3 - s1 * c2 * s3;
+        quat[1] = c1 * c2 * s3 + s1 * s2 * c3;
+        quat[2] = s1 * c2 * c3 + c1 * s2 * s3;
+        quat[3] = c1 * c2 * c3 - s1 * s2 * s3;
+        break;
+    case XZY:
+        quat[0] = s1 * c2 * c3 - c1 * s2 * s3;
+        quat[1] = c1 * c2 * s3 - s1 * s2 * c3;
+        quat[2] = c1 * s2 * c3 + s1 * c2 * s3;
+        quat[3] = c1 * c2 * c3 + s1 * s2 * s3;
+        break;
+    case YXZ:
+        quat[0] = c1 * s2 * c3 + s1 * c2 * s3;
+        quat[1] = s1 * c2 * c3 - c1 * s2 * s3;
+        quat[2] = c1 * c2 * s3 - s1 * s2 * c3;
+        quat[3] = c1 * c2 * c3 + s1 * s2 * s3;
+        break;
+    case ZYX:
+        quat[0] = c1 * c2 * s3 - s1 * s2 * c3;
+        quat[1] = c1 * s2 * c3 + s1 * c2 * s3;
+        quat[2] = s1 * c2 * c3 - c1 * s2 * s3;
+        quat[3] = c1 * c2 * c3 + s1 * s2 * s3;
+        break;
+    }
+
+    return quat;
+}
+
+/**
+ * Translate quaternion to Euler angles in the intrinsic rotation sequence
+ * Source: Appendix A of http://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf
+ * quat must be normalized
+ */
+exports.quat_to_ordered_angles = function(q, order, angles) {
+    var x = q[0], y = q[1], z = q[2], w = q[3];
+
+    switch(order) {
+    case XYX:
+        angles[0] = Math.atan2(x * y + z * w, y * w - x * z);
+        angles[1] = Math.acos(1 - 2 * (y * y + z * z));
+        angles[2] = Math.atan2(x * y - z * w, x * z + y * w);
+        break;
+    case YZY:
+        angles[0] = Math.atan2(x * w + y * z, z * w - x * y);
+        angles[1] = Math.acos(1 - 2 * (x * x + z * z));
+        angles[2] = Math.atan2(y * z - x * w, x * y + z * w);
+        break;
+    case ZXZ:
+        angles[0] = Math.atan2(x * z + y * w, x * w - y * z);
+        angles[1] = Math.acos(1 - 2 * (x * x + y * y));
+        angles[2] = Math.atan2(x * z - y * w, x * w + y * z);
+        break;
+    case XZX:
+        angles[0] = Math.atan2(x * z - y * w, x * y + z * w);
+        angles[1] = Math.acos(1 - 2 * (y * y + z * z));
+        angles[2] = Math.atan2(x * z + y * w, z * w - x * y);
+        break;
+    case YXY:
+        angles[0] = Math.atan2(x * y - z * w, x * w + y * z);
+        angles[1] = Math.acos(1 - 2 * (x * x + z * z));
+        angles[2] = Math.atan2(x * y + z * w, x * w - y * z);
+        break;
+    case ZYZ:
+        angles[0] = Math.atan2(y * z - x * w, x * z + y * w);
+        angles[1] = Math.acos(1 - 2 * (x * x + y * y));
+        angles[2] = Math.atan2(x * w + y * z, y * w - x * z);
+        break;
+    case XYZ:
+        angles[0] = Math.atan2(2 * (x * w - y * z), 1 - 2 * (x * x + y * y));
+        angles[1] = Math.asin(2 * (x * z + y * w));
+        angles[2] = Math.atan2(2 * (z * w - x * y), 1 - 2 * (y * y + z * z));
+        break;
+    case YZX:
+        angles[0] = Math.atan2(2 * (y * w - x * z), 1 - 2 * (y * y + z * z));
+        angles[1] = Math.asin(2 * (x * y + z * w));
+        angles[2] = Math.atan2(2 * (x * w - y * z), 1 - 2 * (x * x + z * z));
+        break;
+    case ZXY:
+        angles[0] = Math.atan2(2 * (z * w - x * y), 1 - 2 * (x * x + z * z));
+        angles[1] = Math.asin(2 * (x * w + y * z));
+        angles[2] = Math.atan2(2 * (y * w - x * z), 1 - 2 * (x * x + y * y));
+        break;
+    case XZY:
+        angles[0] = Math.atan2(2 * (x * w + y * z), 1 - 2 * (x * x + z * z));
+        angles[1] = Math.asin(2 * (z * w - x * y));
+        angles[2] = Math.atan2(2 * (x * z + y * w), 1 - 2 * (y * y + z * z));
+        break;
+    case YXZ:
+        angles[0] = Math.atan2(2 * (x * z + y * w), 1 - 2 * (x * x + y * y));
+        angles[1] = Math.asin(2 * (x * w - y * z));
+        angles[2] = Math.atan2(2 * (x * y + z * w), 1 - 2 * (x * x + z * z));
+        break;
+    case ZYX:
+        angles[0] = Math.atan2(2 * (x * y + z * w), 1 - 2 * (y * y + z * z));
+        angles[1] = Math.asin(2 * (y * w - x * z));
+        angles[2] = Math.atan2(2 * (x * w + y * z), 1 - 2 * (x * x + y * y));
+        break;
+    }
+    // TODO: add check the orientation is far a singularity.
+    // In case of order in {XYZ, YZX, ZXY, XZY, YXZ, ZYX} singularity is angles[1] resides in {-PI/2, PI/2}.
+    // In case of order in {XYX, YZY, ZXZ, XZX, YXY, ZYZ} singularity is angles[1] resides in {0, PI}.
+    return angles;
 }
 
  /**
@@ -584,7 +794,13 @@ exports.create_empty_submesh = function(name) {
         indices: null,
         va_frames: [],
         va_common: va_common,
-        shape_keys: []
+        shape_keys: [],
+        submesh_bd: {
+            bb_world : m_bounds.zero_bounding_box(),
+            be_world : m_bounds.zero_bounding_ellipsoid(),
+            bb_local : m_bounds.zero_bounding_box(),
+            be_local : m_bounds.zero_bounding_ellipsoid()
+        }
     };
 }
 
@@ -610,9 +826,14 @@ exports.clone_object_r = function(obj) {
     var Constructor = obj.constructor;
 
     switch (Constructor) {
-    case Float32Array:
-    case Uint32Array:
+    case Int8Array:
+    case Uint8Array:
+    case Int16Array:
     case Uint16Array:
+    case Int32Array:
+    case Uint32Array:
+    case Float32Array:
+    case Float64Array:
         obj_clone = new Constructor(obj);
         break;
     case Array:
@@ -647,9 +868,14 @@ exports.clone_object_nr = function(obj) {
             var Constructor = obj[prop].constructor;
 
             switch (Constructor) {
-            case Float32Array:
-            case Uint32Array:
+            case Int8Array:
+            case Uint8Array:
+            case Int16Array:
             case Uint16Array:
+            case Int32Array:
+            case Uint32Array:
+            case Float32Array:
+            case Float64Array:
                 new_obj[prop] = new Constructor(obj[prop]);
                 break;
             case Array:
@@ -814,12 +1040,12 @@ function normalize_plane(plane) {
  */
 exports.sphere_is_out_of_frustum = function(pt, planes, radius) {
 
-    if (radius < -point_plane_dist(pt, planes.left) ||
-        radius < -point_plane_dist(pt, planes.right) ||
-        radius < -point_plane_dist(pt, planes.top) ||
-        radius < -point_plane_dist(pt, planes.bottom) ||
-        radius < -point_plane_dist(pt, planes.near) ||
-        radius < -point_plane_dist(pt, planes.far))
+    if (radius < -m_math.point_plane_dist(pt, planes.left) ||
+        radius < -m_math.point_plane_dist(pt, planes.right) ||
+        radius < -m_math.point_plane_dist(pt, planes.top) ||
+        radius < -m_math.point_plane_dist(pt, planes.bottom) ||
+        radius < -m_math.point_plane_dist(pt, planes.near) ||
+        radius < -m_math.point_plane_dist(pt, planes.far))
         return true;
     else
         return false;
@@ -838,8 +1064,8 @@ exports.ellipsoid_is_out_of_frustum = function(pt, planes,
     var r_far = Math.sqrt(dot_nx * dot_nx + dot_ny * dot_ny + dot_nz * dot_nz);
 
     // near and far effective radiuses coincide (far is parallel to near)
-    if (r_far   < -point_plane_dist(pt, planes.near) ||
-        r_far   < -point_plane_dist(pt, planes.far)) {
+    if (r_far   < -m_math.point_plane_dist(pt, planes.near) ||
+        r_far   < -m_math.point_plane_dist(pt, planes.far)) {
         return true;
     }
 
@@ -848,7 +1074,7 @@ exports.ellipsoid_is_out_of_frustum = function(pt, planes,
     var dot_ny = m_vec3.dot(axis_y, planes.left);
     var dot_nz = m_vec3.dot(axis_z, planes.left);
     var r_left = Math.sqrt(dot_nx * dot_nx + dot_ny * dot_ny + dot_nz * dot_nz);
-    if (r_left  < -point_plane_dist(pt, planes.left)) {
+    if (r_left  < -m_math.point_plane_dist(pt, planes.left)) {
         return true;
     }
 
@@ -857,7 +1083,7 @@ exports.ellipsoid_is_out_of_frustum = function(pt, planes,
     dot_ny = m_vec3.dot(axis_y, planes.right);
     dot_nz = m_vec3.dot(axis_z, planes.right);
     var r_right = Math.sqrt(dot_nx * dot_nx + dot_ny * dot_ny + dot_nz * dot_nz);
-    if (r_right < -point_plane_dist(pt, planes.right)) {
+    if (r_right < -m_math.point_plane_dist(pt, planes.right)) {
         return true;
     }
 
@@ -866,7 +1092,7 @@ exports.ellipsoid_is_out_of_frustum = function(pt, planes,
     dot_ny = m_vec3.dot(axis_y, planes.top);
     dot_nz = m_vec3.dot(axis_z, planes.top);
     var r_top = Math.sqrt(dot_nx * dot_nx + dot_ny * dot_ny + dot_nz * dot_nz);
-    if (r_top < -point_plane_dist(pt, planes.top)) {
+    if (r_top < -m_math.point_plane_dist(pt, planes.top)) {
         return true;
     }
 
@@ -875,20 +1101,12 @@ exports.ellipsoid_is_out_of_frustum = function(pt, planes,
     dot_ny = m_vec3.dot(axis_y, planes.bottom);
     dot_nz = m_vec3.dot(axis_z, planes.bottom);
     var r_bott = Math.sqrt(dot_nx * dot_nx + dot_ny * dot_ny + dot_nz * dot_nz);
-    if (r_bott < -point_plane_dist(pt, planes.bottom)) {
+    if (r_bott < -m_math.point_plane_dist(pt, planes.bottom)) {
         return true;
     }
 
     return false;
 }
-
-/**
- * Calculate distance from point to plane.
- */
-function point_plane_dist(pt, plane) {
-    return plane[0] * pt[0] + plane[1] * pt[1] + plane[2] * pt[2] + plane[3];
-}
-
 
 /**
  * Translate positions by matrix
@@ -1122,7 +1340,7 @@ exports.transform_mat4 = function(matrix, scale, quat, trans, dest) {
 exports.transform_vec3 = function(vec, scale, quat, trans, dest) {
     if (!dest)
         var dest = new Float32Array(3);
-    
+
     var m1 = m_mat4.fromRotationTranslation(quat, trans, _mat4_tmp);
     if (scale !== 1) {
         var m2 = m_mat4.identity(_mat4_tmp2);
@@ -1282,13 +1500,25 @@ function hash_code(a, init_val) {
         return hash_code_number(0, hash);
     case "object":
         if (a) {
-            var is_arr = a instanceof Array;
+            // NOTE: some additional props could be added to GL-type objs
+            // so don't build hash code for them
+            switch (a.constructor) {
+            case WebGLUniformLocation:
+            case WebGLProgram:
+            case WebGLShader:
+            case WebGLFramebuffer:
+            case WebGLTexture:
+            case WebGLBuffer:
+                return hash_code_number(0, hash);
+            }
+
             var is_typed_arr = a.buffer instanceof ArrayBuffer
                     && a.byteLength !== "undefined";
+
             if (is_typed_arr)
                 for (var i = 0; i < a.length; i++)
                     hash = hash_code_number(a[i], hash);
-            else if (is_arr)
+            else if (a instanceof Array)
                 for (var i = 0; i < a.length; i++)
                     hash = hash_code(a[i], hash);
             else
@@ -1296,9 +1526,7 @@ function hash_code(a, init_val) {
                     hash = hash_code(a[prop], hash);
         } else
             hash = hash_code_number(0, hash);
-        return hash;
     }
-
     return hash;
 }
 
@@ -1328,44 +1556,6 @@ function hash_code_string(str, init_val) {
     }
     return hash;
 }
-
-/**
- * Translates a matrix by the given vector (from glMatrix 1)
- *
- * @param {Mat4} mat mat4 to translate
- * @param {Vec3} vec vec3 specifying the translation
- * @param {Mat4} [dest] mat4 receiving operation result. If not specified result is written to mat
- * @returns {Mat4} dest if specified, mat otherwise
- * @deprecated Use function from mat4 module
- */
-exports.mat4_translate = function(mat, vec, dest) {
-    var x = vec[0], y = vec[1], z = vec[2],
-        a00, a01, a02, a03,
-        a10, a11, a12, a13,
-        a20, a21, a22, a23;
-
-    if (!dest || mat === dest) {
-        mat[12] = mat[0] * x + mat[4] * y + mat[8] * z + mat[12];
-        mat[13] = mat[1] * x + mat[5] * y + mat[9] * z + mat[13];
-        mat[14] = mat[2] * x + mat[6] * y + mat[10] * z + mat[14];
-        mat[15] = mat[3] * x + mat[7] * y + mat[11] * z + mat[15];
-        return mat;
-    }
-
-    a00 = mat[0]; a01 = mat[1]; a02 = mat[2]; a03 = mat[3];
-    a10 = mat[4]; a11 = mat[5]; a12 = mat[6]; a13 = mat[7];
-    a20 = mat[8]; a21 = mat[9]; a22 = mat[10]; a23 = mat[11];
-
-    dest[0] = a00; dest[1] = a01; dest[2] = a02; dest[3] = a03;
-    dest[4] = a10; dest[5] = a11; dest[6] = a12; dest[7] = a13;
-    dest[8] = a20; dest[9] = a21; dest[10] = a22; dest[11] = a23;
-
-    dest[12] = a00 * x + a10 * y + a20 * z + mat[12];
-    dest[13] = a01 * x + a11 * y + a21 * z + mat[13];
-    dest[14] = a02 * x + a12 * y + a22 * z + mat[14];
-    dest[15] = a03 * x + a13 * y + a23 * z + mat[15];
-    return dest;
-};
 
 exports.mat3_to_mat4 = function(mat, dest) {
     dest[15] = 1;
@@ -1436,11 +1626,11 @@ exports.trunc = function(x) {
     return isNaN(x) || typeof x == "undefined" ? NaN : x | 0;
 }
 
-exports.rad = function(x) {
+exports.deg_to_rad = function(x) {
     return x * Math.PI / 180;
 }
 
-exports.deg = function(x) {
+exports.rad_to_deg = function(x) {
     return x * 180 / Math.PI;
 }
 
@@ -1917,13 +2107,13 @@ exports.panic = function(s) {
 }
 
 /**
- * Convert radian angle into range [from, to]
+ * Convert radian angle into range [from, to)
  */
 exports.angle_wrap_periodic = angle_wrap_periodic;
 function angle_wrap_periodic(angle, from, to) {
-    var rel_angle = angle - from;
-    var period = to - from;
-    return from + (rel_angle - Math.floor(rel_angle / period) * period);
+    var rel_angle = angle - from; // 2Pi
+    var period = to - from; // 2Pi
+    return from + (rel_angle - Math.floor(rel_angle / period) * period); //-Pi + (2Pi - 2Pi)
 }
 
 exports.angle_wrap_0_2pi = angle_wrap_0_2pi;
@@ -1978,12 +2168,15 @@ function objs_is_equal(a, b) {
     if (a && b) {
         // array checking
         var a_is_arr = a instanceof Array;
+        var b_is_arr = b instanceof Array;
+        if (a_is_arr != b_is_arr)
+            return false;
+
         var a_is_typed_arr = a.buffer instanceof ArrayBuffer
                 && a.byteLength !== "undefined";
-        var b_is_arr = b instanceof Array;
         var b_is_typed_arr = b.buffer instanceof ArrayBuffer
                 && b.byteLength !== "undefined";
-        if (a_is_arr != b_is_arr || a_is_typed_arr != b_is_typed_arr)
+        if (a_is_typed_arr != b_is_typed_arr)
             return false;
 
         if (a_is_arr) {
@@ -1999,9 +2192,22 @@ function objs_is_equal(a, b) {
                 if (a[i] != b[i])
                     return false;
         } else {
-            for (var prop in a)
+            // NOTE: some additional props could be added to GL-type objs
+            // so don't iterate over their props
+            switch (a.constructor) {
+            case WebGLUniformLocation:
+            case WebGLProgram:
+            case WebGLShader:
+            case WebGLFramebuffer:
+            case WebGLTexture:
+            case WebGLBuffer:
+                return a == b;
+            }
+
+            for (var prop in a) {
                 if (!vars_is_equal(a[prop], b[prop]))
                     return false;
+            }
             for (var prop in b)
                 if (!(prop in a))
                     return false;
@@ -2065,7 +2271,7 @@ exports.gen_color_id = function(counter) {
     return color_id;
 }
 
-exports.line_plane_intersect = function(pn, p_dist, lp, l_dir, dest) {
+exports.line_plane_intersect = function(pn, p_dist, pline, dest) {
     // four-dimensional representation of a plane
     var plane = _vec4_tmp;
     plane.set(pn);
@@ -2073,7 +2279,10 @@ exports.line_plane_intersect = function(pn, p_dist, lp, l_dir, dest) {
 
     // four-dimensional representation of line direction vector
     var line_dir = _vec4_tmp2;
-    line_dir.set(l_dir);
+    _vec3_tmp[0] = pline[3];
+    _vec3_tmp[1] = pline[4];
+    _vec3_tmp[2] = pline[5];
+    line_dir.set(_vec3_tmp);
     line_dir[3] = 0;
 
     var denominator = m_vec4.dot(plane, line_dir);
@@ -2084,7 +2293,8 @@ exports.line_plane_intersect = function(pn, p_dist, lp, l_dir, dest) {
 
     // four-dimensional representation of line point
     var line_point = _vec4_tmp2;
-    line_point.set(lp);
+    m_vec3.copy(pline, _vec3_tmp);
+    line_point.set(_vec3_tmp);
     line_point[3] = 1;
 
     var numerator = m_vec4.dot(plane, line_point);
@@ -2092,9 +2302,9 @@ exports.line_plane_intersect = function(pn, p_dist, lp, l_dir, dest) {
     var t = - numerator / denominator;
 
     // point of intersection
-    dest[0] = lp[0] + t * l_dir[0];
-    dest[1] = lp[1] + t * l_dir[1];
-    dest[2] = lp[2] + t * l_dir[2];
+    dest[0] = pline[0] + t * pline[3];
+    dest[1] = pline[1] + t * pline[4];
+    dest[2] = pline[2] + t * pline[5];
 
     return dest;
 }
@@ -2244,7 +2454,7 @@ exports.version_cmp = function(ver1, ver2) {
 }
 
 /**
- * It doesn't worry about leading zeros; unappropriate for date 
+ * It doesn't worry about leading zeros; unappropriate for date
  * (month, hour, minute, ...) values.
  */
 exports.version_to_str = function(ver) {
@@ -2320,6 +2530,20 @@ function normpath(path) {
 
 exports.check_npot = function(num) {
     return parseInt(num.toString(2).substr(1), 2) != 0;
+}
+
+exports.ellipsoid_axes_to_mat3 = function(axis_x, axis_y, axis_z, dest) {
+    dest[0] = axis_x[0];
+    dest[1] = axis_y[0];
+    dest[2] = axis_z[0];
+    dest[3] = axis_x[1];
+    dest[4] = axis_y[1];
+    dest[5] = axis_z[1];
+    dest[6] = axis_x[2];
+    dest[7] = axis_y[2];
+    dest[8] = axis_z[2];
+
+    return dest;
 }
 
 }

@@ -21,6 +21,8 @@ var m_obelisks = require("obelisks");
 var m_bonuses  = require("bonuses");
 var m_gems     = require("gems");
 
+var m_phy      = require("physics");
+
 var _level_conf = null; // specified during initialization
 
 var _enemies_wrappers = [];
@@ -33,9 +35,27 @@ var _quat4_tmp2 = new Float32Array(4);
 
 var _golems_spawn_timer = 0;
 
+var ZERO_VEC = new Float32Array(3);
+
 exports.init = function(elapsed_sensor, level_conf) {
     _level_conf = level_conf;
     _golems_spawn_timer = m_conf.GOLEMS_SPAWN_INTERVAL;
+    _enemies_wrappers.length = 0;
+
+    function char_ray_cb(golem_wrapper, id, pulse) {
+        var value = m_ctl.get_sensor_value(golem_wrapper, "CHAR_RAY", 0);
+        var payload = m_ctl.get_sensor_payload(golem_wrapper, "CHAR_RAY", 0);
+        if (value == 0)
+            golem_wrapper.can_see_char = true;
+        else
+            golem_wrapper.can_see_char = false;
+        var ray_id = payload.ray_test_id;
+        var char_wrapper = m_char.get_wrapper();
+        var char_trans = m_trans.get_translation(char_wrapper.phys_body, _vec3_tmp);
+        var golem_trans = m_trans.get_translation(golem_wrapper.empty, _vec3_tmp_2);
+        m_phy.change_ray_test_from_to(ray_id, golem_trans, char_trans);
+    }
+
     for (var i = 0; i < _level_conf.GOLEMS_EMPTIES.length; i++) {
 
         var empty_name = _level_conf.GOLEMS_EMPTIES[i];
@@ -55,10 +75,17 @@ exports.init = function(elapsed_sensor, level_conf) {
 
         set_unit_params(golem_wrapper, type);
 
-        var ray_sens = m_ctl.create_ray_sensor(golem, [0, 0, 0], [0, -10, 0],
+        var gound_ray_sens = m_ctl.create_ray_sensor(golem, ZERO_VEC, [0, -10, 0],
                                                "GROUND", false, false, true);
+        var common_ray_sens = m_ctl.create_ray_sensor(null, ZERO_VEC, [0, -10, 0],
+                                               "COMMON", true, false, true);
+
+        m_ctl.create_sensor_manifold(golem_wrapper, "CHAR_RAY", m_ctl.CT_CONTINUOUS,
+                 [common_ray_sens], function(s){return true},
+                 char_ray_cb);
         m_ctl.create_sensor_manifold(golem_wrapper, "GOLEM", m_ctl.CT_CONTINUOUS,
-                 [elapsed_sensor, ray_sens], function(s){return true}, golem_ai_cb);
+                 [elapsed_sensor, gound_ray_sens], function(s){return true},
+                 golem_ai_cb);
 
         _enemies_wrappers.push(golem_wrapper);
         m_combat.append_enemy(golem_wrapper);
@@ -91,6 +118,8 @@ function init_enemy_wrapper(body, rig, empty) {
         prev_dest: -1,
         dest_pos: new Float32Array(3),
         dist_to_ground: 0,
+
+        can_see_char: false,
 
         last_target: m_conf.GT_POINT,
 
@@ -139,6 +168,9 @@ function golem_ai_cb(golem_wrapper, id, pulse) {
         return;
     }
 
+    if (m_char.get_wrapper().state == m_conf.CH_VICTORY)
+        return;
+
     var ray_dist = m_ctl.get_sensor_value(golem_wrapper, id, 1);
     golem_wrapper.dist_to_ground = ray_dist * 10 - golem_wrapper.height / 2;
 
@@ -156,15 +188,27 @@ function golem_ai_cb(golem_wrapper, id, pulse) {
 }
 
 function init_spawn(elapsed_sensor) {
-    var spawn_points = [];
-    var spawn_quats = [];
-    for (var i = 0; i < _level_conf.GOLEM_SPAWN_POINTS.length; i++) {
-        var spawn_obj = m_scs.get_object_by_name(_level_conf.GOLEM_SPAWN_POINTS[i]);
+
+    var lava_spawn_points = [];
+    var stone_spawn_points = [];
+    var lava_spawn_quats = [];
+    var stone_spawn_quats = [];
+
+    for (var i = 0; i < _level_conf.LAVA_GOLEM_SPAWN_POINTS.length; i++) {
+        var spawn_obj = m_scs.get_object_by_name(_level_conf.LAVA_GOLEM_SPAWN_POINTS[i]);
         var spawn_pos = m_trans.get_translation(spawn_obj);
         var spawn_rot = m_trans.get_rotation(spawn_obj);
-        spawn_points.push(spawn_pos);
-        spawn_quats.push(spawn_rot);
+        lava_spawn_points.push(spawn_pos);
+        lava_spawn_quats.push(spawn_rot);
     }
+    if (_level_conf.STONE_GOLEM_SPAWN_POINTS)
+        for (var i = 0; i < _level_conf.STONE_GOLEM_SPAWN_POINTS.length; i++) {
+            var spawn_obj = m_scs.get_object_by_name(_level_conf.STONE_GOLEM_SPAWN_POINTS[i]);
+            var spawn_pos = m_trans.get_translation(spawn_obj);
+            var spawn_rot = m_trans.get_rotation(spawn_obj);
+            stone_spawn_points.push(spawn_pos);
+            stone_spawn_quats.push(spawn_rot);
+        }
 
     function golems_spawn_cb(obj, id) {
 
@@ -186,7 +230,11 @@ function init_spawn(elapsed_sensor) {
                 var island_id = 0;
             }
 
-            spawn(golem_wrapper, island_id, spawn_points, spawn_quats);
+            if (golem_wrapper.type == m_conf.EN_TYPE_GOLEM_LAVA)
+                spawn(golem_wrapper, island_id, lava_spawn_points, lava_spawn_quats);
+            else
+                spawn(golem_wrapper, island_id, stone_spawn_points, stone_spawn_quats);
+
         }
     }
     m_ctl.create_sensor_manifold(null, "GOLEMS_SPAWN", m_ctl.CT_CONTINUOUS,
@@ -305,10 +353,9 @@ function move(golem_wrapper, elapsed) {
         }
     } else if (_level_conf.LEVEL_NAME == "dungeon") {
          if (char_wrapper.hp > 0 &&
-                m_combat.check_visibility(golem_wrapper, char_wrapper)) {
+                m_combat.check_visibility(golem_wrapper, char_wrapper) &&
+                golem_wrapper.can_see_char) {
             attack_target(golem_wrapper, char_wrapper.phys_body, elapsed);
-            golem_wrapper.speed = 2 * m_conf.GOLEM_SPEED;
-            m_anim.set_speed(golem_wrapper.rig, 2)
             golem_wrapper.last_target = m_conf.GT_CHAR;
         } else {
             patrol(golem_wrapper, elapsed);
@@ -332,10 +379,16 @@ function attack_target(golem_wrapper, target, elapsed) {
     var dist_to_targ = m_vec3.distance(trans, targ_trans);
     var angle_to_targ = rotate_to_dest(golem_wrapper, elapsed);
 
-    if (dist_to_targ >= m_conf.GOLEM_ATTACK_DIST)
+    if ((Math.abs(angle_to_targ) < Math.PI / 6) &&
+            (dist_to_targ >= m_conf.GOLEM_ATTACK_DIST))
         translate(golem_wrapper, elapsed);
-    else if (angle_to_targ < 0.05 * Math.PI)
+    else if (Math.abs(angle_to_targ) < 0.05 * Math.PI)
         perform_attack(golem_wrapper);
+
+    if (golem_wrapper.type == m_conf.EN_TYPE_GOLEM_STONE) {
+        m_anim.set_speed(golem_wrapper.rig, m_conf.STONE_GOLEMS_SP_MULT);
+        golem_wrapper.speed = m_conf.GOLEM_SPEED * m_conf.STONE_GOLEMS_SP_MULT;
+    }
 }
 
 function perform_attack(golem_wrapper) {
@@ -345,7 +398,6 @@ function perform_attack(golem_wrapper) {
     var trans       = _vec3_tmp;
     var cur_dir     = _vec3_tmp_2;
 
-    m_anim.set_speed(golem_wrapper.rig, 2)
     golem_wrapper.attack_done = false;
     set_state(golem_wrapper, m_conf.GS_ATTACKING)
 
@@ -360,11 +412,12 @@ function perform_attack(golem_wrapper) {
 }
 
 function patrol(golem_wrapper, elapsed) {
-    golem_wrapper.speed = m_conf.GOLEM_SPEED;
     m_anim.set_speed(golem_wrapper.rig, 1)
+    golem_wrapper.speed = m_conf.GOLEM_SPEED;
     set_dest_point(golem_wrapper);
-    rotate_to_dest(golem_wrapper, elapsed);
-    translate(golem_wrapper, elapsed);
+    var ang_to_dest = rotate_to_dest(golem_wrapper, elapsed);
+    if (Math.abs(ang_to_dest) < Math.PI / 6)
+        translate(golem_wrapper, elapsed);
 }
 
 function set_dest_point(golem_wrapper) {
@@ -380,8 +433,8 @@ function set_dest_point(golem_wrapper) {
     if (dist_to_dest > 0.05 && golem_wrapper.last_target == m_conf.GT_POINT)
         return;
 
-    golem_wrapper.last_target = m_conf.GT_POINT;
     golem_set_random_destination(golem_wrapper, trans);
+    golem_wrapper.last_target = m_conf.GT_POINT;
 }
 
 function hor_distance(vec1, vec2) {
@@ -395,8 +448,12 @@ function hor_distance(vec1, vec2) {
 function golem_set_random_destination(golem_wrapper, trans) {
     if (_level_conf.LEVEL_NAME == "volcano")
         set_destination_by_island(golem_wrapper, trans);
-    else
-        set_destination_by_id(golem_wrapper, trans);
+    else {
+        if (golem_wrapper.last_target == m_conf.GT_CHAR)
+            set_nearest_dest_point(golem_wrapper, trans);
+        else
+            set_destination_by_id(golem_wrapper, trans);
+    }
 }
 
 function set_destination_by_island(golem_wrapper, trans) {
@@ -529,9 +586,6 @@ function translate(golem_wrapper, elapsed) {
         var y_correction = delta;
 
     trans[1] -= y_correction;
-    if (trans[1] > 0)
-        trans[1] = 0;
-
     m_trans.set_translation_v(empty, trans);
 
     if (!m_sfx.is_play(walk_speaker)) {

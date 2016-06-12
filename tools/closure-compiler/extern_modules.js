@@ -25,9 +25,32 @@ WebGLRenderingContext.READ_FRAMEBUFFER;
 WebGLRenderingContext.DRAW_FRAMEBUFFER;
 WebGLRenderingContext.blitFramebuffer;
 WebGLRenderingContext.renderbufferStorageMultisample;
+WebGLRenderingContext.RENDERBUFFER_SAMPLES;
+
+// missing extensions stuff
+var EXTDisjointTimerQuery;
+EXTDisjointTimerQuery.CURRENT_QUERY_EXT;
+EXTDisjointTimerQuery.GPU_DISJOINT_EXT;
+EXTDisjointTimerQuery.QUERY_COUNTER_BITS_EXT;
+EXTDisjointTimerQuery.QUERY_RESULT_AVAILABLE_EXT;
+EXTDisjointTimerQuery.QUERY_RESULT_EXT;
+EXTDisjointTimerQuery.TIMESTAMP_EXT;
+EXTDisjointTimerQuery.TIME_ELAPSED_EXT;
+EXTDisjointTimerQuery.beginQueryEXT;
+EXTDisjointTimerQuery.createQueryEXT;
+EXTDisjointTimerQuery.deleteQueryEXT;
+EXTDisjointTimerQuery.endQueryEXT;
+EXTDisjointTimerQuery.getQueryEXT;
+EXTDisjointTimerQuery.getQueryObjectEXT;
+EXTDisjointTimerQuery.isQueryEXT;
+EXTDisjointTimerQuery.queryCounterEXT;
 
 // missing WebVR API stuff
 Navigator.prototype.getVRDevices;
+
+// missing gamepad API stuff
+Navigator.prototype.getGamepads;
+Navigator.prototype.webkitGetGamepads;
 
 var HMDVRDevice;
 // HMDVRDevice properties

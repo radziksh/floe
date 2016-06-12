@@ -1,20 +1,3 @@
-# Copyright (C) 2014-2015 Triumph LLC
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
-__author__ = 'dal'
 
 import urllib
 import bpy
@@ -29,7 +12,7 @@ from blend4web.translator import _, p_
 
 def check_for_update(blender_version, b4w_version):
     try:
-        r = urllib.request.urlopen('https://www.blend4web.com/get_versions/', timeout=1).readall()
+        r = urllib.request.urlopen('https://www.blend4web.com/get_versions/', timeout=1).read()
     except urllib.error.URLError as e:
         print("B4W Can't check for updates: %s" % e)
         return None
@@ -91,10 +74,8 @@ class B4WUpdateMessage(bpy.types.Operator):
         self.layout.operator("wm.url_open", text=_("Download"), icon='URL').url = "https://www.blend4web.com/en/downloads/"
 
 def register():
-    bpy.utils.register_class(B4WUpdateMessage)
     bpy.app.handlers.scene_update_pre.append(check_for_update_callback)
 
 def unregister():
     if check_for_update_callback in bpy.app.handlers.scene_update_pre:
         bpy.app.handlers.scene_update_pre.remove(check_for_update_callback)
-    bpy.utils.unregister_class(B4WUpdateMessage)

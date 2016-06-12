@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,33 +41,34 @@ b4w.module["main"] = function(exports, require) {
  * @param {Number} timeline Timeline
  */
 
-var m_anchors  = require("__anchors");
-var m_anim     = require("__animation");
-var m_assets   = require("__assets");
-var m_cfg      = require("__config");
-var m_compat   = require("__compat");
-var m_cont     = require("__container");
-var m_ctl      = require("__controls");
-var m_data     = require("__data");
-var m_debug    = require("__debug");
-var m_ext      = require("__extensions");
-var m_geom     = require("__geometry");
-var m_hud      = require("__hud");
-var m_nla      = require("__nla");
-var m_lnodes   = require("__logic_nodes")
-var m_obj      = require("__objects");
-var m_phy      = require("__physics");
-var m_print    = require("__print");
-var m_render   = require("__renderer");
-var m_scenes   = require("__scenes");
-var m_sfx      = require("__sfx");
-var m_shaders  = require("__shaders");
-var m_textures = require("__textures");
-var m_time     = require("__time");
-var m_trans    = require("__transform");
-var m_armat    = require("__armature");
-var m_util     = require("__util");
-var m_version  = require("__version");
+var m_anchors   = require("__anchors");
+var m_anim      = require("__animation");
+var m_assets    = require("__assets");
+var m_cfg       = require("__config");
+var m_compat    = require("__compat");
+var m_cont      = require("__container");
+var m_ctl       = require("__controls");
+var m_data      = require("__data");
+var m_debug     = require("__debug");
+var m_ext       = require("__extensions");
+var m_geom      = require("__geometry");
+var m_input     = require("__input");
+var m_hud       = require("__hud");
+var m_nla       = require("__nla");
+var m_lnodes    = require("__logic_nodes")
+var m_obj       = require("__objects");
+var m_phy       = require("__physics");
+var m_print     = require("__print");
+var m_render    = require("__renderer");
+var m_scenes    = require("__scenes");
+var m_sfx       = require("__sfx");
+var m_shaders   = require("__shaders");
+var m_textures  = require("__textures");
+var m_time      = require("__time");
+var m_trans     = require("__transform");
+var m_util      = require("__util");
+var m_version   = require("__version");
+var m_particles = require("__particles");
 
 var cfg_ctx = m_cfg.context;
 var cfg_def = m_cfg.defaults;
@@ -151,8 +152,9 @@ exports.init = function(elem_canvas_webgl, elem_canvas_hud) {
 
     m_compat.apply_context_alpha_hack();
 
-    // allow WebGL 2 only in Chrome
-    if (!m_compat.check_user_agent("Chrome"))
+    // allow WebGL 2 only in Chrome and Firefox
+    if (!(m_compat.check_user_agent("Chrome") ||
+                m_compat.check_user_agent("Firefox")))
         cfg_def.webgl2 = false;
 
     var gl = get_context(elem_canvas_webgl, cfg_def.webgl2);
@@ -167,7 +169,6 @@ exports.init = function(elem_canvas_webgl, elem_canvas_hud) {
         return null;
 
     m_print.log("%cINIT WEBGL " + (cfg_def.webgl2 ? "2" : "1"), "color: #00a");
-    window.gl = gl;
 
     _gl = gl;
 
@@ -270,16 +271,6 @@ function init_context(canvas, canvas_hud, gl) {
 }
 
 /**
- * Whether to perform the checks of WebGL errors during rendering or not.
- * Note: additional checks can slow down the engine.
- * @param {Boolean} val Check flag
- * @method module:main.set_check_gl_errors
- */
-exports.set_check_gl_errors = function(val) {
-    m_debug.set_check_gl_errors(val);
-}
-
-/**
  * Resize the rendering canvas.
  * @method module:main.resize
  * @param {Number} width New canvas width
@@ -346,17 +337,8 @@ function clear_render_callback() {
  * @deprecated Use {@link module:time.get_timeline|time.get_timeline} instead
  */
 exports.global_timeline = function() {
+    m_print.error_deprecated("main.global_timeline", "time.get_timeline");
     return m_time.get_timeline();
-}
-
-/**
- * Force redraw.
- * @method module:main.redraw
- * @deprecated Never required
- */
-exports.redraw = function() {
-    m_print.error_once("redraw() deprecated");
-    frame(m_time.get_timeline(), 0);
 }
 
 exports.pause = pause;
@@ -470,13 +452,8 @@ function frame(timeline, delta) {
     if (!m_data.is_primary_loaded())
         return;
 
-    // user callback
-    _render_callback(delta, timeline);
-
-    // possible unload in render callback
-    if (!m_data.is_primary_loaded())
-        return;
-
+    //inputs should be updated before controls
+    m_input.update();
     // controls
     m_ctl.update(timeline, delta);
 
@@ -489,6 +466,16 @@ function frame(timeline, delta) {
 
     // objects
     m_obj.update(timeline, delta);
+
+    // particles
+    m_particles.update();
+
+    // user callback
+    _render_callback(delta, timeline);
+
+    // possible unload in render callback
+    if (!m_data.is_primary_loaded())
+        return;
 
     // rendering
     m_scenes.update(timeline, delta);
@@ -571,6 +558,7 @@ exports.canvas_data_url = function(callback) {
  * @deprecated Use {@link module:container.get_canvas|container.get_canvas} instead
  */
 exports.get_canvas_elem = function() {
+    m_print.error_deprecated("main.get_canvas_elem", "container.get_canvas");
     return _elem_canvas_webgl;
 }
 /**

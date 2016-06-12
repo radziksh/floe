@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,9 +36,13 @@ var m_vec3   = require("__vec3");
 var cfg_def = m_cfg.defaults;
 
 var USE_FRUSTUM_CULLING = true;
-var SUBS_UPDATE_DO_RENDER = ["MAIN_OPAQUE", "MAIN_BLEND", "MAIN_PLANE_REFLECT",
-        "MAIN_CUBE_REFLECT", "MAIN_GLOW", "SHADOW_CAST", "DEPTH", "OUTLINE_MASK",
-        "WIREFRAME", "COLOR_PICKING", "MAIN_XRAY", "COLOR_PICKING_XRAY"];
+var SUBS_UPDATE_DO_RENDER = ["MAIN_OPAQUE", "MAIN_BLEND",
+        "MAIN_PLANE_REFLECT", "MAIN_CUBE_REFLECT", "MAIN_PLANE_REFLECT_BLEND",
+        "MAIN_CUBE_REFLECT_BLEND", "MAIN_GLOW", "SHADOW_CAST", "SHADOW_RECEIVE",
+        "OUTLINE_MASK", "DEBUG_VIEW", "COLOR_PICKING", "MAIN_XRAY",
+        "COLOR_PICKING_XRAY"];
+
+var _vec3_tmp = new Float32Array(3);
 
 /**
  * Set do_render flag for subscenes/bundles
@@ -50,28 +54,39 @@ exports.prerender_subs = function(subs) {
 
         for (var i = 0; i < bundles.length; i++) {
             var bundle = bundles[i];
-            if (subs.type == "MAIN_CUBE_REFLECT") {
+            var batch = bundle.batch;
+            if (subs.type == "MAIN_CUBE_REFLECT"
+                    || subs.type == "MAIN_CUBE_REFLECT_BLEND") {
                 for (var j = 0; j < 6; j++) {
                     subs.camera.frustum_planes = subs.cube_cam_frustums[j];
                     bundle.do_render_cube[j] = prerender_bundle(bundle, subs);
-                    if (bundle.do_render_cube[j])
+                    if (bundle.do_render_cube[j]) {
                         has_render_bundles = true;
+                        update_particles_buffers(batch);
+                    }
                 }
             } else {
                 bundle.do_render = prerender_bundle(bundle, subs);
-                if (bundle.do_render)
+                if (bundle.do_render) {
                     has_render_bundles = true;
+                    update_particles_buffers(batch);
+                }
             }
+
+            if (subs.need_perm_uniforms_update)
+                batch.shader.need_uniforms_update = true;
         }
+        subs.need_perm_uniforms_update = false;
 
         switch (subs.type) {
-        case "WIREFRAME":
-            // NOTE: wireframe subs rendered optionally
+        case "DEBUG_VIEW":
+            // NOTE: debug view subs rendered optionally
             break;
         default:
-            // prevent rare bugs when blend is only one rendered
-            if (subs.type === "MAIN_OPAQUE" || subs.type === "DEPTH" 
-                    || subs.type === "MAIN_GLOW" || has_render_bundles)
+            // prevent bugs when blend is only one rendered
+            if (subs.type === "MAIN_OPAQUE" || subs.type === "SHADOW_RECEIVE" 
+                    || subs.type === "MAIN_GLOW" || subs.type === "MAIN_PLANE_REFLECT"
+                    || subs.type === "MAIN_CUBE_REFLECT" || has_render_bundles)
                 subs.do_render = true;
             else {
                 // clear subscene if it switches "do_render" flag to false
@@ -81,6 +96,13 @@ exports.prerender_subs = function(subs) {
             }
             break;
         }
+    } else if (subs.need_perm_uniforms_update) {
+        var bundles = subs.bundles;
+        for (var i = 0; i < bundles.length; i++) {
+            if (subs.need_perm_uniforms_update)
+                bundles[i].batch.shader.need_uniforms_update = true;
+        }
+        subs.need_perm_uniforms_update = false;
     }
     if (subs.type == "MAIN_BLEND")
         zsort(subs);
@@ -95,38 +117,42 @@ function zsort(subs) {
     if (!cfg_def.alpha_sort || !subs.bundles)
         return;
 
-    var eye = m_tsr.get_trans_view(subs.camera.world_tsr);
-
-    // update if coords changed more than for 1 unit
-    var cam_updated =
-        m_vec3.dist(eye, subs.zsort_eye_last) > cfg_def.alpha_sort_threshold;
+    var eye = m_tsr.get_trans_value(subs.camera.world_tsr, _vec3_tmp);
 
     for (var i = 0; i < subs.bundles.length; i++) {
-        var bundle = subs.bundles[i];
-        var obj_render = bundle.obj_render;
 
-        if (!obj_render.force_zsort && !cam_updated)
+        var bundle = subs.bundles[i];
+        if (!bundle.do_render)
             continue;
 
+        var obj_render = bundle.obj_render;
         var batch = bundle.batch;
 
-        if (batch && batch.blend && batch.zsort_type != m_geom.ZSORT_DISABLED) {
+        if (batch && batch.z_sort) {
             var bufs_data = batch.bufs_data;
 
-            if (!bufs_data || !bundle.do_render)
+            if (!bufs_data)
                 continue;
 
             var info = bufs_data.info_for_z_sort_updates;
-            if (info && info.type == m_geom.ZSORT_BACK_TO_FRONT) {
-                m_geom.update_buffers_movable(bufs_data, obj_render.world_tsr, eye);
-            }
+
+            // update if camera shifted enough
+            var cam_shift = m_vec3.dist(eye, info.zsort_eye_last);
+
+            // take batch geometry size into account
+            var shift_param = cfg_def.alpha_sort_threshold * Math.min(info.bb_min_side, 1);
+            var batch_cam_updated = cam_shift > shift_param;
+
+            if (!batch_cam_updated && !obj_render.force_zsort)
+                continue;
+
+            m_geom.update_buffers_movable(bufs_data, obj_render.world_tsr, eye);
+
+            // remember new coords
+            m_vec3.copy(eye, info.zsort_eye_last);
         }
         obj_render.force_zsort = false;
     }
-
-    // remember new coords
-    if (cam_updated)
-        m_vec3.copy(eye, subs.zsort_eye_last);
 }
 
 /**
@@ -136,21 +162,19 @@ function zsort(subs) {
 function prerender_bundle(bundle, subs) {
 
     var obj_render = bundle.obj_render;
+    var batch = bundle.batch;
 
     obj_render.is_visible = false;
+
+    if (obj_render.hide)
+        return false;
 
     var cam = subs.camera;
 
     if (subs.type == "SHADOW_CAST")
         var eye = cam.lod_eye;
     else
-        var eye = m_tsr.get_trans_view(cam.world_tsr);
-
-    if (!obj_render)
-        return false;
-
-    if (obj_render.hide)
-        return false;
+        var eye = m_tsr.get_trans_value(cam.world_tsr, _vec3_tmp);
 
     if (!is_lod_visible(obj_render, eye))
         return false;
@@ -160,11 +184,11 @@ function prerender_bundle(bundle, subs) {
     if (subs.type == "OUTLINE_MASK" && !Boolean(obj_render.outline_intensity))
         return false;
 
-    if (USE_FRUSTUM_CULLING && is_out_of_frustum(obj_render, cam.frustum_planes))
+    if (USE_FRUSTUM_CULLING && is_out_of_frustum(obj_render, cam.frustum_planes, batch))
         return false;
 
-    if (subs.type == "WIREFRAME")
-        if (bundle.batch.wireframe_mode == m_debug.WM_DEBUG_SPHERES)
+    if (subs.type == "DEBUG_VIEW")
+        if (bundle.batch.debug_view_mode == m_debug.DV_DEBUG_SPHERES)
             return bundle.batch.debug_sphere;
         else
             return !bundle.batch.debug_sphere;
@@ -172,30 +196,23 @@ function prerender_bundle(bundle, subs) {
     return true;
 }
 
-function is_out_of_frustum(obj_render, planes) {
+function is_out_of_frustum(obj_render, planes, batch) {
 
     if (obj_render.do_not_cull)
         return false;
 
-    if (obj_render.type === "STATIC") {
-        var bs = obj_render.bs_world;
-        var pt = bs.center;
-        var radius = bs.radius;
-        var is_out = m_util.sphere_is_out_of_frustum(pt, planes, radius);
-    } else {
-        var be = obj_render.be_world;
-        var pt = be.center;
-        var axis_x = be.axis_x;
-        var axis_y = be.axis_y;
-        var axis_z = be.axis_z;
-        var is_out = m_util.ellipsoid_is_out_of_frustum(pt, planes,
+    var be = batch.be_world;
+    var pt = be.center;
+    var axis_x = be.axis_x;
+    var axis_y = be.axis_y;
+    var axis_z = be.axis_z;
+    var is_out = m_util.ellipsoid_is_out_of_frustum(pt, planes,
                                                       axis_x, axis_y, axis_z);
-    }
-
     return is_out;
 }
 
 function is_lod_visible(obj_render, eye) {
+
     var center = obj_render.bs_world.center;
 
     var dist_min = obj_render.lod_dist_min;
@@ -212,6 +229,26 @@ function is_lod_visible(obj_render, eye) {
         return true;
     else
         return false;
+}
+
+function update_particles_buffers(batch) {
+    // NOTE: update buffers only for visible bundles
+    var pdata = batch.particles_data;
+    if (!(pdata && pdata.need_buffers_update))
+        return;
+
+    var pbuf = batch.bufs_data;
+    m_geom.make_dynamic(pbuf);
+    var vbo_array = pbuf.vbo_array;
+
+    var pointers = pbuf.pointers;
+    var pos_pointer = pointers["a_position"];
+    var norm_pointer = pointers["a_normal"];
+
+    vbo_array.set(pdata.positions_cache, pos_pointer.offset);
+    vbo_array.set(pdata.normals_cache, norm_pointer.offset);
+
+    m_geom.update_gl_buffers(pbuf);
 }
 
 }

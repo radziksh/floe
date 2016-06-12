@@ -22,7 +22,8 @@ exports.init = function() {
         show_fps: true,
         physics_enabled: false,
         alpha: true,
-        autoresize: true
+        autoresize: true,
+        console_verbose: true
     });
 }
 
@@ -32,7 +33,6 @@ function init_cb(canvas_elem, success) {
         console.log("b4w init failure");
         return;
     }
-    m_app.enable_controls();
     load();
 }
 

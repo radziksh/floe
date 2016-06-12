@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,16 +26,18 @@
  */
 b4w.module["__geometry"] = function(exports, require) {
 
+var m_bounds= require("__boundings");
 var m_ext   = require("__extensions");
 var m_print = require("__print");
 var m_tsr   = require("__tsr");
 var m_util  = require("__util");
 var m_vec3  = require("__vec3");
 
-
 var _vec3_tmp = new Float32Array(3);
 var _vec3_tmp2 = new Float32Array(3);
 var _vec3_tmp3 = new Float32Array(3);
+
+var _bb_corners_tmp = new Float32Array(24);
 
 var MAX_SUBMESH_LENGTH = 256*256;
 var BINARY_FLOAT_SIZE = 4;
@@ -50,11 +52,6 @@ var COL_NUM_COMP = 3;
 
 // deprecated
 var INFLUENCE_NUM_COMP = 4;
-
-// z-sort types
-exports.ZSORT_DISABLED      = 10;
-exports.ZSORT_BACK_TO_FRONT = 20;
-exports.ZSORT_FRONT_TO_BACK = 30;
 
 // draw modes
 exports.DM_TRIANGLES         = 10;
@@ -92,7 +89,7 @@ exports.delete_buffers = function(geometry_id) {
 /**
  * Convert mesh/material object to gl buffer data
  */
-exports.submesh_to_bufs_data = function(submesh, zsort_type, draw_mode, vc_usage) {
+exports.submesh_to_bufs_data = function(submesh, z_sort, draw_mode, vc_usage) {
     if (is_long_submesh(submesh))
         submesh_drop_indices(submesh);
 
@@ -112,7 +109,7 @@ exports.submesh_to_bufs_data = function(submesh, zsort_type, draw_mode, vc_usage
     update_gl_buffers(bufs_data);
 
     // NOTE: Z-sorting is possible only for indexed buffers
-    if (zsort_type != exports.ZSORT_DISABLED && is_indexed(submesh)) {
+    if (z_sort && is_indexed(submesh)) {
         // object is movable and/or animatable so we cannot precalc
         // world space triangle medians as for batches; so just save sources
 
@@ -125,7 +122,8 @@ exports.submesh_to_bufs_data = function(submesh, zsort_type, draw_mode, vc_usage
             median_cache: new Float32Array(indices.length),
             median_world_cache: new Float32Array(indices.length),
             dist_cache: new Float32Array(indices.length/3),
-            type: zsort_type
+            zsort_eye_last: new Float32Array(3),
+            bb_min_side: m_bounds.calc_min_bb_side(submesh.submesh_bd.bb_local)
         };
     }
 
@@ -683,16 +681,27 @@ function submesh_list_join(submeshes) {
     var submesh0 = submeshes[0];
     var new_submesh = submesh_list_join_prepare_dest(submeshes);
 
+    var new_submesh_bd = new_submesh.submesh_bd;
+    new_submesh_bd.bb_world = m_util.clone_object_r(submesh0.submesh_bd.bb_world);
+    new_submesh_bd.be_world = m_util.clone_object_r(submesh0.submesh_bd.be_world);
+
+    new_submesh_bd.bb_local = m_util.clone_object_r(submesh0.submesh_bd.bb_local);
+    new_submesh_bd.be_local = m_util.clone_object_r(submesh0.submesh_bd.be_local);
     // indices
     var i_offset = 0;
     var v_ind_offset = 0;
     var keys = {};
+    var bounding_verts = [];
     for (var i = 0; i < submeshes.length; i++) {
         var submesh = submeshes[i];
         var indices = submesh.indices;
         var base_length = submesh.base_length;
         var va_common = submesh.va_common;
         var va_frames = submesh.va_frames;
+        m_bounds.extract_bb_corners(submesh.submesh_bd.bb_world, _bb_corners_tmp);
+        m_bounds.expand_bounding_box(new_submesh_bd.bb_world, submesh.submesh_bd.bb_world);
+        for (var k = 0; k < _bb_corners_tmp.length; k++)
+            bounding_verts.push(_bb_corners_tmp[k])
 
         // indices
         for (var j = 0; j < indices.length; j++) {
@@ -723,6 +732,8 @@ function submesh_list_join(submeshes) {
         }
         v_ind_offset += base_length;
     }
+    new_submesh.submesh_bd.be_world = m_bounds.create_bounding_ellipsoid_by_bb(
+            bounding_verts, true);
 
     if (new_submesh.shape_keys.length > 0)
         for (var i = 0; i < new_submesh.shape_keys.length; i++) {
@@ -817,7 +828,7 @@ function submesh_list_join_prepare_dest(submeshes) {
  * well-suited for hair particles
  * ignore transform/center positions
  */
-exports.make_clone_submesh = function(src_submesh, params, transforms) {
+exports.make_clone_submesh = function(src_submesh, params, transforms, em_obj) {
 
     // ignore empty submeshes
     if (!src_submesh.base_length)
@@ -850,6 +861,11 @@ exports.make_clone_submesh = function(src_submesh, params, transforms) {
     new_submesh.base_length = base_length * count;
 
     new_submesh.indices = new Uint32Array(indices.length * count);
+
+    var submesh_bd = new_submesh.submesh_bd;
+    var bb_tmp = m_bounds.zero_bounding_box();
+    var bs_tmp = m_bounds.zero_bounding_sphere();
+    var bounding_verts = [];
 
     for (var i = 0; i < count; i++) {
         var i_offset = indices.length * i;
@@ -909,6 +925,25 @@ exports.make_clone_submesh = function(src_submesh, params, transforms) {
         }
     }
 
+    var submesh_bd = new_submesh.submesh_bd;
+    var bb_tmp = m_bounds.zero_bounding_box();
+    var bounding_verts = [];
+
+    for (var i = 0; i < count; i++) {
+        bb_tmp = m_bounds.bounding_box_transform(src_submesh.submesh_bd.bb_local,
+                transforms[i], bb_tmp);
+        m_bounds.expand_bounding_box(submesh_bd.bb_local, bb_tmp);
+        bb_tmp = m_bounds.bounding_box_transform(bb_tmp, 
+                em_obj.render.world_tsr, bb_tmp);
+        m_bounds.expand_bounding_box(submesh_bd.bb_world, bb_tmp);
+        m_bounds.extract_bb_corners(bb_tmp, _bb_corners_tmp);
+        for (var j = 0; j < _bb_corners_tmp.length; j++)
+            bounding_verts.push(_bb_corners_tmp[j])
+    }
+    submesh_bd.be_world = m_bounds.create_bounding_ellipsoid_by_bb(bounding_verts, true);
+    submesh_bd.be_local = m_bounds.calc_be_local_by_tsr(submesh_bd.be_world,
+        em_obj.render.world_tsr);
+
     return new_submesh;
 }
 
@@ -924,12 +959,12 @@ function extract_submesh(mesh, material_index, attr_names, bone_skinning_info,
     // TODO: implement caching
     // TODO: handle cases when submesh can't provide requested attribute name
 
-    var submesh = m_util.create_empty_submesh("SUBMESH_" + mesh["name"] + "_" +
-            material_index);
-
     var bsub = mesh["submeshes"][material_index];
     var base_length = bsub["base_length"];
     var mat = mesh["materials"][material_index];
+
+    var submesh = m_util.create_empty_submesh("SUBMESH_" + mesh["name"] + "_" +
+            mat["name"]);
 
     submesh.base_length = base_length;
 
@@ -1042,8 +1077,30 @@ function extract_submesh(mesh, material_index, attr_names, bone_skinning_info,
         submesh_drop_indices(submesh, 1, true);
         submesh.va_common["a_polyindex"] = extract_polyindices(submesh);
     }
+    // extract submesh bounding data
+
+    submesh.submesh_bd = submesh_bd_to_b4w(bsub["boundings"]);
 
     return submesh;
+}
+
+function submesh_bd_to_b4w(submesh_bd) {
+    var be_axes = submesh_bd["bounding_ellipsoid_axes"];
+    return {
+        bb_local : {
+            max_x : submesh_bd["bounding_box"]["max_x"],
+            max_y : submesh_bd["bounding_box"]["max_y"],
+            max_z : submesh_bd["bounding_box"]["max_z"],
+            min_x : submesh_bd["bounding_box"]["min_x"],
+            min_y : submesh_bd["bounding_box"]["min_y"],
+            min_z : submesh_bd["bounding_box"]["min_z"]
+        },
+        be_local : m_bounds.create_bounding_ellipsoid(
+                    [be_axes[0], 0, 0], [0, be_axes[1], 0], [0, 0, be_axes[2]],
+                    submesh_bd["bounding_ellipsoid_center"], [0, 0, 0, 1]),
+        bb_world : null,
+        be_world : null
+    }
 }
 
 function create_frame(submesh, bsub, attr_names, base_length, use_normal,
@@ -1300,6 +1357,7 @@ exports.extract_halo_submesh = function(submesh) {
     var pos_arr      = new Float32Array(12 * base_length);
     var bb_vert_arr  = new Float32Array(8 * base_length);
     var indices_out  = new Uint32Array (4 * submesh.indices.length);
+    var random_vals = new Float32Array (4 * base_length);
 
     for (var i = 0; i < base_length; i++) {
         // generate positions
@@ -1336,6 +1394,12 @@ exports.extract_halo_submesh = function(submesh) {
         indices_out[6 * i + 3]   =  4 * i + 2;
         indices_out[6 * i + 4]   =  4 * i;
         indices_out[6 * i + 5]   =  4 * i + 3;
+
+        var random_val = Math.random();
+        random_vals[4 * i] = random_val;
+        random_vals[4 * i + 1] = random_val;
+        random_vals[4 * i + 2] = random_val;
+        random_vals[4 * i + 3] = random_val;
     }
 
     var halo_submesh = m_util.create_empty_submesh("HALO");
@@ -1345,8 +1409,8 @@ exports.extract_halo_submesh = function(submesh) {
     halo_submesh.base_length = 4 * base_length;
     halo_submesh.va_frames[0]["a_position"]    = pos_arr;
     halo_submesh.va_common["a_halo_bb_vertex"] = bb_vert_arr;
+    halo_submesh.va_common["a_random_vals"] = random_vals;
     halo_submesh.indices                       = indices_out;
-
     return halo_submesh;
 }
 
@@ -1365,14 +1429,22 @@ function has_attr(attr_names, name) {
  * Extract all materials.
  * common_vc_usage - vertex colors which exist for every submesh
  */
-exports.extract_submesh_all_mats = function(mesh, attr_names, common_vc_usage) {
+exports.extract_submesh_all_mats = function(mesh, attr_names, common_vc_usage, render) {
 
     var submeshes = [];
 
     for (var i = 0; i < mesh["submeshes"].length; i++) {
         var submesh = extract_submesh(mesh, i, attr_names, null, common_vc_usage, null);
-        if (submesh.base_length)
+        if (submesh.base_length) {
+            var submesh_bd = submesh.submesh_bd;
+            if (render) {
+                submesh_bd.bb_world = m_bounds.bounding_box_transform(submesh_bd.bb_local,
+                        render.world_tsr);
+                submesh_bd.be_world = m_bounds.bounding_ellipsoid_transform(submesh_bd.be_local,
+                        render.world_tsr);
+            }
             submeshes.push(submesh);
+        }
     }
 
     if (submeshes.length == 0)
@@ -2189,6 +2261,137 @@ exports.has_dyn_geom = function(obj) {
         return true;
     else
         return false;
+}
+
+exports.draw_line = function(batch, positions, is_split) {
+
+    var bufs_data = batch.bufs_data;
+
+    if (bufs_data) {
+
+        if (is_split)
+            var num_line_segm = positions.length / 3 / 2;
+        else
+            var num_line_segm = positions.length / 3 - 1;
+
+        // two triangles, 4 vertices, 6 indices
+        var tri_pos = new Float32Array(num_line_segm * 4 * 3);
+        var tri_dir = new Float32Array(num_line_segm * 4 * 3);
+        var tri_ind = new Uint16Array(num_line_segm * 6);
+
+        for (var i = 0; i < num_line_segm; i++) {
+            if (is_split) {
+                var pos_offset = 2 * 3 * i;
+                var pos_offset_next = 2 * 3 * i + 3;
+            } else {
+                var pos_offset = 3 * i;
+                var pos_offset_next = 3 * (i + 1);
+            }
+
+            var pos_x = positions[pos_offset];
+            var pos_y = positions[pos_offset + 1];
+            var pos_z = positions[pos_offset + 2];
+
+            var pos_x_next = positions[pos_offset_next];
+            var pos_y_next = positions[pos_offset_next + 1];
+            var pos_z_next = positions[pos_offset_next + 2];
+
+            var dir_x = pos_x_next - pos_x;
+            var dir_y = pos_y_next - pos_y;
+            var dir_z = pos_z_next - pos_z;
+
+            // 0, right
+            tri_pos[i * 4 * 3     ] = pos_x;
+            tri_pos[i * 4 * 3 +  1] = pos_y;
+            tri_pos[i * 4 * 3 +  2] = pos_z;
+
+            tri_dir[i * 4 * 3     ] = dir_x;
+            tri_dir[i * 4 * 3 +  1] = dir_y;
+            tri_dir[i * 4 * 3 +  2] = dir_z;
+
+            // 1, left, next
+            tri_pos[i * 4 * 3 +  3] = pos_x_next;
+            tri_pos[i * 4 * 3 +  4] = pos_y_next;
+            tri_pos[i * 4 * 3 +  5] = pos_z_next;
+
+            tri_dir[i * 4 * 3 +  3] = -dir_x;
+            tri_dir[i * 4 * 3 +  4] = -dir_y;
+            tri_dir[i * 4 * 3 +  5] = -dir_z;
+
+            // 2, left
+            tri_pos[i * 4 * 3 +  6] = pos_x;
+            tri_pos[i * 4 * 3 +  7] = pos_y;
+            tri_pos[i * 4 * 3 +  8] = pos_z;
+
+            tri_dir[i * 4 * 3 +  6] = -dir_x;
+            tri_dir[i * 4 * 3 +  7] = -dir_y;
+            tri_dir[i * 4 * 3 +  8] = -dir_z;
+
+            // 3, right, next
+            tri_pos[i * 4 * 3 +  9] = pos_x_next;
+            tri_pos[i * 4 * 3 + 10] = pos_y_next;
+            tri_pos[i * 4 * 3 + 11] = pos_z_next;
+
+            tri_dir[i * 4 * 3 +  9] = dir_x;
+            tri_dir[i * 4 * 3 + 10] = dir_y;
+            tri_dir[i * 4 * 3 + 11] = dir_z;
+
+            // 0 1 2
+            tri_ind[i * 6] = 4 * i;
+            tri_ind[i * 6 + 1] = 4 * i + 1;
+            tri_ind[i * 6 + 2] = 4 * i + 2;
+
+            // 0 3 1
+            tri_ind[i * 6 + 3] = 4 * i;
+            tri_ind[i * 6 + 4] = 4 * i + 3;
+            tri_ind[i * 6 + 5] = 4 * i + 1;
+        }
+
+        var new_vbo_size = 0;
+        for (var attr in bufs_data.pointers) {
+            var pointer = bufs_data.pointers[attr];
+
+            new_vbo_size += tri_pos.length / 3 * pointer.num_comp;
+        }
+
+        bufs_data.vbo_array = new Float32Array(new_vbo_size);
+        var vbo_array = bufs_data.vbo_array;
+
+        exports.update_bufs_data_index_array(bufs_data, batch.draw_mode,
+                tri_ind);
+
+        var offset = 0;
+
+        for (var attr in bufs_data.pointers) {
+            var pointer = bufs_data.pointers[attr];
+
+            switch (attr) {
+            case "a_position":
+                vbo_array.set(tri_pos, offset);
+                pointer.offset = offset;
+                pointer.length = tri_pos.length;
+                offset += pointer.length;
+                break;
+            case "a_direction":
+                vbo_array.set(tri_dir, offset);
+                pointer.offset = offset;
+                pointer.length = tri_dir.length;
+                offset += pointer.length;
+                break;
+            default:
+                pointer.offset = offset;
+                pointer.length = tri_pos.length / 3 * pointer.num_comp;
+
+                var new_array = new Float32Array(pointer.length);
+
+                vbo_array.set(new_array, offset);
+                offset += pointer.length;
+                break;
+            }
+        }
+
+        update_gl_buffers(bufs_data);
+    }
 }
 
 }

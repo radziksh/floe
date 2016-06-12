@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 /**
  * Lights API.
  * @module lights
+ * @local LightParams
  */
 b4w.module["lights"] = function(exports, require) {
 
@@ -39,6 +40,20 @@ var _sun_pos        = new Float32Array(3);
 var _date           = {};
 var _julian_date    = 0;
 var _max_sun_angle  = 60;
+
+/**
+ * @typedef LightParams
+ * @type {Object}
+ * @property {String} light_type Light type
+ * @property {Number} light_energy Light energy
+ * @property {RGB} light_color Light color
+ * @property {Number} light_spot_blend Blend parameter of SPOT light
+ * @property {Number} light_spot_size Size parameter of SPOT light
+ * @property {Number} light_distance Light falloff distance for POINT and SPOT
+ * lights
+ * @cc_externs light_type light_energy light_color
+ * @cc_externs light_spot_blend light_spot_size light_distance
+*/
 
 /**
  * Get lamp objects.
@@ -89,15 +104,15 @@ function get_sun_params() {
         var cur_dir = sun.light.direction;
 
         // sun azimuth
-        var angle_hor = Math.atan2(cur_dir[2], cur_dir[0]) * 180 / Math.PI + 90;
+        var angle_hor = m_util.rad_to_deg(Math.atan2(cur_dir[2], cur_dir[0])) + 90;
         if (angle_hor > 180)
             angle_hor -= 360;
 
         // sun altitude
-        var angle_vert = Math.atan2(
+        var angle_vert = m_util.rad_to_deg(Math.atan2(
                 cur_dir[1],
                 Math.sqrt(cur_dir[0]*cur_dir[0] + cur_dir[2]*cur_dir[2])
-                ) * 180 / Math.PI;
+                ));
 
         var sun_params = {};
         sun_params.hor_position  = angle_hor;
@@ -137,8 +152,8 @@ function set_sun_params(sun_params) {
     if (typeof sun_params.hor_position == "number" &&
         typeof sun_params.vert_position == "number") {
         // convert to radians
-        var angle_hor  =  ((180 - sun_params.hor_position)) / 180 * Math.PI;
-        var angle_vert =  ((90 - sun_params.vert_position)) / 180 * Math.PI;
+        var angle_hor  =  m_util.deg_to_rad(180 - sun_params.hor_position);
+        var angle_vert =  m_util.deg_to_rad(90 - sun_params.vert_position);
 
         var sun_render = sun.render;
 
@@ -164,6 +179,8 @@ function set_sun_params(sun_params) {
 
             // set amplitude lighting params
             var def_env_color = scene["world"]["light_settings"]["environment_energy"];
+            var def_horizon_color = scene["world"]["horizon_color"];
+            var def_zenith_color = scene["world"]["zenith_color"];
 
             // change sun intensity dependent to its position
             var energy     = Math.cos(Math.abs(angle_vert));
@@ -171,7 +188,8 @@ function set_sun_params(sun_params) {
             var env_energy = Math.max(energy, 0.1) * def_env_color;
 
             m_lights.set_light_energy(sun_light, sun_energy);
-            m_scenes.set_environment_colors(scene, env_energy, null, null);
+
+            m_scenes.set_environment_colors(scene, env_energy, def_horizon_color, def_zenith_color);
         }
         m_scenes.update_lamp_scene(sun, scene);
     }
@@ -237,7 +255,7 @@ exports.set_max_sun_angle = function(angle) {
  * Get the light params.
  * @method module:lights.get_light_params
  * @param {Object3D} lamp_obj Lamp object
- * @returns {LightParams} Light params
+ * @returns {LightParams | null} Light params or null in case of error
  */
 exports.get_light_params = function(lamp_obj) {
 
@@ -245,13 +263,13 @@ exports.get_light_params = function(lamp_obj) {
         var light = lamp_obj.light;
     else {
         m_print.error("get_light_params(): Wrong object");
-        return false;
+        return null;
     }
 
     var type = get_light_type(lamp_obj);
 
     if (type)
-        switch(type) {
+        switch (type) {
         case "SPOT":
             var rslt = {
                 "light_type": type,
@@ -281,7 +299,7 @@ exports.get_light_params = function(lamp_obj) {
     if (rslt)
         return rslt;
     else
-        return false;
+        return null;
 }
 
 exports.get_light_type = get_light_type
@@ -301,9 +319,8 @@ function get_light_type(lamp_obj) {
 /**
  * Set the light params.
  * @method module:lights.set_light_params
- * @param {Object3D} lamp_obj Lamp object.
+ * @param {Object3D} lamp_obj Lamp object
  * @param {LightParams} light_params Light params
- * @cc_externs light_distance light_spot_size light_spot_blend light_energy light_color
  */
 exports.set_light_params = function(lamp_obj, light_params) {
 
@@ -391,8 +408,7 @@ function get_sun_coordinates (jul_date, days) {
     var g = 357.528 + 0.9856003 * n;
     g = g % 360;
 
-    // Convert to radians
-    g *= Math.PI / 180;
+    g = m_util.deg_to_rad(g);
 
     // Ecliptic longitude of the Sun
     var e_longitude = l + 1.915 * Math.sin(g) + 0.020 * Math.sin(2 * g);

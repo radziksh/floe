@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,11 +23,14 @@
  */
 b4w.module["util"] = function(exports, require) {
 
+var m_compat   = require("__compat");
 var m_obj_util = require("__obj_util");
 var m_print    = require("__print");
+var m_quat     = require("__quat");
 var m_util     = require("__util");
 var m_vec3     = require("__vec3");
 
+var _pline_tmp = new Float32Array(6);
 /**
  * X-axis vector.
  * @const {Vec3} module:util.AXIS_X
@@ -58,6 +61,73 @@ exports.AXIS_MY = new Float32Array([ 0,-1, 0]);
  * @const {Vec3} module:util.AXIS_MZ
  */
 exports.AXIS_MZ = new Float32Array([ 0, 0,-1]);
+
+/**
+ * Rotation sequence enum.
+ * @typedef RotationSequence
+ * @type {Number}
+ */
+
+/**
+ * Rotation sequence: XYX.
+ * @const {RotationSequence} module:util.XYX
+ */
+exports.XYX = m_util.XYX;
+/**
+ * Rotation sequence: YZY.
+ * @const {RotationSequence} module:util.YZY
+ */
+exports.YZY = m_util.YZY;
+/**
+ * Rotation sequence: ZXZ.
+ * @const {RotationSequence} module:util.ZXZ
+ */
+exports.ZXZ = m_util.ZXZ;
+/**
+ * Rotation sequence: XZX.
+ * @const {RotationSequence} module:util.XZX
+ */
+exports.XZX = m_util.XZX;
+/**
+ * Rotation sequence: YXY.
+ * @const {RotationSequence} module:util.YXY
+ */
+exports.YXY = m_util.YXY;
+/**
+ * Rotation sequence: ZYZ.
+ * @const {RotationSequence} module:util.ZYZ
+ */
+exports.ZYZ = m_util.ZYZ;
+/**
+ * Rotation sequence: XYZ.
+ * @const {RotationSequence} module:util.XYZ
+ */
+exports.XYZ = m_util.XYZ;
+/**
+ * Rotation sequence: YZX.
+ * @const {RotationSequence} module:util.YZX
+ */
+exports.YZX = m_util.YZX;
+/**
+ * Rotation sequence: ZXY.
+ * @const {RotationSequence} module:util.ZXY
+ */
+exports.ZXY = m_util.ZXY;
+/**
+ * Rotation sequence: XZY.
+ * @const {RotationSequence} module:util.XZY
+ */
+exports.XZY = m_util.XZY;
+/**
+ * Rotation sequence: YXZ.
+ * @const {RotationSequence} module:util.YXZ
+ */
+exports.YXZ = m_util.YXZ;
+/**
+ * Rotation sequence: ZYX.
+ * @const {RotationSequence} module:util.ZYX
+ */
+exports.ZYX = m_util.ZYX;
 
 /**
  * Create a new Float32Array.
@@ -107,17 +177,50 @@ exports.matrix_to_quat = function(matrix) {
 }
 
 /**
- * Convert euler rotation to quaternion rotation.
+ * Convert euler angles in the YZX intrinsic system to quaternion.
  * @method module:util.euler_to_quat
- * @param {Euler} euler Euler vector
- * @param {Quat} quat Destination quaternion vector
- * @returns {Quat} Quaternion vector
+ * @param {Euler} euler Euler angles. The angles order: an angle of the rotation around the x axis,
+ * an angle of the rotation around the y axis, an angle of the rotation around the z axis.
+ * @param {Quat} quat Destination quaternion vector.
+ * @returns {Quat} Quaternion vector.
  */
 exports.euler_to_quat = function(euler, quat) {
     if (!quat)
         quat = new Float32Array(4);
 
     return m_util.euler_to_quat(euler, quat);
+}
+
+/**
+ * Convert Euler angles in the ordered intrinsic system to quaternion.
+ * @method module:util.ordered_angles_to_quat
+ * @param {Euler} angles Ordered Euler angles. Euler angles have the same order as
+ * the intrinsic rotation sequence.
+ * @param {RotationSequence} order Intrinsic rotation sequence.
+ * @param {Quat} quat Destination quaternion vector.
+ * @returns {Quat} Quaternion vector.
+ */
+exports.ordered_angles_to_quat = function(angles, order, quat) {
+    if (!quat)
+        quat = m_quat.create();
+
+    return m_util.ordered_angles_to_quat(angles, order, quat);
+}
+
+/**
+ * Convert quaternion to Euler angles in the ordered intrinsic system.
+ * @method module:util.quat_to_ordered_angles
+ * @param {Quat} quat Quaternion vector.
+ * @param {RotationSequence} order Intrinsic rotation sequence.
+ * @param {Euler} euler Destination Euler angles vector. Euler angles have the same order as
+ * the intrinsic rotation sequence.
+ * @returns {Euler} Euler angles vector.
+ */
+exports.quat_to_ordered_angles = function(quat, order, angles) {
+    if (!angles)
+        angles = m_vec3.create();
+
+    return m_util.quat_to_ordered_angles(quat, order, angles);
 }
 
 /**
@@ -266,8 +369,19 @@ exports.xz_direction = m_util.xz_direction;
  * @param {Vec3} l_dir Line direction.
  * @param {Vec3} dest Destination vector.
  * @returns {?Vec3} Intersection point or null if the line is parallel to the plane.
+ * @deprecated use {@link module:math.line_plane_intersect|math.line_plane_intersect} instead.
  */
-exports.line_plane_intersect = m_util.line_plane_intersect;
+exports.line_plane_intersect = function(pn, p_dist, lp, l_dir, dest) {
+    m_print.error_deprecated("util.line_plane_intersect", "math.line_plane_intersect");
+    _pline_tmp[0] = lp[0];
+    _pline_tmp[1] = lp[1];
+    _pline_tmp[2] = lp[2];
+
+    _pline_tmp[3] = l_dir[0];
+    _pline_tmp[4] = l_dir[1];
+    _pline_tmp[5] = l_dir[2];
+    return m_util.line_plane_intersect(pn, p_dist, _pline_tmp, dest);
+}
 
 /**
  * Check if object is of type MESH
@@ -294,7 +408,7 @@ exports.is_armature = function(obj) {
 }
 
 /**
- * Convert radian angle into range [0, 2PI]
+ * Convert radian angle into range [0, 2PI)
  * @method module:util.angle_wrap_0_2pi
  * @param {Number} angle Angle in radians
  * @returns {Number} Converted angle
@@ -302,7 +416,7 @@ exports.is_armature = function(obj) {
 exports.angle_wrap_0_2pi = m_util.angle_wrap_0_2pi;
 
 /**
- * Convert radian angle into custom range [from, to]
+ * Convert radian angle into custom range [from, to)
  * @method module:util.angle_wrap_periodic
  * @param {Number} angle Angle in radians
  * @param {Number} from Value from in radians
@@ -330,5 +444,36 @@ exports.smooth_step = m_util.smooth_step;
  * @returns {Number} Result value.
  */
 exports.lerp = m_util.lerp;
+
+/**
+ * Convert degrees to radians.
+ * @method module:util.deg_to_rad
+ * @param {Number} degrees Angle in degrees.
+ * @returns {Number} Angle in radians.
+ */
+exports.deg_to_rad = m_util.deg_to_rad;
+
+/**
+ * Convert radians to degrees.
+ * @method module:util.rad_to_deg
+ * @param {Number} radians Angle in radians.
+ * @returns {Number} Angle in degrees.
+ */
+exports.rad_to_deg = m_util.rad_to_deg;
+/**
+ * Convert directional vector to quaternion.
+ * @method module:util.dir_to_quat
+ * @param {Vec3} dir Directional vector.
+ * @param {Vec3} ident Identity vector
+ * @param {Quat} [dest] Destination quaternion
+ * @returns {Quat} Destination quaternion
+ */
+exports.dir_to_quat = m_util.dir_to_quat;
+
+/**
+ * Check if Internet Explorer 11 is using.
+ * @returns {Boolean} Check result.
+ */
+exports.is_ie11 = m_compat.is_ie11;
 
 }

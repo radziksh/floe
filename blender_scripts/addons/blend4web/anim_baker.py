@@ -1,19 +1,3 @@
-# Copyright (C) 2014-2015 Triumph LLC
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 ### bpy.ops.webgl.reload(); bpy.ops.anim.bake()
 
 # NOTE may require curve_simplify.py addon enabled
@@ -185,7 +169,7 @@ class B4W_Anim_Baker(bpy.types.Operator):
 
         arm_bones = armobj.data.bones
         for bone in arm_bones:
-            if self.needed_to_deform(bone):
+            if not armobj.b4w_bake_only_deform or self.needed_to_deform(bone):
 
                 bname = bone.name
                 new_groups.new(bname)
@@ -536,6 +520,9 @@ class B4W_AnimBakerPanel(bpy.types.Panel):
         row.prop(obj, "b4w_anim_clean_keys", text=_("Optimize Keyframes"))
 
         row = layout.row()
+        row.prop(obj, "b4w_bake_only_deform", text=_("Bake Only Deform Bones"))
+
+        row = layout.row()
         row.prop(obj, "b4w_use_bpy_anim_baker",
             text=_("Use Blender's Native Baker"))
 
@@ -586,16 +573,6 @@ class B4W_AnimRemOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 def register():
-    bpy.utils.register_class(B4W_Anim_Baker)
-    bpy.utils.register_class(B4W_Constraints_Muter)
-    bpy.utils.register_class(B4W_Constraints_UnMuter)
-    bpy.utils.register_class(B4W_AnimBakerPanel)
-    bpy.utils.register_class(B4W_AnimAddOperator)
-    bpy.utils.register_class(B4W_AnimRemOperator)
-    bpy.utils.register_class(B4W_UI_UL_actions_list)
-
-    bpy.utils.register_class(B4W_Anim)
-
     bpy.types.Object.b4w_anim =\
             bpy.props.CollectionProperty(type=B4W_Anim, name=_("B4W: animation"))
     bpy.types.Object.b4w_anim_index =\
@@ -603,15 +580,4 @@ def register():
     bpy.types.Object.b4w_use_bpy_anim_baker =\
             bpy.props.BoolProperty(name=_("B4W: use bpy anim baker"),
                 default = False)
-
-def unregister():
-    bpy.utils.unregister_class(B4W_Anim_Baker)
-    bpy.utils.unregister_class(B4W_Constraints_Muter)
-    bpy.utils.unregister_class(B4W_Constraints_UnMuter)
-    bpy.utils.unregister_class(B4W_AnimBakerPanel)
-    bpy.utils.unregister_class(B4W_AnimAddOperator)
-    bpy.utils.unregister_class(B4W_AnimRemOperator)
-    bpy.utils.unregister_class(B4W_UI_UL_actions_list)
-
-    bpy.utils.unregister_class(B4W_Anim)
 

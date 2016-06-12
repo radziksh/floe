@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@
  * @local ManifoldLogicFunction
  * @local CollisionPayload
  * @local RayPayload
+ * @local SensorCallback
  */
 b4w.module["controls"] = function(exports, require) {
 
@@ -75,7 +76,7 @@ var m_print = require("__print");
  * Collision sensor payload.
  * @callback CollisionPayload
  * @param {?Object3D} coll_obj The target collision object, i.e the object
- * the source object collides with (null for no collision or when this object 
+ * the source object collides with (null for no collision or when this object
  * is represented by collision material).
  * @param {?Vec3} coll_pos Position of collision point.
  * @param {?Vec3} coll_norm Normal of collision point.
@@ -91,6 +92,11 @@ var m_print = require("__print");
  * @param {Number} hit_time Time the hit happened.
  * @param {Vec3} hit_pos Hit position in world space.
  * @param {Vec3} hit_norm Hit normal in world space.
+ */
+/**
+ * Special callback for callback-sensor. It's executed every frame and
+ * its return value is copied into the sensor value. Should return a numeric value.
+ * @callback SensorCallback
  */
 
 /**
@@ -594,6 +600,28 @@ exports.PL_MULTITOUCH_MOVE_ZOOM = m_ctl.PL_MULTITOUCH_MOVE_ZOOM;
 exports.PL_MULTITOUCH_MOVE_PAN  = m_ctl.PL_MULTITOUCH_MOVE_PAN;
 
 /**
+ * Payload value of a touch movement sensor. Returned by get_sensor_payload()
+ * for multi-finger rotate gestures.
+ * @const module:controls.PL_MULTITOUCH_MOVE_ROTATE
+ */
+exports.PL_MULTITOUCH_MOVE_ROTATE  = m_ctl.PL_MULTITOUCH_MOVE_ROTATE;
+/**
+ * Create a gamepad button sensor.
+ * @method module:controls.create_gamepad_btn_sensor
+ * @param {Number} ind Button number
+ * @param {Number} [number] Connected gamepad number
+ * @returns {Sensor} Sensor object
+ */
+exports.create_gamepad_btn_sensor = m_ctl.create_gamepad_btn_sensor;
+/**
+ * Create a gamepad an axis sensor.
+ * @method module:controls.create_gamepad_axis_sensor
+ * @param {Number} axis Axis number
+ * @param {Number} [number] Connected gamepad number
+ * @returns {Sensor} Sensor object
+ */
+exports.create_gamepad_axis_sensor = m_ctl.create_gamepad_axis_sensor;
+/**
  * Create a custom sensor.
  * A custom sensor can be controlled manually by using the get_custom_sensor()
  * and set_custom_sensor() methods.
@@ -605,8 +633,14 @@ exports.create_custom_sensor = m_ctl.create_custom_sensor;
 
 /**
  * Create a keyboard sensor.
+ * This sensor carries the following payload values:
+ * 0 --- button wasn't pressed at the last frame, and it wasn't pressed at the current frame,
+ * 1 --- button wasn't pressed at the last frame, but it was pressed at the current frame,
+ * 2 --- button was pressed at the last frame, and it was pressed at the current frame,
+ * 3 --- button was pressed at the last frame, and it wasn't pressed at the current frame.
  * @method module:controls.create_keyboard_sensor
  * @param {Number} key Sensor key KEY_*
+ * @param {HTMLElement} [element=Canvas container element] HTML element
  * @returns {Sensor} Sensor object
  */
 exports.create_keyboard_sensor = m_ctl.create_keyboard_sensor;
@@ -682,6 +716,7 @@ exports.create_ray_sensor = function(obj_src, from, to, collision_id,
 /**
  * Create a mouse click sensor.
  * @method module:controls.create_mouse_click_sensor
+ * @param {HTMLElement} [element=Canvas container element] HTML element
  * @returns {Sensor} Sensor object
  */
 exports.create_mouse_click_sensor = m_ctl.create_mouse_click_sensor;
@@ -690,6 +725,7 @@ exports.create_mouse_click_sensor = m_ctl.create_mouse_click_sensor;
  * Create a mouse wheel sensor.
  * The sensor's value is 1 for a single wheel notch scrolled away from the user.
  * @method module:controls.create_mouse_wheel_sensor
+ * @param {HTMLElement} [element=Canvas container element] HTML element
  * @returns {Sensor} Sensor object
  */
 exports.create_mouse_wheel_sensor = m_ctl.create_mouse_wheel_sensor;
@@ -700,6 +736,7 @@ exports.create_mouse_wheel_sensor = m_ctl.create_mouse_wheel_sensor;
  * coordinate(s).
  * @method module:controls.create_mouse_move_sensor
  * @param {String} [axis="XY"] Coordinate(s) to track: "X", "Y", "XY"
+ * @param {HTMLElement} [element=Canvas container element] HTML element
  * @returns {Sensor} Sensor object
  */
 exports.create_mouse_move_sensor = m_ctl.create_mouse_move_sensor;
@@ -709,6 +746,7 @@ exports.create_mouse_move_sensor = m_ctl.create_mouse_move_sensor;
  * The sensor's value is a number of pixels.
  * @method module:controls.create_touch_move_sensor
  * @param {String} [axis="XY"] Coordinate(s) to track: "X", "Y" or "XY"
+ * @param {HTMLElement} [element=Canvas container element] HTML element
  * @returns {Sensor} Sensor object
  */
 exports.create_touch_move_sensor = m_ctl.create_touch_move_sensor;
@@ -717,9 +755,28 @@ exports.create_touch_move_sensor = m_ctl.create_touch_move_sensor;
  * Create a touch zoom sensor.
  * The sensor's value is the distance difference in pixels.
  * @method module:controls.create_touch_zoom_sensor
+ * @param {HTMLElement} [element=Canvas container element] HTML element
  * @returns {Sensor} Sensor object
  */
 exports.create_touch_zoom_sensor = m_ctl.create_touch_zoom_sensor;
+
+/**
+ * Create a touch rotate sensor.
+ * The sensor's value is the angle from -PI to PI.
+ * @method module:controls.create_touch_rotate_sensor
+ * @param {HTMLElement} [element=Canvas container element] HTML element
+ * @returns {Sensor} Sensor object
+ */
+exports.create_touch_rotate_sensor = m_ctl.create_touch_rotate_sensor;
+
+/**
+ * Create a touch click sensor.
+ * The sensor's value is 1 for a touched fouchscreen.
+ * @method module:controls.create_touch_click_sensor
+ * @param {HTMLElement} [element=Canvas container element] HTML element
+ * @returns {Sensor} Sensor object
+ */
+exports.create_touch_click_sensor = m_ctl.create_touch_click_sensor;
 
 /**
  * Create a motion sensor.
@@ -750,19 +807,44 @@ exports.create_vertical_velocity_sensor = m_ctl.create_vertical_velocity_sensor;
  * Create a gyroscope angle sensor.
  * The sensor's payload stores the Euler angles of orientation
  * of a mobile device.
- * @method module:controls.create_gyroscope_angles_sensor
+ * @method module:controls.create_gyro_angles_sensor
  * @returns {Sensor} Sensor object
  */
 exports.create_gyro_angles_sensor = m_ctl.create_gyro_angles_sensor;
 
 /**
+ * Create a gyroscope quaternion sensor.
+ * The sensor's payload stores the quaternion of orientation
+ * of a mobile device.
+ * @method module:controls.create_gyro_quat_sensor
+ * @returns {Sensor} Sensor object
+ */
+exports.create_gyro_quat_sensor = m_ctl.create_gyro_quat_sensor;
+
+/**
  * Create a gyroscope delta sensor.
  * The sensor's payload stores the differences between Euler angles of the
  * current orientation and the previous orientation of a mobile device.
- * @method module:controls.create_gyroscope_angles_sensor
+ * @method module:controls.create_gyro_delta_sensor
  * @returns {Sensor} Sensor object
  */
 exports.create_gyro_delta_sensor = m_ctl.create_gyro_delta_sensor;
+
+/**
+ * Create a HMD quaternion sensor.
+ * The sensor's payload stores the quaternion of orientation of a HMD.
+ * @method module:controls.create_hmd_quat_sensor
+ * @returns {Sensor} Sensor object
+ */
+exports.create_hmd_quat_sensor = m_ctl.create_hmd_quat_sensor;
+
+/**
+ * Create a HMD position sensor.
+ * The sensor's payload stores the vector of HMD position.
+ * @method module:controls.create_hmd_position_sensor
+ * @returns {Sensor} Sensor object
+ */
+exports.create_hmd_position_sensor = m_ctl.create_hmd_position_sensor;
 
 /**
  * Create a timer sensor.
@@ -817,6 +899,18 @@ exports.create_timeline_sensor = m_ctl.create_timeline_sensor;
  */
 exports.create_selection_sensor = function(obj, auto_release) {
     return m_ctl.create_selection_sensor(obj, auto_release || false);
+}
+
+/**
+ * Create a callback sensor.
+ * The given callback is executed every frame and its return value is copied into the sensor value.
+ * @param {SensorCallback} callback A callback which modifies sensor value.
+ * @param {Number} [value=0] Initial sensor value.
+ * @method module:controls.create_callback_sensor
+ * @returns {Sensor} Sensor object
+ */
+exports.create_callback_sensor = function(callback, value) {
+    return m_ctl.create_callback_sensor(callback, value || 0);
 }
 
 /**
@@ -928,18 +1022,6 @@ exports.check_sensor_manifolds = function(obj) {
 exports.check_sensor_manifold = m_ctl.check_sensor_manifold;
 
 /**
- * Remove all sensor manifolds registered for the object.
- * @method module:controls.remove_sensor_manifolds
- * @param {?Object3D} obj Object 3D to delete manifolds from, or null to denote
- * the global object
- * @deprecated Use {@link module:controls.remove_sensor_manifold|controls.remove_sensor_manifold} with null manifold ID instead
- */
-exports.remove_sensor_manifolds = function(obj) {
-    m_print.error_deprecated("remove_sensor_manifolds", "remove_sensor_manifold");
-    m_ctl.remove_sensor_manifold(obj, null);
-}
-
-/**
  * Remove the sensor manifold registered for the object.
  * @method module:controls.remove_sensor_manifold
  * @param {?Object3D} obj Object 3D to delete the manifold from, or null to denote
@@ -963,8 +1045,11 @@ exports.reset = m_ctl.reset;
  * @param {Boolean} prevent_default Prevent browsers' default actions for
  * registered events.
  * @method module:controls.register_keyboard_events
+ * @deprecated Not needed anymore.
  */
-exports.register_keyboard_events = m_ctl.register_keyboard_events;
+exports.register_keyboard_events = function(){
+    m_print.error_once("controls.register_keyboard_events() deprecated");
+};
 
 /**
  * Add mouse event listeners (mousedown, mouseup, mousemove and mouseout) to
@@ -976,12 +1061,11 @@ exports.register_keyboard_events = m_ctl.register_keyboard_events;
  * @param {Boolean} [allow_element_exit=false] Continue receiving mouse events
  * even when the mouse is leaving the HTML element
  * @method module:controls.register_mouse_events
+ * @deprecated Not needed anymore.
  */
-exports.register_mouse_events = function(element, prevent_default,
-                                         allow_element_exit) {
-
-    m_ctl.register_mouse_events(element, prevent_default, !!allow_element_exit);
-}
+exports.register_mouse_events = function(){
+    m_print.error_once("controls.register_mouse_events() deprecated");
+};
 
 /**
  * Add mouse wheel event listeners (mousewheel and DOMMouseScroll) to
@@ -990,8 +1074,11 @@ exports.register_mouse_events = function(element, prevent_default,
  * @param {Boolean} prevent_default Prevent browser default actions for
  * registered events.
  * @method module:controls.register_wheel_events
+ * @deprecated Not needed anymore.
  */
-exports.register_wheel_events = m_ctl.register_wheel_events;
+exports.register_wheel_events = function(){
+    m_print.error_once("controls.register_wheel_events() deprecated");
+};
 
 /**
  * Add touch event listeners (touchstart and touchmove) to the HTML element.
@@ -1000,51 +1087,72 @@ exports.register_wheel_events = m_ctl.register_wheel_events;
  * @param {Boolean} prevent_default Prevent browser default actions for
  * registered events.
  * @method module:controls.register_touch_events
+ * @deprecated Not needed anymore.
  */
-exports.register_touch_events = m_ctl.register_touch_events;
+exports.register_touch_events = function(){
+    m_print.error_once("controls.register_touch_events() deprecated");
+};
 
 /**
  * Add device orientation event listener (deviceorientation) to the DOM window.
  * @method module:controls.register_device_orientation
+ * @deprecated Not needed anymore.
  */
-exports.register_device_orientation = m_ctl.register_device_orientation;
+exports.register_device_orientation = function(){
+    m_print.error_once("controls.register_device_orientation() deprecated");
+};
 
 /**
  * Remove keyboard event listeners (keydown and keyup) from the HTML element.
  * @param {HTMLElement} element HTML element to remove event listeners from
  * @method module:controls.unregister_keyboard_events
+ * @deprecated Not needed anymore.
  */
-exports.unregister_keyboard_events = m_ctl.unregister_keyboard_events;
+exports.unregister_keyboard_events = function(){
+    m_print.error_once("controls.unregister_keyboard_events() deprecated");
+};
 
 /**
  * Remove mouse event listeners (mousedown, mouseup, mousemove and mouseout)
  * from the HTML element.
  * @param {HTMLElement} element HTML element to remove event listeners from
  * @method module:controls.unregister_mouse_events
+ * @deprecated Not needed anymore.
  */
-exports.unregister_mouse_events = m_ctl.unregister_mouse_events;
+exports.unregister_mouse_events = function(){
+    m_print.error_once("controls.unregister_mouse_events() deprecated");
+};
 
 /**
  * Remove mouse wheel event listeners (mousewheel and DOMMouseScroll) from
  * the HTML element.
  * @param {HTMLElement} element HTML element to remove event listeners from
  * @method module:controls.unregister_wheel_events
+ * @deprecated Not needed anymore.
  */
-exports.unregister_wheel_events = m_ctl.unregister_wheel_events;
+exports.unregister_wheel_events = function(){
+    m_print.error_once("controls.unregister_wheel_events() deprecated");
+};
 
 /**
  * Remove touch event listeners (touchstart and touchmove) from the HTML
  * element.
  * @param {HTMLElement} element HTML element to remove event listeners from
  * @method module:controls.unregister_touch_events
+ * @deprecated Not needed anymore.
  */
-exports.unregister_touch_events = m_ctl.unregister_touch_events;
+exports.unregister_touch_events = function(){
+    m_print.error_once("controls.unregister_touch_events() deprecated");
+};
 
 /**
  * Remove device orientation event listener (deviceorientation) from
  * the DOM window.
  * @method module:controls.unregister_device_orientation
+ * @deprecated Not needed anymore.
  */
-exports.unregister_device_orientation = m_ctl.unregister_device_orientation;
+exports.unregister_device_orientation = function(){
+    m_print.error_once("controls.unregister_device_orientation() deprecated");
+};
 
 }

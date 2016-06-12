@@ -8,8 +8,10 @@ var m_cfg         = require("config");
 var m_cont        = require("container");
 var m_ctl         = require("controls");
 var m_data        = require("data");
-var m_main        = require("main");
 var m_hmd         = require("hmd");
+var m_hmd_conf    = require("hmd_conf");
+var m_input       = require("input");
+var m_main        = require("main");
 var m_scs         = require("scenes");
 var m_sfx         = require("sfx");
 var m_storage     = require("storage");
@@ -38,6 +40,7 @@ var _is_anim_left            = false;
 var _is_qual_menu_opened     = false;
 var _is_stereo_menu_opened   = false;
 var _is_help_menu_opened     = false;
+var _no_social               = false;
 
 var _circle_container;
 var _preloader_caption;
@@ -53,6 +56,7 @@ var _quality_buttons_container;
 var _stereo_buttons_container;
 var _help_info_container;
 var _help_button;
+var _hor_button_section;
 var _selected_object;
 
 var _player_buttons = [
@@ -82,9 +86,9 @@ var _player_buttons = [
 
     {type:              "trigger_button",
      id:                "sound_on_button",
-     callback:          play_sound,
+     callback:          stop_sound,
      replace_button_id: "sound_off_button",
-     replace_button_cb: stop_sound},
+     replace_button_cb: play_sound},
 
     {type:                   "menu_button",
      id:                     "stereo_buttons_container",
@@ -128,6 +132,9 @@ exports.init = function() {
 
     if (url_params && "show_fps" in url_params)
         show_fps = true;
+
+    if (url_params && "no_social" in url_params)
+        _no_social = true;
 
     if (url_params && "alpha" in url_params)
         alpha = true;
@@ -178,8 +185,6 @@ function init_cb(canvas_element, success) {
 
     set_stereo_button();
 
-    check_hmd();
-
     init_control_buttons();
 
     var file = search_file();
@@ -188,8 +193,6 @@ function init_cb(canvas_element, success) {
         return;
 
     anim_logo(file);
-
-    m_app.enable_controls();
 
     window.addEventListener("resize", on_resize);
 
@@ -225,7 +228,7 @@ function display_no_webgl_bg() {
         _preloader_container.style.display = "none";
     } else
         report_app_error("Browser could not initialize WebGL", "For more info visit",
-                      "https://www.blend4web.com/troubleshooting")
+                      "https://www.blend4web.com/doc/en/problems_and_solutions.html")
 }
 
 function define_dom_elems() {
@@ -243,6 +246,7 @@ function define_dom_elems() {
     _stereo_buttons_container = document.querySelector("#stereo_buttons_container");
     _help_info_container = document.querySelector("#help_info_container");
     _help_button = document.querySelector("#help_button");
+    _hor_button_section = document.querySelector("#hor_button_section");
 }
 
 function add_engine_version() {
@@ -306,6 +310,9 @@ function set_stereo_button() {
         break;
     case "HMD":
         _stereo_buttons_container.className = "control_panel_button hmd_mode_button";
+        if (m_input.can_use_device(m_input.DEVICE_HMD)) {
+            m_hmd_conf.update();
+        }
         break;
     }
 }
@@ -383,11 +390,10 @@ function search_file() {
             file = url_params["load"];
 
             return file;
-        }
-        else {
+        } else {
             report_app_error("Please specify a scene to load",
-                                   "For more info visit",
-                                   "https://www.blend4web.com/troubleshooting");
+                             "For more info visit",
+                             "https://www.blend4web.com/doc/en/web_player.html");
             return null;
         }
     }
@@ -495,7 +501,7 @@ function play_sound(e) {
     if (is_anim_in_process())
         return;
 
-    m_sfx.mute(null, true);
+    m_sfx.mute(null, false);
     update_button(e.target);
 }
 
@@ -503,7 +509,7 @@ function stop_sound(e) {
     if (is_anim_in_process())
         return;
 
-    m_sfx.mute(null, false);
+    m_sfx.mute(null, true);
     update_button(e.target);
 }
 
@@ -536,12 +542,7 @@ function enter_fullscreen(e) {
     if (is_anim_in_process())
         return;
 
-    var hmd_dev;
-
-    if (m_cfg.get("stereo") == "HMD")
-        hmd_dev = m_hmd.get_hmd_device()
-
-    m_app.request_fullscreen(document.body, fullscreen_cb, fullscreen_cb, hmd_dev);
+    m_app.request_fullscreen(document.body, fullscreen_cb, fullscreen_cb);
 }
 
 function exit_fullscreen() {
@@ -630,13 +631,14 @@ function close_menu() {
         m_app.css_animate(elem, "marginRight", 0, -45, ANIM_ELEM_DELAY, "", "px");
 
         m_app.css_animate(elem, "opacity", 1, 0, ANIM_ELEM_DELAY, "", "", function() {
-            if (elem.nextElementSibling && elem.nextElementSibling.id != "opened_button")
-                drop_left(elem.nextElementSibling);
+            if (elem.previousElementSibling && elem.previousElementSibling.id != "opened_button")
+                drop_left(elem.previousElementSibling);
             else {
                 setTimeout(function() {
                     _is_anim_left = false;
                     _is_panel_open_left = false;
                     check_anim_end();
+                    _hor_button_section.style.display = "";
                 }, 100);
 
                 return;
@@ -665,7 +667,9 @@ function close_menu() {
     }
 
     drop_left(hor_elem);
-    drop_top(vert_elem);
+
+    if (!_no_social)
+        drop_top(vert_elem);
 }
 
 function open_menu() {
@@ -685,6 +689,7 @@ function open_menu() {
                    document.querySelector("#fullscreen_off_button") ||
                    document.querySelector("#quality_buttons_container");
 
+
     var vert_elem = document.querySelector("#vk_button");
 
     var drop_left = function(elem) {
@@ -692,7 +697,9 @@ function open_menu() {
 
         elem.style.marginRight = "-45px";
 
-        if (elem.id == "help_button" && _is_help_menu_opened) {
+        if ((elem.id == "help_button") &&
+                _is_help_menu_opened) {
+
             setTimeout(function() {
                 _is_anim_left = false;
                 _is_panel_open_left = true;
@@ -706,7 +713,7 @@ function open_menu() {
 
         m_app.css_animate(elem, "marginRight", -45, 0, ANIM_ELEM_DELAY, "", "px", function() {
 
-            if (!elem.previousElementSibling) {
+            if (!elem.nextElementSibling) {
                 setTimeout(function() {
                     _is_anim_left = false;
                     _is_panel_open_left = true;
@@ -716,7 +723,7 @@ function open_menu() {
                 return;
             }
 
-            drop_left(elem.previousElementSibling)
+            drop_left(elem.nextElementSibling)
         });
 
         m_app.css_animate(elem, "opacity", 0, 1, ANIM_ELEM_DELAY, "", "");
@@ -745,8 +752,12 @@ function open_menu() {
         m_app.css_animate(elem, "opacity", 0, 1, ANIM_ELEM_DELAY, "", "");
     }
 
+    _hor_button_section.style.display = "block";
+
     drop_left(hor_elem);
-    drop_top(vert_elem);
+
+    if (!_no_social)
+        drop_top(vert_elem);
 
     _buttons_container.addEventListener("mouseleave", deferred_close);
     _buttons_container.addEventListener("mouseenter", clear_deferred_close);
@@ -909,7 +920,7 @@ function open_stereo_menu(e, button) {
 
     var no_hmd = "";
 
-    if (!m_hmd.check_browser_support())
+    if (!m_input.can_use_device(m_input.DEVICE_HMD))
         no_hmd = "no_hmd";
 
     _stereo_buttons_container.className = "stereo_buttons_container " + no_hmd;
@@ -952,12 +963,12 @@ function loaded_callback(data_id, success) {
     if (!success) {
         report_app_error("Could not load the scene",
                 "For more info visit",
-                "https://www.blend4web.com/troubleshooting");
+                "https://www.blend4web.com/doc/en/web_player.html");
 
         return;
     }
 
-    var canvas_elem = m_main.get_canvas_elem();
+    var canvas_elem = m_cont.get_canvas();
     canvas_elem.addEventListener("mousedown", main_canvas_clicked);
 
     check_autorotate();
@@ -995,12 +1006,14 @@ function loaded_callback(data_id, success) {
 
     if (meta_tags.title)
         document.title = meta_tags.title;
+
+    check_hmd();
 }
 
 function check_hmd() {
     var hmd_mode_button = document.querySelector("#hmd_mode_button");
 
-    if (!m_hmd.check_browser_support()) {
+    if (!m_input.can_use_device(m_input.DEVICE_HMD)) {
         hmd_mode_button.parentElement.removeChild(hmd_mode_button);
 
         return;
@@ -1009,7 +1022,7 @@ function check_hmd() {
     if (m_cfg.get("stereo") != "HMD")
         return;
 
-    m_hmd.enable_hmd(m_hmd.HMD_ALL_AXES_MOUSE_NONE);
+    m_hmd.enable_hmd(m_hmd.HMD_ALL_AXES_MOUSE_YAW);
 }
 
 function preloader_callback(percentage, load_time) {

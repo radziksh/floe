@@ -1,53 +1,86 @@
 .. _problems_and_solutions:
 
-******************
-Проблемы и решения
-******************
+**********************
+Problems and Solutions
+**********************
 
+.. contents:: Table of Contents
+    :depth: 3
+    :backlinks: entry
+
+As WebGL is still a relatively new technology, it may not work perfectly with every combination of software and hardware. This chapter covers common problems that users of the Blend4Web engine may encounter and provides solutions for these problems.
+
+.. _webgl_support:
+
+WebGL Support
+=============
+
+If you are using a desktop or laptop computer, your system must have a GPU that supports DirectX 9.0c and OpenGL 2.1, such as:
+
+    * Nvidia GeForce 6xxx series or higher.
+
+    * AMD/ATi Radeon R500 (X1xxx) series or higher.
+
+    * Intel GMA 950 or higher.
+
+If you are using WebGL on a mobile device, please check whether your device is on the `compatibility list <http://mobilehtml5.org/>`_.
+
+You also need to have a web browser that supports WebGL technology.
+
+The following web browsers support WebGL:
+
+    * Google Chrome (v. 9 or higher)
+    * Mozilla Firefox (v 4.0 or higher)
+    * Safari (v. 8.0 or higher)
+    * Chrome for Android (v. 25 or higher)
+    * Internet Explorer (v. 11 or higher)
+    * Microsoft Edge
+    * Opera (v. 12 or higher)
+    * UC Browser (experimental)
+
+We also recommend to use the most recent version of the web browser to avoid compatibility problems.
 
 .. _renderer_not_working:
 
-Проблемы при запуске движка
-===========================
+Problems Upon Startup
+=====================
 
-*1. Появляется сообщение "Browser could not initialize WebGL."*
+*1. The "Browser could not initialize WebGL" message is shown*.
 
 .. image:: src_images/problems_and_solutions/no_webgl.png
    :align: center
    :width: 100%
 
-Следует выполнить действия, описанные в разделе :ref:`webgl_not_working`. 
+Follow the instructions listed in the :ref:`webgl_not_working` section.
 
-*2. Видны элементы интерфейса или пустой экран, но сцена не отображается. При этом тестовый сайт* http://get.webgl.org/ *и другие WebGL приложения работают корректно.*
+*2. The user interface or background is shown but the default scene is not rendered. At the same time the* http://get.webgl.org/ *site and other WebGL applications are working correctly.*
 
-    Вероятные причины:
+    Possible causes:
 
-    * Не используется локальный веб-сервер или браузер не настроен для работы с локальными ресурсами. См. раздел :ref:`browser_for_local_loading`.
+    * The engine tries to load resource files which were moved or deleted.
 
-    * Файлы ресурсов, которые пытается загрузить движок, были перемещены или удалены.
+    * You are using the old versions of video drivers.
 
-    * Используются старые версии драйверов.
+    * You are using open source drivers which do not fully support WebGL.
 
-    * Используются открытые драйвера, не обеспечивающие поддержку WebGL.
+        For Linux users - due to incomplete OpenGL implementation in open source drivers at the moment it is recommended to use current versions of proprietary drivers for Nvidia and AMD video cards.
 
-        Для пользователей Linux - ввиду неполной реализации OpenGL стека в драйверах
-        с открытым кодом в настоящий момент рекомендуется
-        использовать проприетарные драйверы текущей версии для графических процессоров Nvidia и AMD.
+    * You are using an outdated operating system, such as Windows XP.
 
-    * Используется устаревшая операционная система, такая как Windows XP.
+    * Browser is not set up for loading local resources. In this case, the problem can be fixed by using local web server. See the :ref:`browser_for_local_loading` section.
 
 
 .. _webgl_not_working:
 
-Ошибка инициализации WebGL
+WebGL Failed to Initialize
 ==========================
 
-Сайт http://get.webgl.org/ при просмотре в браузерах Chrome или Firefox последней версии сообщает о проблемах. Что делать? 
+The http://get.webgl.org/ page tells about problems when viewing it in recent Chrome or Firefox. What can I do?
 
 
-1. Установить доступные обновления для системы (для Windows см. `инструкцию <http://support.microsoft.com/kb/311047/ru>`_). В случае Windows установить последнюю версию `DirectX <http://www.microsoft.com/ru-ru/download/details.aspx?id=35>`_. Перезагрузить систему.
+1. Install the latest updates for your system (for MS Windows see `the guide <http://support.microsoft.com/kb/311047>`_). In case of MS Windows install the latest `DirectX runtime <https://www.microsoft.com/en-us/Download/confirmation.aspx?id=35>`_. Reboot.
 
-2. Рекомендуется проводить своевременное обновление драйверов для графических карт. Чтобы определить тип и производителя карты, можно ввести **about:gpu** (или **chrome://gpu**) в адресную строку браузера Chrome...
+2. It is recommended to timely update video card drivers. To detect your video card and its vendor please type **about:gpu** (or **chrome://gpu**) to the address bar of Chrome browser...
 
 .. image:: src_images/problems_and_solutions/chrome_gpu.png
    :align: center
@@ -55,7 +88,7 @@
 
 |
 
-или Firefox...
+or Firefox...
 
 .. image:: src_images/problems_and_solutions/firefox_gpu.png
    :align: center
@@ -63,22 +96,45 @@
 
 |
 
-Для операционных систем семейства Windows можно воспользоваться средством диагностики DirectX **dxdiag**.
+For Windows, you can run the DirectX Diagnostic Tool called **dxdiag**.
 
-.. image:: src_images/problems_and_solutions/dxdiag.png
+To do it, please follow these steps:
+
+    #. Select the ``Run`` command from the Start menu
+
+    #. Type *dxdiag* to the ``Open`` field and press ``Enter`` to open DirectX Diagnostic Tool
+
+    #. Open the ``Display`` panel. There you can find manufacturer, model and other information regarding your video card.
+
+.. image:: src_images/problems_and_solutions/problems_dxdiag.png
    :align: center
    :width: 100%
 
 |
 
+For MacOS X, you can check System Report.
 
-Необходимо загрузить драйверы с соответствующего центра поддержки (например, `Intel <http://downloadcenter.intel.com/Default.aspx?lang=rus>`_, `Nvidia <http://www.nvidia.com/Download/index.aspx?lang=ru>`_, `AMD/ATI <http://support.amd.com/ru-ru/download>`_). После установки драйверов перезагрузить систему.
+To do it, please follow these steps:
 
-3. Если в результате вышеперечисленных действий инициализировать рендеринг не удается (или нет возможности обновить систему), можно попробовать изменить настройки браузера. 
+    #. Select ``About This Mac`` from the ``Apple`` menu.
 
-*В Chrome*:
+    #. Click ``System Report`` button.
 
-Ввести **about:flags** (или **chrome://flags**) в адресную строку браузера, нажать :file:`Включить` (:file:`Enable`) под опцией :file:`Переопределение списка программного рендеринга` (:file:`Override software rendering list`) и перезапустить браузер.
+    #. Select ``Graphics/Displays`` in the ``Hardware`` section.
+
+.. image:: src_images/problems_and_solutions/problems_osx.png
+   :align: center
+   :width: 100%
+
+|
+
+Download the drivers from the corresponding support center (for example `Intel <http://downloadcenter.intel.com/Default.aspx>`_, `Nvidia <http://www.nvidia.com/Download/index.aspx>`_, `AMD/ATI <http://support.amd.com/en-us/download>`_). Reboot the system after the drivers are installed.
+
+3. If the measures described above did not help to initialize rendering (or there is no possibility to update the system) try to change the browser settings.
+
+*For Chrome*:
+
+Enter **about:flags** (or **chrome://flags**) into the browser's address bar, click :file:`Enable` under the :file:`Override software rendering list` option and restart the browser.
 
 |
 
@@ -88,11 +144,63 @@
 
 |
 
-*В Firefox*: 
+*For Firefox*:
 
-Ввести **about:config** в адресную строку браузера, найти параметр ``webgl.force-enabled`` и переключить его двойным щелчком мыши из ``false`` в ``true``. 
+Enter **about:config** into the browser's address bar, search for the ``webgl.force-enabled`` parameter and double-click on it to switch from ``false`` to ``true``.
 
 
 .. image:: src_images/problems_and_solutions/about_config_force_webgl.png
    :align: center
    :width: 100%
+
+*For Safari*
+
+Select ``Preferences`` from Safari menu, select the ``Security`` tab and make sure that ``Allow WebGL`` checkbox is enabled.
+
+.. image:: src_images/problems_and_solutions/safari_force_webgl.png
+   :align: center
+   :width: 100%
+
+More In-Depth Troubleshooting
+=============================
+
+If nothing mentioned above helped you solve the issues you are experiencing, please visit the Blend4Web `community forum <https://www.blend4web.com/en/forums/>`_ and leave a message in the `Bug Report <https://www.blend4web.com/en/forums/forum/17/>`_ thread. Our team will be sure to help you. 
+
+.. _known_problems:
+
+Known Issues
+============
+
+* Problems with updating of the add-on.
+
+    It’s strongly advised to restart Blender after installing a newer version of Addon/SDK.
+
+* NVIDIA 331 driver in Linux can cause WebGL errors.
+
+* Changed texture filtering on some platforms.
+
+    An incorrect texture filtering was disabled on iPad and Internet Explorer for materials with Alpha Clip type of transparency.
+
+* Some devices with Mail GPU require manual WebGL activation in browser settings.
+
+* For the local development server to work on Apple OS X and Blender 2.76, you may need to install `Python 3.4 <https://www.python.org/downloads/release/python-343/>`. This is due to a bug in Blender https://developer.blender.org/T46623. This bug has been fixed in Blender 2.76b, so updating it is advised.
+
+* Skeletal animation may work incorrectly while using Nouveau drivers.
+
+* Transparent textures may not render correctly in the IE11 and Microsoft Edge web browsers and on iPad.
+
+    The problem is relevant for the :ref:`transparent materials <alpha_blend>`. Image artifacts are visible in the areas where alpha channel value is close or equal to zero. To fix this issue, it is recommended to increase the value of the alpha channel until artifact are no longer visible (increasing it by value from 0.01 to 0.05 should be enough in the most cases).
+
+* WebGL crashes on Linux Chromium with Nvidia GeForce 400/500 series GPUs with drivers later than 355.
+    
+    This issue is caused by incompatibility of Chromium sandbox and NVIDIA's latest drivers. The solution is to downgrade drivers to the 340xx version.
+
+* WebAudio issues.
+
+    Audio doesn't work in some versions of Google Chrome for the "Background Music" speakers in case of HTML export. Currently, speaker type is automatically changed to "Background Sound" as a workaround.
+
+    There is an audio context error when running too many instances (>6) of b4w engine (for example, many browser tabs or many iframes on one page) in Google Chrome. The error is prevented by disabling the audio for an application if the audio context cannot be created for it.
+
+* QQ Browser doesn't support WebGL at the moment.
+
+* WebGL is unstable and sometimes crashes on Mesa 11.x drivers in Linux/Chrome with Intel GPUs. Downgrading to Mesa 10.x drivers can help.
