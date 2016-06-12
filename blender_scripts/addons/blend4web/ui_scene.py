@@ -1,19 +1,3 @@
-# Copyright (C) 2014-2015 Triumph LLC
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 import bpy
 import imp
 import mathutils
@@ -78,7 +62,7 @@ class B4W_SCENE_PT_simplify(SceneButtonsPanel, Panel):
 
     def draw_header(self, context):
         rd = context.scene.render
-        self.layout.prop(rd, "use_simplify", text=_(""))
+        self.layout.prop(rd, "use_simplify", text="")
 
     def draw(self, context):
         layout = self.layout
@@ -107,7 +91,7 @@ class B4W_SceneAudio(SceneButtonsPanel, Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        self.layout.prop(context.scene, "b4w_enable_audio", text=_(""))
+        self.layout.prop(context.scene, "b4w_enable_audio", text="")
 
     def draw(self, context):
 
@@ -194,7 +178,7 @@ class B4W_SceneLogicEditor(SceneButtonsPanel, Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        self.layout.prop(context.scene, "b4w_use_logic_editor", text=_(""))
+        self.layout.prop(context.scene, "b4w_use_logic_editor", text="")
 
     def draw(self, context):
         scene = context.scene
@@ -218,7 +202,7 @@ class B4W_SceneNLA(SceneButtonsPanel, Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        self.layout.prop(context.scene, "b4w_use_nla", text=_(""))
+        self.layout.prop(context.scene, "b4w_use_nla", text="")
 
     def draw(self, context):
         scene = context.scene
@@ -234,7 +218,7 @@ class B4W_SceneMetaTags(SceneButtonsPanel, Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        self.layout.prop(context.scene, "b4w_enable_tags", text=_(""))
+        self.layout.prop(context.scene, "b4w_enable_tags", text="")
 
     def draw(self, context):
         scene = context.scene
@@ -270,15 +254,19 @@ class B4W_ScenePhysics(SceneButtonsPanel, Panel):
         layout = self.layout
         layout.prop(scene, "b4w_enable_physics", text=_("Enable Physics"))
 
-class B4W_SceneBatching(SceneButtonsPanel, Panel):
-    bl_label = _("Batching")
-    bl_idname = "SCENE_PT_b4w_batching"
+class B4W_SceneClusterBatching(SceneButtonsPanel, Panel):
+    bl_label = _("Cluster Batching")
+    bl_idname = "SCENE_PT_b4w_cluster_batching"
     bl_options = {'DEFAULT_CLOSED'}
+
+    def draw_header(self, context):
+        self.layout.prop(context.scene, "b4w_enable_cluster_batching", text="")
 
     def draw(self, context):
         scene = context.scene
         layout = self.layout
-        layout.prop(scene, "b4w_batch_grid_size", text=_("Batch Grid Size"))
+        layout.active = getattr(scene, "b4w_enable_cluster_batching")
+        layout.prop(scene, "b4w_cluster_size", text=_("Cluster Size"))
 
 class B4W_SceneObjsSelection(SceneButtonsPanel, Panel):
     bl_label = _("Objects Selection")
@@ -318,40 +306,3 @@ class B4W_SceneExportOptions(SceneButtonsPanel, Panel):
         row = layout.row()
         row.prop(scene, "b4w_do_not_export", text=_("Do Not Export"))
 
-def register():
-    bpy.utils.register_class(B4W_SCENE_PT_scene)
-    bpy.utils.register_class(B4W_SCENE_PT_unit)
-
-    bpy.utils.register_class(B4W_SceneAudio)
-    bpy.utils.register_class(B4W_LogicEditorAddNodeTree)
-    bpy.utils.register_class(B4W_LogicEditorRefreshAvailableTrees)
-    bpy.utils.register_class(B4W_LogicEditorRemoveNodeTree)
-    bpy.utils.register_class(B4W_SceneNLA)
-    bpy.utils.register_class(B4W_SceneLogicEditor)
-    bpy.utils.register_class(B4W_SceneMetaTags)
-    bpy.utils.register_class(B4W_ScenePhysics)
-    bpy.utils.register_class(B4W_SceneBatching)
-    bpy.utils.register_class(B4W_SceneObjsSelection)
-    bpy.utils.register_class(B4W_SceneAnchors)
-    bpy.utils.register_class(B4W_SceneExportOptions)
-
-    bpy.utils.register_class(B4W_SCENE_PT_simplify)
-
-def unregister():
-    bpy.utils.unregister_class(B4W_SCENE_PT_scene)
-    bpy.utils.unregister_class(B4W_SCENE_PT_unit)
-
-    bpy.utils.unregister_class(B4W_SceneAudio)
-    bpy.utils.unregister_class(B4W_SceneNLA)
-    bpy.utils.unregister_class(B4W_SceneLogicEditor)
-    bpy.utils.unregister_class(B4W_LogicEditorRefreshAvailableTrees)
-    bpy.utils.unregister_class(B4W_LogicEditorAddNodeTree)
-    bpy.utils.unregister_class(B4W_LogicEditorRemoveNodeTree)
-    bpy.utils.unregister_class(B4W_SceneMetaTags)
-    bpy.utils.unregister_class(B4W_ScenePhysics)
-    bpy.utils.unregister_class(B4W_SceneBatching)
-    bpy.utils.unregister_class(B4W_SceneObjsSelection)
-    bpy.utils.unregister_class(B4W_SceneAnchors)
-    bpy.utils.unregister_class(B4W_SceneExportOptions)
-
-    bpy.utils.unregister_class(B4W_SCENE_PT_simplify)

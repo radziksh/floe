@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,12 +26,12 @@ if (!window["b4w"])
  * @module ns_compat
  *
  * @cc_externs animation armature assets camera config controls constraints container
- * @cc_externs data debug geometry hud lights main material particles physics
- * @cc_externs rgb rgba scenes sfx textures transform util version nla
+ * @cc_externs data debug geometry hud lights main material math particles physics
+ * @cc_externs rgb rgba scenes sfx textures transform util version nla input
  *
  * @cc_externs vec3 vec4 quat mat3 mat4
  *
- * @cc_externs app camera_anim gyroscope hmd mixer mouse npc_ai ns_compat preloader storage
+ * @cc_externs app camera_anim gp_conf gyroscope hmd_conf hmd mixer mouse npc_ai ns_compat preloader storage
  */
 b4w.module["ns_compat"] = function(exports, require) {
 

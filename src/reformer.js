@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ var m_quat   = require("__quat");
 var m_util   = require("__util");
 var m_vec3   = require("__vec3");
 var m_vec4   = require("__vec4");
+var m_logn   = require("__logic_nodes");
 
 var REPORT_COMPATIBILITY_ISSUES = true;
 
@@ -47,6 +48,32 @@ var _params_reported = {};
 function reform_node(node) {
 
     switch(node["type"]) {
+    case "VALTORGB":
+        if(!node["color_ramp"]) {
+            node["color_ramp"] = {"elements" : [{"position": 0.5, "color": [1, 1, 1, 1]}]};
+            report("node Color Ramp", node, "color_ramp");
+        }
+        break;
+    case "CURVE_RGB":
+        if(!node["curve_mapping"]) {
+            node["curve_mapping"] = {"curves_data": [[[0, 0], [1, 1]],
+                [[0, 0], [1, 1]], [[0, 0], [1, 1]], [[0, 0], [1, 1]]],
+                "curves_handle_types" : ["EXTRAPOLATED", "EXTRAPOLATED",
+                "EXTRAPOLATED", "EXTRAPOLATED"], "curve_extend" : 
+                [["AUTO", "AUTO"], ["AUTO", "AUTO"], ["AUTO", "AUTO"], ["AUTO", "AUTO"]]};
+            report("node RGB Curves", node, "curve_mapping");
+        }
+        break;
+    case "CURVE_VEC":
+        if(!node["curve_mapping"]) {
+            node["curve_mapping"] = {"curves_data": [[[0, 0], [1, 1]],
+                [[0, 0], [1, 1]], [[0, 0], [1, 1]]],
+                "curves_handle_types" : ["EXTRAPOLATED", "EXTRAPOLATED",
+                "EXTRAPOLATED"], "curve_extend" : 
+                [["AUTO", "AUTO"], ["AUTO", "AUTO"], ["AUTO", "AUTO"]]};
+            report("node Vector Curves", node, "curve_mapping");
+        }
+        break;
     case "MAPPING":
         if(!node["vector_type"]) {
             node["vector_type"] = "POINT";
@@ -166,6 +193,22 @@ function reform_node(node) {
             break;
         default:
             break;
+        }
+        break;
+    case "VECT_TRANSFORM":
+        if (!("convert_from" in node)) {
+            node["convert_from"] = "WORLD";
+            report("node " + node["type"], node, "convert_from");
+        }
+
+        if (!("convert_to" in node)) {
+            node["convert_to"] = "WORLD";
+            report("node " + node["type"], node, "convert_to");
+        }
+
+        if (!("vector_type" in node)) {
+            node["vector_type"] = "POINT";
+            report("node " + node["type"], node, "vector_type");
         }
         break;
     }
@@ -346,6 +389,16 @@ exports.check_bpy_data = function(bpy_data) {
                 slot["default_value"] = 1.0;
                 report("world_texture_slot", slot, "default_value");
             }
+        }
+
+        if (!("b4w_use_default_animation" in world)) {
+            report("world", world, "b4w_use_default_animation");
+            world["b4w_use_default_animation"] = false;
+        }
+
+        if (!("b4w_anim_behavior" in world)) {
+            report("world", world, "b4w_anim_behavior");
+            world["b4w_anim_behavior"] = "CYCLIC";
         }
     }
 
@@ -691,6 +744,11 @@ exports.check_bpy_data = function(bpy_data) {
             else
                 scene["b4w_render_refractions"] = "OFF";
 
+        if(!("b4w_render_dynamic_grass" in scene)) {
+            report("scene", scene, "b4w_render_dynamic_grass");
+            scene["b4w_render_dynamic_grass"] = "AUTO";
+        }
+
         if (scene["b4w_nla_script"]) {
             report_deprecated("scene", scene, "b4w_nla_script");
         }
@@ -745,6 +803,28 @@ exports.check_bpy_data = function(bpy_data) {
             mesh["b4w_shape_keys"] = [];
             report("mesh", mesh, "b4w_shape_keys");
         }
+
+        var submesh_is_ok = true;
+        for (var k = 0; k < mesh["submeshes"].length; k++) {
+            var submesh = mesh["submeshes"][k];
+            if (!("boundings" in submesh)) {
+                submesh_is_ok = false;
+                submesh["boundings"] = {
+                    "bounding_ellipsoid_axes" : mesh["b4w_bounding_ellipsoid_axes"],
+                    "bounding_ellipsoid_center" : mesh["b4w_bounding_ellipsoid_center"],
+                    "bounding_box" : {
+                        "max_x" : mesh["b4w_bounding_box"]["max_x"],
+                        "max_y" : mesh["b4w_bounding_box"]["max_y"],
+                        "max_z" : mesh["b4w_bounding_box"]["max_z"],
+                        "min_x" : mesh["b4w_bounding_box"]["min_x"],
+                        "min_y" : mesh["b4w_bounding_box"]["min_y"],
+                        "min_z" : mesh["b4w_bounding_box"]["min_z"]
+                    }
+                };
+            }
+        }
+        if (!submesh_is_ok)
+            report("mesh", mesh, "submesh_bd");
 
         check_export_props(mesh);
 
@@ -886,6 +966,13 @@ exports.check_bpy_data = function(bpy_data) {
         if (!("b4w_use_panning" in camera)) {
             camera["b4w_use_panning"] = true;
             report("camera", camera, "b4w_use_panning");
+        }
+
+        if (!("b4w_use_pivot_limits" in camera)) {
+            camera["b4w_use_pivot_limits"] = false;
+            camera["b4w_pivot_z_min"] = 0;
+            camera["b4w_pivot_z_max"] = 10;
+            report("camera", camera, "b4w_use_pivot_limits");
         }
     }
 
@@ -1758,12 +1845,12 @@ exports.check_bpy_data = function(bpy_data) {
 
             if (!("use_rotation_dupli" in pset)) {
                 pset["use_rotation_dupli"] = false;
-                report("object", pset, "use_rotation_dupli");
+                report("particle_settings", pset, "use_rotation_dupli");
             }
 
             if (!("use_whole_group" in pset)) {
                 pset["use_whole_group"] = false;
-                report("object", pset, "use_whole_group");
+                report("particle_settings", pset, "use_whole_group");
             }
 
             if (!psys["transforms"]) {
@@ -1870,6 +1957,16 @@ exports.check_bpy_data = function(bpy_data) {
                 pset["b4w_particles_softness"] = 1.0;
                 report("particle_settings", pset, "b4w_particles_softness");
             }
+
+            if (!("billboard_tilt" in pset)) {
+                pset["billboard_tilt"] = 0.0;
+                report("particle_settings", pset, "billboard_tilt");
+            }
+
+            if (!("billboard_tilt_random" in pset)) {
+                pset["billboard_tilt_random"] = 0.0;
+                report("particle_settings", pset, "billboard_tilt_random");
+            }
         }
 
         if (!("constraints" in bpy_obj)) {
@@ -1916,6 +2013,16 @@ exports.check_bpy_data = function(bpy_data) {
         if (!("b4w_viewport_alignment" in bpy_obj)) {
             bpy_obj["b4w_viewport_alignment"] = null;
             report("object", bpy_obj, "b4w_viewport_alignment");
+        }
+
+        if (!("pinverse_tsr" in bpy_obj)) {
+            bpy_obj["pinverse_tsr"] = null;
+            report("object", bpy_obj, "pinverse_tsr");
+        }
+
+        if (!("b4w_cluster_data" in bpy_obj)) {
+            bpy_obj["b4w_cluster_data"] = { "cluster_id": -1 };
+            report("object", bpy_obj, "b4w_cluster_data");
         }
 
         if (check_negative_scale(bpy_obj))
@@ -2115,7 +2222,6 @@ exports.apply_mesh_modifiers = function(bpy_obj) {
         return null;
 
     var mesh = mesh_copy(bpy_obj["data"], bpy_obj["data"]["name"] + "_MOD");
-
     var modifiers = bpy_obj["modifiers"];
     for (var i = 0; i < modifiers.length; i++) {
         var mod = modifiers[i];
@@ -2133,7 +2239,6 @@ exports.apply_mesh_modifiers = function(bpy_obj) {
         }
         m_bounds.recalculate_mesh_boundings(mesh);
     }
-
     return mesh;
 }
 
@@ -2469,7 +2574,6 @@ function mesh_copy(mesh, new_name) {
         var submesh_new = m_util.clone_object_nr(submesh);
         mesh_new["submeshes"].push(submesh_new);
     }
-
     return mesh_new;
 }
 
@@ -2489,7 +2593,7 @@ function mesh_join(mesh, mesh2) {
         submesh["base_length"] += submesh2["base_length"];
 
         for (var prop in submesh) {
-            if (prop == "base_length")
+            if (prop == "base_length" || prop == "boundings")
                 continue;
 
             if (prop == "indices") {
@@ -2530,7 +2634,25 @@ function mesh_transform_locations(mesh, matrix) {
  * Not the best place to do such things, but other methods are much harder to
  * implement (see update_object())
  */
-exports.assign_logic_nodes_object_params = function(bpy_objects, scene) {
+exports.assign_logic_nodes_object_params = function(bpy_objects, bpy_world, scene) {
+
+    function set_bpy_objs_props(objects_paths, props) {
+        for (var id in objects_paths) {
+            var path = objects_paths[id];
+            var name = path[0];
+            if (path.length > 1)
+                for (var k = 1; k < path.length; k++)
+                    name += "*" + path[k];
+            for (var k = 0; k < bpy_objects.length; k++) {
+                var bpy_obj = bpy_objects[k];
+                if (bpy_obj["name"] == name) {
+                    for (var key in props) {
+                        bpy_obj[key] = props[key];
+                    }
+                }
+            }
+        }
+    }
 
     var script = scene["b4w_logic_nodes"];
     for (var i = 0; i < script.length; i++) {
@@ -2546,6 +2668,19 @@ exports.assign_logic_nodes_object_params = function(bpy_objects, scene) {
                 if (key in snode)
                     snode[rename[key]] = snode[key]
             }
+            // add scope for variables
+            for (var v in snode["variables"]) {
+                if (typeof(snode["variables"][v][0]) != "boolean")
+                    snode["variables"][v] = [false, snode["variables"][v]]
+            }
+            if (["MATH", "CONDJUMP", "PAGEPARAM", "REGSTORE"].indexOf(snode["type"]) >= 0) {
+                if ("variable1" in snode)
+                    snode["variables"]["v1"] = [false, snode["variable1"]];
+                if ("variable2" in snode)
+                    snode["variables"]["v2"] = [false, snode["variable2"]];
+                if ("variabled" in snode)
+                    snode["variables"]["vd"] = [false, snode["variabled"]];
+            }
             switch (snode["type"]) {
             case "SELECT":
                 for (var k = 0; k < bpy_objects.length; k++) {
@@ -2557,64 +2692,219 @@ exports.assign_logic_nodes_object_params = function(bpy_objects, scene) {
                     snode["bools"] = {}
                 if (!snode["bools"]["not_wait"])
                     snode["bools"]["not_wait"] = false
-
+                report_raw("Logic nodes type \"SELECT\" is deprecated");
                 break;
             case "SWITCH_SELECT":
-                for (var id in snode["objects_paths"]) {
-                    var path = snode["objects_paths"][id];
-                    var name = path[0];
-                    if (path.length > 1)
-                        for (var k = 1; k < path.length; k++)
-                            name += "*" + path[k];
-                    for (var k = 0; k < bpy_objects.length; k++) {
-                        var bpy_obj = bpy_objects[k];
-                        if (bpy_obj["name"] == name) {
-                            bpy_obj["b4w_selectable"] = true;
-                        }
+                set_bpy_objs_props(snode["objects_paths"], {"b4w_selectable": true});
+                if (snode["links"] instanceof Array) {
+                    report_raw("Format of a \"SWITCH_SELECT\" node is outdated. " +
+                    "It is recommended to reexport the scene \"" + scene.name+"\"");
+                    var links = {};
+                    var kk = 0;
+                    for (k in snode["objects_paths"]) {
+                        links[k] = snode["links"][kk];
+                        kk++;
                     }
+                    snode["links"] = links;
                 }
                 break;
             case "SELECT_PLAY":
                 report_raw("Logic nodes type \"SELECT_PLAY\" is deprecated, " +
-                "node will be muted. To fix this, reexport scene \"" + scene.name+"\"");
+                "node will be muted. To fix this, reexport the scene \"" + scene.name+"\"");
                 snode["mute"] = true;
                 break;
+            case "SELECT_PLAY_ANIM":
+                report_raw("Logic nodes type \"SELECT_PLAY_ANIM\" is deprecated");
+                break;    
             case "SHOW":
             case "HIDE":
-            case "PLAY_ANIM":
             case "SET_SHADER_NODE_PARAM":
             case "INHERIT_MAT":
-                for (var id in snode["objects_paths"]) {
-                    var path = snode["objects_paths"][id];
-                    var name = path[0];
-                    if (path.length > 1)
-                        for (var k = 1; k < path.length; k++)
-                            name += "*" + path[k];
-                    for (var k = 0; k < bpy_objects.length; k++) {
-                        var bpy_obj = bpy_objects[k];
-                        if (bpy_obj["name"] == name) {
-                            bpy_obj["b4w_do_not_batch"] = true;
-                        }
-                    }
-                }
+                set_bpy_objs_props(snode["objects_paths"], {"b4w_do_not_batch": true});
                 break;
             case "PLAY":
                 scene["b4w_use_nla"] = true;
                 break;
             case "MOVE_TO":
-                for (var id in snode["objects_paths"]) {
-                    var path = snode["objects_paths"][id];
-                    var name = path[0];
-                    if (path.length > 1)
-                        for (var k = 1; k < path.length; k++)
-                            name += "*" + path[k];
-                    for (var k = 0; k < bpy_objects.length; k++) {
-                        var bpy_obj = bpy_objects[k];
-                        if (bpy_obj["name"] == name) {
-                            bpy_obj["b4w_do_not_batch"] = true;
-                        }
+                set_bpy_objs_props(snode["objects_paths"], {"b4w_do_not_batch": true});
+                break;
+            case "TRANSFORM_OBJECT":
+                set_bpy_objs_props(snode["objects_paths"], {"b4w_do_not_batch": true});
+                break;
+            case "OUTLINE":
+                set_bpy_objs_props(snode["objects_paths"], {"b4w_outlining": true});
+                break;
+            case "CONDJUMP":
+                if (snode["condition"])
+                    snode["common_usage_names"]["condition"] = snode["condition"];
+
+                if ("cnd" in snode["floats"])
+                    snode["common_usage_names"]["condition"] = snode["floats"]["cnd"];
+                else {
+                    switch(snode["common_usage_names"]["condition"]){
+                    case "GEQUAL":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_GEQUAL;
+                        break;
+                    case "LEQUAL":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_LEQUAL;
+                        break;
+                    case "GREATER":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_GREATER;
+                        break;
+                    case "LESS":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_LESS;
+                        break;
+                    case "NOTEQUAL":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_NOTEQUAL;
+                        break;
+                    case "EQUAL":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_EQUAL;
+                        break;
                     }
-                }                    
+                }
+                if (snode["number1"] != undefined)
+                    snode["input1"] = snode["number1"];
+                if (snode["number2"] != undefined)
+                    snode["input2"] = snode["number2"];
+                if (!snode["bools"])
+                        snode["bools"] = {};
+                if (snode["bools"]["str"] === undefined) {
+                    snode["bools"]["str"] = false;
+                    snode["floats"]["inp1"] = snode["input1"];
+                    snode["floats"]["inp2"] = snode["input2"];
+                }
+                break;
+            case "SEND_REQ":
+                if (!snode["bools"])
+                    snode["bools"] = {};
+                if (!snode["strings"])
+                    snode["strings"] = {};
+
+                if (snode["bools"]["ct"] === undefined)
+                    snode["bools"]["ct"] = false;
+                if (snode["url"] != undefined) {
+                    snode["bools"]["url"] = false;
+                    snode["strings"]["url"] = snode["url"];
+                }
+
+                break;
+            case "MATH":
+                if (snode["number1"] != undefined)
+                    snode["input1"] = snode["number1"];
+                if (snode["number2"] != undefined)
+                    snode["input2"] = snode["number2"];
+                if (snode["input1"] != undefined)
+                    snode["floats"]["inp1"] = snode["input1"];
+                if (snode["input2"] != undefined)
+                    snode["floats"]["inp2"] = snode["input2"];
+                break;
+            case "REGSTORE":
+                if (!snode["floats"])
+                        snode["floats"] = {};
+                if (!snode["strings"])
+                        snode["strings"] = {};
+
+                if (snode["number1"] != undefined)
+                    snode["input1"] = snode["number1"];
+                if (snode["input1"] != undefined)
+                    switch (typeof(snode["input1"])) {
+                    case "number":
+                        snode["floats"]["inp1"] = snode["input1"];
+                        snode["common_usage_names"]["variable_type"] = "NUMBER";
+                        break;
+                    default:
+                        snode["strings"]["inp1"] = snode["input1"];
+                        snode["common_usage_names"]["variable_type"] = "STRING";
+                    }
+
+                switch(snode["common_usage_names"]["variable_type"]) {
+                case "NUMBER":
+                    snode["common_usage_names"]["variable_type"] = m_logn.NT_NUMBER;
+                    break;
+                case "STRING":
+                    snode["common_usage_names"]["variable_type"] = m_logn.NT_STRING;
+                    break;
+                }
+
+                break;
+            case "PAGEPARAM":
+                if (!snode["bools"])
+                    snode["bools"] = {};
+                if (snode["bools"]["hsh"] === undefined)
+                    snode["bools"]["hsh"] = false;
+
+                if (!snode["floats"])
+                    snode["floats"] = {};
+                if (snode["floats"]["ptp"] === undefined)
+                    snode["floats"]["ptp"] = 0;
+                break;
+            case "PLAY_ANIM":
+                set_bpy_objs_props(snode["objects_paths"], {"b4w_do_not_batch": true});
+                if (!snode["bools"])
+                    snode["bools"] = {};
+                if (snode["bools"]["env"] === undefined)
+                    snode["bools"]["env"] = false;
+                break;
+            case "STOP_ANIM":
+                if (!snode["bools"])
+                    snode["bools"] = {};
+                if (snode["bools"]["env"] === undefined)
+                    snode["bools"]["env"] = false;
+                break;
+            case "STRING":
+                if ("cnd" in snode["floats"])
+                    snode["common_usage_names"]["condition"] = snode["floats"]["cnd"];
+                else {
+                    switch(snode["common_usage_names"]["condition"]){
+                    case "GEQUAL":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_GEQUAL;
+                        break;
+                    case "LEQUAL":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_LEQUAL;
+                        break;
+                    case "GREATER":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_GREATER;
+                        break;
+                    case "LESS":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_LESS;
+                        break;
+                    case "NOTEQUAL":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_NOTEQUAL;
+                        break;
+                    case "EQUAL":
+                        snode["common_usage_names"]["condition"] = m_logn.NC_EQUAL;
+                        break;
+                    }
+                }
+
+                break;
+            case "REDIRECT":
+                if (snode["url"] != undefined) {
+                    snode["bools"]["url"] = false;
+                    snode["strings"]["url"] = snode["url"];
+                }
+                break;
+            case "ENTRYPOINT":
+                if (!snode["bools"])
+                    snode["bools"] = {};
+                if (snode["bools"]["js"] === undefined)
+                    snode["bools"]["js"] = false;
+
+                if (snode["bools"]["js"])
+                    snode["mute"] = true;
+                break;
+            case "JS_CALLBACK":
+                var cb_params_dict = snode["common_usage_names"]["js_cb_params"];
+                for (var key in cb_params_dict)
+                    switch(cb_params_dict[key]) {
+                        case "OBJECT":
+                            cb_params_dict[key] = m_logn.NCPT_OBJECT;
+                            break;
+                        case "VARIABLE":
+                            cb_params_dict[key] = m_logn.NCPT_VARIABLE;
+                            break;
+                    }
+                break;
             }
         }
     }

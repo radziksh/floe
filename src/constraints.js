@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -160,7 +160,6 @@ exports.append_semi_stiff_cam_obj = function(obj, obj_parent, offset,
     // link to parent object
     cons.obj_parent = obj_parent;
     cons.offset = new Float32Array(offset);
-
     cons.parent_prev_rotation = new Float32Array(p_quat);
 
     cons.clamp_left = m_util.angle_wrap_0_2pi(clamp_left);
@@ -890,7 +889,7 @@ function correct_up(camobj, up_axis, strict) {
 
     m_quat.multiply(rotation, quat, quat);
 
-    // strictly align camera with the given UP vector
+    // strictly align camera with the given UP vector direction
     if (strict) {
         var mz_cam_world = m_util.quat_to_dir(quat, m_util.AXIS_MZ, _vec3_tmp);
         if (m_vec3.dot(up_axis, mz_cam_world) < 0)

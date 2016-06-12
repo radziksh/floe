@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ exports.extract_index_array = function(obj, mat_name) {
  * @param {Float32Array} array The new array
  */
 exports.update_vertex_array = function(obj, mat_name, attrib_name, array) {
-    var types = ["MAIN", "DEPTH", "COLOR_ID"];
+    var types = ["MAIN", "SHADOW", "COLOR_ID"];
 
     if (!m_geom.has_dyn_geom(obj)) {
         m_print.error("Wrong object:", obj.name);
@@ -133,7 +133,7 @@ exports.update_vertex_array = function(obj, mat_name, attrib_name, array) {
 exports.override_geometry = function(obj, mat_name, ibo_array,
                                         positions_array, smooth_normals) {
 
-    var types = ["MAIN", "DEPTH", "COLOR_ID"];
+    var types = ["MAIN", "SHADOW", "COLOR_ID"];
 
     if (!m_geom.has_dyn_geom(obj)) {
         m_print.error("Wrong object:", obj.name);
@@ -303,6 +303,31 @@ exports.get_shape_key_value = function(obj, key_name) {
     }
 
     return m_geom.get_shape_key_value(obj, key_name);
+}
+
+/**
+ * Draw a line.
+ * @method module:geometry.draw_line
+ * @param {Object3D} obj Line object
+ * @param {Float32Array} positions Line points [X0,Y0,Z0,X1,Y1,Z1...]
+ * @param {Boolean} is_split True - draw a splitted line
+ * (points specified in pairs), false - draw continuous line
+ */
+exports.draw_line = function(obj, positions, is_split) {
+    is_split = is_split || false;
+
+    if (!(positions instanceof Float32Array)) {
+        m_print.error("Wrong positions type");
+        return;
+    }
+
+    var batch = m_batch.get_first_batch(obj);
+
+    if (batch) {
+        m_geom.draw_line(batch, positions, is_split);
+
+        m_render.assign_attribute_setters(batch);
+    }
 }
 
 }

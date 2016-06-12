@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Алфавитный указатель &mdash; Руководство пользователя: Blend4Web vv15.12</title>
+  <title>Алфавитный указатель &mdash; Руководство пользователя Blend4Web 16.05</title>
   
 
   
@@ -33,7 +33,7 @@
   
         <link rel="author" title="Об этих документах"
               href="about.html"/>
-    <link rel="top" title="Руководство пользователя: Blend4Web vv15.12" href="index.html"/> 
+    <link rel="top" title="Руководство пользователя Blend4Web 16.05" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -60,7 +60,7 @@
           
           
             <div class="version">
-              v15.12
+              v16.05
             </div>
           
         
@@ -83,29 +83,32 @@
           
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="about.html">Общие сведения</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">Функционал движка</a></li>
-<li class="toctree-l1"><a class="reference internal" href="first_steps.html">Экспресс-установка</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">Развёртывание среды разработки</a></li>
+<li class="toctree-l1"><a class="reference internal" href="engine_features.html">Возможности движка</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Установка и обновление</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Рабочий процесс</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project_manager.html">Управление проектами</a></li>
 <li class="toctree-l1"><a class="reference internal" href="viewer.html">Просмотрщик сцен</a></li>
 <li class="toctree-l1"><a class="reference internal" href="web_player.html">Веб-плеер</a></li>
 <li class="toctree-l1"><a class="reference internal" href="addon.html">Аддон</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scene_settings.html">Параметры сцены</a></li>
 <li class="toctree-l1"><a class="reference internal" href="objects.html">Объекты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meshes.html">Меши</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normal_editor.html">Редактор нормалей</a></li>
 <li class="toctree-l1"><a class="reference internal" href="camera.html">Камера</a></li>
 <li class="toctree-l1"><a class="reference internal" href="materials.html">Материалы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="textures.html">Текстуры</a></li>
 <li class="toctree-l1"><a class="reference internal" href="node_materials.html">Нодовые материалы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Логические ноды</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lighting.html">Освещение, тени и фон</a></li>
-<li class="toctree-l1"><a class="reference internal" href="postprocessing_effects.html">Постпроцессинговые эффекты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postprocessing_effects.html">Спецэффекты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stereo_rendering.html">Стереоизображение</a></li>
+<li class="toctree-l1"><a class="reference internal" href="textures.html">Текстуры</a></li>
 <li class="toctree-l1"><a class="reference internal" href="particles.html">Система частиц. Флюиды</a></li>
 <li class="toctree-l1"><a class="reference internal" href="particles_instancing.html">Система частиц. Инстансинг</a></li>
 <li class="toctree-l1"><a class="reference internal" href="animation.html">Анимация</a></li>
-<li class="toctree-l1"><a class="reference internal" href="outdoor_rendering.html">Рендеринг наружных сцен</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gamma_alpha.html">Гамма-коррекция и альфа-композитинг</a></li>
-<li class="toctree-l1"><a class="reference internal" href="audio.html">Звуковая подсистема</a></li>
+<li class="toctree-l1"><a class="reference internal" href="outdoor_rendering.html">Природные эффекты</a></li>
+<li class="toctree-l1"><a class="reference internal" href="colors.html">Работа с цветом</a></li>
+<li class="toctree-l1"><a class="reference internal" href="audio.html">Звук</a></li>
 <li class="toctree-l1"><a class="reference internal" href="physics.html">Физика</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nla.html">Нелинейная анимация</a></li>
-<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Визуальное программирование</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers.html">Разработчикам приложений</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers_advanced.html">Разработчикам движка</a></li>
 <li class="toctree-l1"><a class="reference internal" href="git_short_manual.html">Работа в команде с использованием Git</a></li>
@@ -130,6 +133,11 @@
 
       
       <div class="wy-nav-content">
+        <div id="lang_cont">
+          <a href="#">RU</a>
+          <a href="#">EN</a>
+          <a href="#">ZH</a>
+        </div>
         <div class="rst-content">
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
@@ -154,14 +162,13 @@
  <a href="#Символы"><strong>Символы</strong></a>
  | <a href="#B"><strong>B</strong></a>
  | <a href="#D"><strong>D</strong></a>
- | <a href="#E"><strong>E</strong></a>
  | <a href="#G"><strong>G</strong></a>
- | <a href="#H"><strong>H</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  | <a href="#Символы"><strong>Символы</strong></a>
  
@@ -189,12 +196,6 @@
   <dt><a href="about.html#index-6">Blender</a>
   </dt>
 
-      <dd><dl>
-        
-  <dt><a href="first_steps.html#index-0">установка</a>
-  </dt>
-
-      </dl></dd>
   </dl></td>
 </tr></table>
 
@@ -202,23 +203,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="textures.html#index-4">diffuse map</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
   <dt><a href="postprocessing_effects.html#index-1">DOF</a>
-  </dt>
-
-  </dl></td>
-</tr></table>
-
-<h2 id="E">E</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="textures.html#index-9">environment map</a>
   </dt>
 
   </dl></td>
@@ -266,28 +251,6 @@
 
       </dl></dd>
   </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="postprocessing_effects.html#index-3">god rays</a>
-  </dt>
-
-  </dl></td>
-</tr></table>
-
-<h2 id="H">H</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="materials.html#index-11">halo</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="textures.html#index-7">height map</a>
-  </dt>
-
-  </dl></td>
 </tr></table>
 
 <h2 id="M">M</h2>
@@ -297,14 +260,10 @@
   <dt><a href="textures.html#index-3">matcap</a>
   </dt>
 
-      
-  <dt><a href="textures.html#index-3">material capture</a>
-  </dt>
-
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="textures.html#index-10">mirror map</a>
+  <dt><a href="textures.html#index-3">material capture</a>
   </dt>
 
   </dl></td>
@@ -314,9 +273,15 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="textures.html#index-6">normal map</a>
+  <dt><a href="normal_editor.html#index-0">normals</a>
   </dt>
 
+      <dd><dl>
+        
+  <dt><a href="normal_editor.html#index-0">editor</a>
+  </dt>
+
+      </dl></dd>
   </dl></td>
 </tr></table>
 
@@ -334,12 +299,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="textures.html#index-12">render-to-texture</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
   <dt><a href="textures.html#index-12">RTT</a>
   </dt>
 
@@ -350,33 +309,26 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="developers.html#index-0">sensor</a>
+  <dt><a href="postprocessing_effects.html#index-2">SSAO</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt>
+    viewer
   </dt>
 
       <dd><dl>
         
-  <dt><a href="developers.html#index-1">manifold</a>
+  <dt><a href="addon.html#index-1">launch</a>
   </dt>
 
       </dl></dd>
-      
-  <dt><a href="textures.html#index-11">skydome</a>
-  </dt>
-
-      
-  <dt><a href="textures.html#index-5">specular map</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
-  <dt><a href="postprocessing_effects.html#index-2">SSAO</a>
-  </dt>
-
-      
-  <dt><a href="textures.html#index-8">stencil map</a>
-  </dt>
-
   </dl></td>
 </tr></table>
 
@@ -404,25 +356,22 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="addon.html#index-0">аддон</a>
+  <dt>
+    Адд-он
   </dt>
 
       <dd><dl>
         
-  <dt><a href="addon.html#index-1">ошибки инициализации</a>
-  </dt>
-
-        
-  <dt><a href="first_steps.html#index-1">установка</a>
-  </dt>
-
-        
-  <dt><a href="first_steps.html#index-4">установка новой версии</a>
+  <dt><a href="addon.html#index-2">ошибки инициализации</a>
   </dt>
 
       </dl></dd>
       
-  <dt><a href="postprocessing_effects.html#index-5">анаглиф</a>
+  <dt><a href="addon.html#index-0">аддон</a>
+  </dt>
+
+      
+  <dt><a href="stereo_rendering.html#index-0">анаглиф</a>
   </dt>
 
       
@@ -430,7 +379,7 @@
   </dt>
 
       
-  <dt><a href="outdoor_rendering.html#index-0">береговая линия</a>
+  <dt><a href="outdoor_rendering.html#index-0">береговая линия</a>, <a href="outdoor_rendering.html#index-0">[1]</a>
   </dt>
 
       
@@ -452,7 +401,7 @@
 
       <dd><dl>
         
-  <dt><a href="addon.html#index-2">ошибки</a>
+  <dt><a href="addon.html#index-3">ошибки</a>
   </dt>
 
       </dl></dd>
@@ -465,6 +414,14 @@
   </dt>
 
       
+  <dt><a href="engine_features.html#index-0">возможности движка</a>
+  </dt>
+
+      
+  <dt><a href="objects.html#index-1">Выбор объектов</a>
+  </dt>
+
+      
   <dt><a href="postprocessing_effects.html#index-1">глубина резкости камеры (depth of field)</a>
   </dt>
 
@@ -474,6 +431,10 @@
 
       
   <dt><a href="about.html#index-1">движок</a>
+  </dt>
+
+      
+  <dt><a href="textures.html#index-4">диффузная текстура</a>
   </dt>
 
       
@@ -500,11 +461,11 @@
 
       <dd><dl>
         
-  <dt><a href="materials.html#index-7">динамическое</a>
+  <dt><a href="materials.html#index-6">static</a>
   </dt>
 
         
-  <dt><a href="materials.html#index-6">статическое</a>
+  <dt><a href="materials.html#index-7">динамическое</a>
   </dt>
 
         
@@ -517,15 +478,17 @@
   </dt>
 
       
-  <dt><a href="lighting.html#index-3">источники света</a>
+  <dt><a href="lighting.html#index-2">источники света</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="objects.html#index-2">Кватернионы</a>
   </dt>
 
       
-  <dt><a href="objects.html#index-1">кватернион</a>
-  </dt>
-
-      
-  <dt><a href="developers_advanced.html#index-0">компиляция шейдеров</a>
+  <dt><a href="developers_advanced.html#index-0">копиляция шейдеров</a>
   </dt>
 
       <dd><dl>
@@ -558,10 +521,8 @@
   </dt>
 
       </dl></dd>
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="postprocessing_effects.html#index-6">коррекция цвета</a>
+  <dt><a href="colors.html#index-0">Коррекция цвета</a>
   </dt>
 
       
@@ -570,7 +531,11 @@
 
       <dd><dl>
         
-  <dt><a href="materials.html#index-11">гало</a>
+  <dt><a href="materials.html#index-1">Параметры освещения</a>
+  </dt>
+
+        
+  <dt><a href="materials.html#index-12">гало</a>
   </dt>
 
         
@@ -582,11 +547,7 @@
   </dt>
 
         
-  <dt><a href="materials.html#index-9">опции рендеринга</a>
-  </dt>
-
-        
-  <dt><a href="materials.html#index-1">параметры освещения</a>
+  <dt><a href="materials.html#index-10">опции рендеринга</a>, <a href="materials.html#index-9">[1]</a>
   </dt>
 
         
@@ -594,26 +555,12 @@
   </dt>
 
         
-  <dt><a href="materials.html#index-10">специальные параметры</a>
-  </dt>
-
-      </dl></dd>
-      
-  <dt><a href="lighting.html#index-2">нормали</a>
-  </dt>
-
-      <dd><dl>
-        
-  <dt><a href="lighting.html#index-2">редактор</a>
+  <dt><a href="materials.html#index-11">специальные параметры</a>
   </dt>
 
       </dl></dd>
       
   <dt><a href="lighting.html#index-0">освещение</a>
-  </dt>
-
-      
-  <dt><a href="outdoor_rendering.html#index-0">параметры берега</a>
   </dt>
 
       
@@ -626,7 +573,7 @@
 
       <dd><dl>
         
-  <dt><a href="materials.html#index-4">настройка</a>
+  <dt><a href="materials.html#index-4">Настройка</a>
   </dt>
 
         
@@ -643,21 +590,17 @@
   <dt><a href="workflow.html#index-1">добавление сцен</a>
   </dt>
 
-        
-  <dt><a href="setup.html#index-0">запуск</a>
-  </dt>
-
       </dl></dd>
-      
-  <dt><a href="first_steps.html#index-2">профиль Blend4Web</a>
-  </dt>
-
       
   <dt><a href="postprocessing_effects.html#index-0">размытие при движении (motion blur)</a>
   </dt>
 
       
-  <dt><a href="postprocessing_effects.html#index-7">сглаживание</a>
+  <dt><a href="textures.html#index-12">рендеринг в текстуру</a>
+  </dt>
+
+      
+  <dt><a href="postprocessing_effects.html#index-5">сглаживание</a>
   </dt>
 
       
@@ -686,11 +629,19 @@
 
       </dl></dd>
       
-  <dt><a href="postprocessing_effects.html#index-5">стереоизображение</a>
+  <dt><a href="postprocessing_effects.html#index-3">Сумеречные лучи</a>
   </dt>
 
       
   <dt><a href="postprocessing_effects.html#index-3">сумеречные лучи (crepuscular rays)</a>
+  </dt>
+
+      
+  <dt><a href="scene_settings.html#index-0">сцена</a>
+  </dt>
+
+      
+  <dt><a href="textures.html#index-11">текстура неба (skydome)</a>
   </dt>
 
       
@@ -752,27 +703,23 @@
   </dt>
 
       
-  <dt><a href="lighting.html#index-4">цвет фона</a>
+  <dt><a href="lighting.html#index-3">цвет фона</a>
   </dt>
 
       
-  <dt><a href="first_steps.html#index-3">экспорт</a>, <a href="workflow.html#index-0">[1]</a>
+  <dt><a href="setup.html#index-0">экспорт</a>, <a href="workflow.html#index-0">[1]</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="addon.html#index-3">ошибки</a>
+  <dt><a href="addon.html#index-4">ошибки</a>
   </dt>
 
         
-  <dt><a href="addon.html#index-4">предупреждения об ошибках экспорта</a>
+  <dt><a href="addon.html#index-5">предупреждения об ошибках экспорта</a>
   </dt>
 
       </dl></dd>
-      
-  <dt><a href="materials.html#index-8">эффект Френеля</a>
-  </dt>
-
   </dl></td>
 </tr></table>
 
@@ -787,15 +734,49 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, ООО &#34;Триумф&#34;.
-      Обновлено: 2015-12-22.
+        &copy; Copyright 2014-2016, Триумф.
+      Обновлено: 2016-05-31.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+  <a href="https://www.blend4web.com">www.blend4web.com</a>
+
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+  (function() {
+    if (window.document.domain != "www.blend4web.com")
+      return;
+
+    (function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter24512171 = new Ya.Metrika({
+                    id:24512171,
+                    clickmap:false,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");
+  })();
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/24512171" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
 
 </footer>
-
         </div>
       </div>
 
@@ -810,7 +791,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'v15.12',
+            VERSION:'v16.05',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -834,6 +815,36 @@
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.StickyNav.enable();
+
+          var lang_cont = $("#lang_cont");
+          var links = lang_cont.children();
+
+          var link_ru = links[0];
+          var link_en = links[1];
+          var link_zh = links[2];
+
+          var loc = document.location.href;
+
+          var href_ru = loc;
+          var href_en = loc;
+          var href_zh = loc; 
+
+          if (loc.search("/ru/") != -1) {
+              href_en = loc.replace("/ru/", "/en/");
+              href_zh = loc.replace("/ru/", "/zh/");
+          } else if (loc.search("/en/") != -1) {
+              href_ru = loc.replace("/en/", "/ru/");
+              href_zh = loc.replace("/en/", "/zh/");
+          } else {
+              href_ru = loc.replace("/zh/", "/ru/");
+              href_en = loc.replace("/zh/", "/en/");
+          }
+
+          link_ru.href = href_ru;
+          link_en.href = href_en;
+          link_zh.href = href_zh;
+
+          lang_cont.css("display", "inline-block")
       });
   </script>
    

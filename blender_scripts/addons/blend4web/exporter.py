@@ -1,19 +1,3 @@
-# Copyright (C) 2014-2015 Triumph LLC
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 import bpy
 from collections import OrderedDict
 import hashlib
@@ -31,6 +15,7 @@ import blend4web
 
 b4w_modules =  ["binary_module_hook",
                 "anim_baker",
+                "clusterer",
                 "logic_node_tree",
                 "server",
                 "init_validation",
@@ -49,7 +34,7 @@ ROW_HEIGHT = 20
 
 SUF_HAIR_DUPLI = "_HAIR_DUPLI"
 
-PATH_TO_VIEWER = "apps_dev/viewer/viewer_dev.html"
+PATH_TO_VIEWER = "apps_dev/viewer/viewer.html"
 
 JSON_PRETTY_PRINT = False
 SUPPORTED_OBJ_TYPES = ["MESH", "CURVE", "ARMATURE", "EMPTY", "CAMERA", "LAMP", \
@@ -260,7 +245,7 @@ class ExportMessagesDialog(bpy.types.Operator):
                 row.label(message["text"])
             row = self.layout.row()
             if _b4w_export_warnings:
-                row.label(text=_(""))
+                row.label(text="")
         if _b4w_export_warnings:
             print(_b4w_export_warnings)
             row = self.layout.row()
@@ -439,7 +424,7 @@ def attach_export_properties(tags):
 def check_dupli_groups(objects, group_number):
     global _dg_counter
     for obj in objects:
-        if obj.dupli_group:
+        if obj.dupli_group and obj.dupli_type == "GROUP":
             _dg_counter += 1
             check_dupli_groups(obj.dupli_group.objects, _dg_counter)
 
@@ -503,19 +488,45 @@ def get_component_export_path(component):
 def obj_to_mesh_needed(obj):
     """Check if object require copy of obj.data during export"""
     if (obj.type == "CURVE" or obj.type == "SURFACE" or obj.type == "META" 
-            or obj.type == "FONT" or obj.type == "MESH" 
+            or obj.type == "FONT"):
+        return True
+    elif (obj.type == "MESH"
             and (obj.b4w_apply_modifiers or obj.b4w_loc_export_vertex_anim 
             or use_split_normals(obj) or obj.b4w_shape_keys
-            or obj.b4w_apply_scale)):
+            or obj.b4w_apply_scale
+            or obj_auto_apply_modifiers(obj))):
         return True
     else:
         return False
 
+def obj_auto_apply_scale(obj):
+    if ('b4w_apply_scale' in obj.keys()
+            or obj.parent
+            or find_modifier(obj, "ARMATURE")
+            or obj.b4w_loc_export_vertex_anim):
+        return False
+    else:
+        return obj_has_nonuniform_scale(obj)
+
+def obj_has_nonuniform_scale(obj):
+    return not (obj.scale[0] == obj.scale[1] and obj.scale[1] == obj.scale[2])
+
+def obj_auto_apply_modifiers(obj):
+    if ('b4w_apply_modifiers' in obj.keys()
+            or find_modifier(obj, "ARMATURE")
+            or obj.b4w_loc_export_vertex_anim):
+        return False
+    else:
+        return obj_has_modifiers(obj) or obj_has_nonuniform_scale(obj)
+
+def obj_has_modifiers(obj):
+    return len(obj.modifiers) > 0
+
 def get_obj_data(obj, scene):
     data = None
     if obj.data:
-        if obj_to_mesh_needed(obj):            
-            data = obj.to_mesh(scene, obj.b4w_apply_modifiers or obj.b4w_apply_scale, "PREVIEW")
+        if obj_to_mesh_needed(obj):
+            data = obj.to_mesh(scene, obj.b4w_apply_modifiers or obj.b4w_apply_scale or obj_auto_apply_modifiers(obj), "PREVIEW")
             if data:
                 if obj.type == "META":
                     for slot in obj.material_slots:
@@ -523,13 +534,13 @@ def get_obj_data(obj, scene):
                             data.materials.append(slot.material)
 
                 new_name = None
-                if obj.b4w_apply_modifiers:
+                if obj.b4w_apply_modifiers or obj_auto_apply_modifiers(obj):
                     new_name = obj.name + "_MODIFIERS_APPLIED"
                 elif obj.b4w_loc_export_vertex_anim:
                     new_name = obj.name + "_VERTEX_ANIM"
                 elif use_split_normals(obj):
                     new_name = obj.name + "_VERTEX_NORMALS"
-                elif obj.b4w_apply_scale:
+                elif obj.b4w_apply_scale or obj_auto_apply_scale(obj):
                     new_name = obj.name + "_NONUNIFORM_SCALE_APPLIED"
                 elif obj.b4w_shape_keys:
                     new_name = obj.name + "_SHAPE_KEYS"
@@ -592,8 +603,15 @@ def scenes_store_select_all_layers():
     global _scene_active_layers
     _scene_active_layers = {}
 
-    for scene in bpy.data.scenes:
+    curr_scene = bpy.context.screen.scene
+    active_cam = curr_scene.camera
 
+    for scene in bpy.data.scenes:
+        if (not scene.camera and active_cam and curr_scene != scene
+                and not active_cam.name in scene.objects):
+            scene.objects.link(active_cam)
+        bpy.context.screen.scene = scene 
+               
         if scene.name not in _scene_active_layers:
             _scene_active_layers[scene.name] = {}
 
@@ -603,6 +621,11 @@ def scenes_store_select_all_layers():
         for i in range(len(scene.layers)):
             layers.append(scene.layers[i])
             scene.layers[i] = True
+        if (not scene.camera and active_cam and curr_scene != scene
+                    and not active_cam.name in scene.objects):
+            scene.objects.unlink(active_cam)
+
+    bpy.context.screen.scene = curr_scene
 
 def scenes_restore_selected_layers():
     global _scene_active_layers
@@ -781,7 +804,7 @@ def process_action(action):
 
     # prefer quaternion rotation
     if has_quat_rotation and has_euler_rotation:
-        for data_path in fc_indices:
+        for data_path in list(fc_indices):
             if data_path.find("rotation_euler") > -1:
                 del fc_indices[data_path]
 
@@ -792,22 +815,24 @@ def process_action(action):
         is_rotation_euler = data_path.find("rotation_euler") > -1
         is_node = data_path.find("nodes") == 0
         is_light_color = data_path.find("color") == 0
+        is_environment_color = data_path.find("horizon_color") == 0 or data_path.find("zenith_color") == 0
+        is_fog_color = data_path.find("b4w_fog_color") == 0
 
         num_channels = 1
         if is_scale or is_location or is_rotation_quat or is_rotation_euler:
             num_channels = 8
-        if is_light_color:
+        elif is_light_color or is_environment_color or is_fog_color:
             num_channels = 3
         elif is_node:
-            num_channels_mat = get_mat_action_num_channels(action, data_path)
+            pattern = r'"([^"]*)"'
+            matched = re.search(pattern, data_path)
+            if matched:
+                node_name = matched.groups()[0]
+                num_channels_mat = get_mat_action_num_channels(action, node_name) or\
+                                   get_ngroups_action_num_channels(action, node_name)
 
-            if num_channels_mat != None:
-                num_channels = num_channels_mat
-            else:
-                num_channels_ngroups = get_ngroups_action_num_channels(action,
-                                                                      data_path)
-                if num_channels_ngroups != None:
-                    num_channels = num_channels_ngroups
+                if num_channels_mat != None:
+                    num_channels = num_channels_mat
 
         for index in fc_indices[data_path]:
             if data_path not in act_data["fcurves"]:
@@ -926,47 +951,56 @@ def process_action(action):
     _export_uuid_cache[act_data["uuid"]] = act_data
     _bpy_uuid_cache[act_data["uuid"]] = action
 
-def get_mat_action_num_channels(action, data_path):
+def get_mat_action_num_channels(action, node_name):
     mats = bpy.data.materials
     for mat in mats:
         node_tree = mat.node_tree
         if not node_tree:
             continue
-        num_channels_mat = num_node_channels(action.name, node_tree,
-                                         data_path)
+        num_channels_mat = num_node_channels(action.name, node_tree, node_name)
         if num_channels_mat:
             return num_channels_mat
     return None
 
-def get_ngroups_action_num_channels(action, data_path):
+def get_ngroups_action_num_channels(action, node_name):
     ngroups = bpy.data.node_groups
     for ntree in ngroups:
-        num_channels_ngroup = num_node_channels(action.name, ntree,
-                                                data_path)
+        num_channels_ngroup = num_node_channels(action.name, ntree, node_name)
         if num_channels_ngroup:
             return num_channels_ngroup
     return None
 
-def num_node_channels(action_name, node_tree, data_path):
+def num_node_channels(action_name, node_tree, node_name):
     anim_data = node_tree.animation_data
     if not anim_data:
         return None
 
     node_action = anim_data.action
-    if node_action:
-        if node_action.name == action_name:
-            pattern = r'"([^"]*)"'
-            matched = re.search(pattern, data_path)
-            if matched:
-                node_name = matched.groups()[0]
-                for node in node_tree.nodes:
-                    if node.name == node_name:
-                        if node.type == "RGB":
-                            return 3
-                        else:
-                            return 1
+    if node_action and node_action.name == action_name:
+        num = extract_node_action_num_channels(node_tree, node_name)
+        if num:
+            return num
 
+    nla_tracks = anim_data.nla_tracks
+    if nla_tracks:
+        for track in nla_tracks:
+            for strip in track.strips:
+                action = strip.action
+                if action and action.name == action_name:
+                    num = extract_node_action_num_channels(node_tree, node_name)
+                    if num:
+                        return num
     return None
+
+def extract_node_action_num_channels(node_tree, node_name):
+    for node in node_tree.nodes:
+        if node.name == node_name:
+            if node.type == "RGB":
+                return 3
+            else:
+                return 1
+    return None
+
 
 def process_scene(scene):
     if "export_done" in scene and scene["export_done"]:
@@ -1005,10 +1039,14 @@ def process_scene(scene):
     scene_data["b4w_render_reflections"] = scene.b4w_render_reflections
     scene_data["b4w_reflection_quality"] = scene.b4w_reflection_quality
     scene_data["b4w_render_refractions"] = scene.b4w_render_refractions
+    scene_data["b4w_render_dynamic_grass"] = scene.b4w_render_dynamic_grass
     scene_data["b4w_enable_god_rays"] = scene.b4w_enable_god_rays
     scene_data["b4w_enable_glow_materials"] = scene.b4w_enable_glow_materials
     scene_data["b4w_enable_ssao"] = scene.b4w_enable_ssao
-    scene_data["b4w_batch_grid_size"] = round_num(scene.b4w_batch_grid_size, 2)
+
+    # NOTE: temporary backward compatibility, should be removed after some time
+    scene_data["b4w_batch_grid_size"] = 0
+
     scene_data["b4w_anisotropic_filtering"] = scene.b4w_anisotropic_filtering
     scene_data["b4w_enable_bloom"] = scene.b4w_enable_bloom
     scene_data["b4w_enable_motion_blur"] = scene.b4w_enable_motion_blur
@@ -1073,6 +1111,9 @@ def process_scene(scene):
     check_scene_data(scene_data, scene)
     _curr_stack["scenes"].pop()
 
+    if scene.b4w_enable_cluster_batching:
+        clusterer.run(_export_uuid_cache, _bpy_uuid_cache, scene_data, 
+                scene.b4w_cluster_size)
 
 def get_tags_description(tags):
     if tags.desc_source == "TEXT":
@@ -1160,8 +1201,6 @@ def get_logic_nodetree_name(scene):
     return tree_name
 
 def force_mute_node(node_data, desc):
-     err("Incorrect Logic Editor node " + "\"" + node_data["name"] \
-     + "\". " + desc + " Node muted.")
      node_data['mute'] = True
 
 def process_scene_nla(scene, scene_data):
@@ -1170,15 +1209,18 @@ def process_scene_nla(scene, scene_data):
     scene_data["b4w_logic_nodes"] = []
     scene_data["b4w_use_logic_editor"] = scene.b4w_use_logic_editor
 
-    def get_url(slot, slot_data):
-        if slot['param_url']:
-            slot_data["url"] = slot['param_url']
-            return True
+    def check_url(slot):
+        if slot["bools"]["url"]:
+            if slot["variables_names"]["url"] != "":
+                return True
         else:
-            err("Incorrect Logic script node " + "\"" + slot_data["name"] \
-                 + "\"" + ", falling back to simple sequential NLA.")
-            scene_data["b4w_logic_nodes"] = []
-            return False
+            if slot["strings"]["url"] != "":
+                return True
+
+        err("Incorrect Logic script node " + "\"" + slot_data["name"] \
+             + "\"" + ", falling back to simple sequential NLA.")
+        scene_data["b4w_logic_nodes"] = []
+        return False
 
     if not scene.b4w_use_logic_editor:
         return
@@ -1207,28 +1249,23 @@ def process_scene_nla(scene, scene_data):
             slot_data["frame_range"] = [0,0]
             slot_data["object"] = None
             slot_data["operation"] = ""
-            slot_data["condition"] = ""
-            # -1 - do not use the register
-            slot_data["variable1"] = -1
-            slot_data["variable2"] = -1
-            slot_data["variabled"] = -1
-            slot_data["number1"] = 0
-            slot_data["number2"] = 0
-            slot_data["url"] = ""
             slot_data["param_name"] = ""
             slot_data["mute"] = slot["mute"]
             slot_data["anim_name"] = slot["param_anim_name"]
-            slot_data["parse_resp_list"] = slot["parse_resp_list"]
+            slot_data["parse_json_vars"] = slot["parse_json_vars"]
+            slot_data["parse_json_paths"] = slot["parse_json_paths"]
             slot_data["objects_paths"] = slot["objects_paths"]
             slot_data["materials_names"] = slot["materials_names"]
             slot_data["nodes_paths"] = slot["nodes_paths"]
             slot_data["floats"] = slot["floats"]
             slot_data["bools"] = slot["bools"]
             slot_data["variables"] = slot["variables_names"]
+            slot_data["strings"] = slot["strings"]
             slot_data["shader_nd_type"] = slot["shader_nd_type"]
             slot_data["common_usage_names"] = slot["common_usage_names"]
-            slot_data["send_req_vars_list"] = slot["send_req_vars_list"]
-            slot_data["links"] = []
+            slot_data["encode_json_vars"] = slot["encode_json_vars"]
+            slot_data["encode_json_paths"] = slot["encode_json_paths"]
+            slot_data["links"] = {}
 
             if slot['type'] == "PLAY":
                 frame_range, frame_range_mask = markers_to_frame_range(scene,
@@ -1237,7 +1274,7 @@ def process_scene_nla(scene, scene_data):
                 slot_data["frame_range_mask"] = frame_range_mask
 
             elif slot['type'] == "SELECT":
-                obj = logic_node_tree.object_by_path(scene.objects, slot['objects_paths']["id0"])
+                obj = logic_node_tree.object_by_path(bpy.data.objects, slot['objects_paths']["id0"])
                 if (obj and do_export(obj) and object_is_valid(obj)):
                     slot_data["object"] = slot["objects_paths"]["id0"]
                     if slot['link_jump']:
@@ -1248,30 +1285,38 @@ def process_scene_nla(scene, scene_data):
             elif slot['type'] == "SWITCH_SELECT":
                 ind = 0
                 for k in slot["objects_paths"]:
-                    obj = logic_node_tree.object_by_path(scene.objects, slot["objects_paths"][k])
+                    obj = logic_node_tree.object_by_path(bpy.data.objects, slot["objects_paths"][k])
                     if (obj and do_export(obj) and object_is_valid(obj)):
                         idx = -1
                         if k in slot["links"]:
                             idx = get_node_idx_by_name(script, slot['links'][k])
-                        slot_data["links"].append(idx)
+                        slot_data["links"][k] = idx
                     else:
                         force_mute_node(slot_data, "Object is not selected or not exported.")
                         break
                     ind += 1
 
             elif slot['type'] == "PLAY_ANIM" or slot['type'] == "STOP_ANIM":
-                obj = logic_node_tree.object_by_path(scene.objects, slot['objects_paths']["id0"])
+                if not slot["bools"]["env"]:
+                    obj = logic_node_tree.object_by_path(bpy.data.objects, slot['objects_paths']["id0"])
 
-                if (obj and do_export(obj) and object_is_valid(obj)):
-                    slot_data["object"] = slot['objects_paths']["id0"]
+                    if (obj and do_export(obj) and object_is_valid(obj)):
+                        slot_data["object"] = slot['objects_paths']["id0"]
+                    else:
+                        force_mute_node(slot_data, "Object is not selected or not exported.")
                 else:
-                    force_mute_node(slot_data, "Object is not selected or not exported.")
+                    wrld = logic_node_tree.object_by_path(bpy.data.worlds, slot['objects_paths']["id0"])
+
+                    if (wrld and do_export(wrld)):
+                        slot_data["object"] = slot['objects_paths']["id0"]
+                    else:
+                        force_mute_node(slot_data, "World is not selected or not exported.")
 
             elif slot['type'] == "INHERIT_MAT":
-                check_objects_paths(scene, slot, slot_data)
+                check_objects_paths(slot, slot_data)
 
             elif slot['type'] == "SET_SHADER_NODE_PARAM":
-                obj = logic_node_tree.object_by_path(scene.objects, slot["objects_paths"]["id0"])
+                obj = logic_node_tree.object_by_path(bpy.data.objects, slot["objects_paths"]["id0"])
                 if (obj and do_export(obj) and object_is_valid(obj)):
                     slot_data["object"] = slot['objects_paths']["id0"]
                 else:
@@ -1280,7 +1325,7 @@ def process_scene_nla(scene, scene_data):
                     slot_data['mute'] = True
 
             elif slot['type'] == "APPLY_SHAPE_KEY":
-                obj = logic_node_tree.object_by_path(scene.objects, slot["objects_paths"]["id0"])
+                obj = logic_node_tree.object_by_path(bpy.data.objects, slot["objects_paths"]["id0"])
                 if (obj and do_export(obj) and object_is_valid(obj)):
                     pass
                 else:
@@ -1292,46 +1337,30 @@ def process_scene_nla(scene, scene_data):
                 slot_data["slot_idx_jump"] = get_node_idx_by_name(script, slot['link_jump'])
 
                 if slot['type'] == "CONDJUMP":
-                    slot_data["condition"] = slot['param_condition']
+                    if not slot['param_var_flag1']:
+                        slot_data["variables"]["v1"][1] = -1
 
-                    if slot['param_var_flag1']:
-                        slot_data["variable1"] = slot['param_var1']
-                    else:
-                        slot_data["number1"] = round_num(slot['param_number1'], 6)
-
-                    if slot['param_var_flag2']:
-                        slot_data["variable2"] = slot['param_var2']
-                    else:
-                        slot_data["number2"] = round_num(slot['param_number2'], 6)
+                    if not slot['param_var_flag2']:
+                        slot_data["variables"]["v2"][1] = -1
 
             elif slot['type'] == "REGSTORE":
-                slot_data["variabled"] = \
-                slot['param_var_define'] if slot['param_var_flag1'] else slot['param_var_dest']
-                slot_data["number1"] = round_num(slot['param_number1'], 6)
+                if slot['param_var_flag1']:
+                    slot_data["variables"]["vd"] = slot['param_var_define']
 
             elif slot['type'] == "MATH":
                 slot_data["operation"] = slot['param_operation']
-
-                if slot['param_var_flag1']:
-                    slot_data["variable1"] = slot['param_var1']
-                else:
-                    slot_data["number1"] = round_num(slot['param_number1'], 6)
-
-                if slot['param_var_flag2']:
-                    slot_data["variable2"] = slot['param_var2']
-                else:
-                    slot_data["number2"] = round_num(slot['param_number2'], 6)
-
-                slot_data["variabled"] = slot['param_var_dest']
-
+                if not slot['param_var_flag1']:
+                    slot_data["variables"]["v1"][1] = -1
+                if not slot['param_var_flag2']:
+                    slot_data["variables"]["v2"][1] = -1
             elif slot['type'] == "REDIRECT":
-                if not get_url(slot, slot_data):
+                if not check_url(slot):
                     return
             elif slot['type'] == "SEND_REQ":
-                if not get_url(slot, slot_data):
+                if not check_url(slot):
                     return
             elif slot['type'] == "SHOW" or slot['type'] == "HIDE":
-                obj = logic_node_tree.object_by_path(scene.objects, slot['objects_paths']["id0"])
+                obj = logic_node_tree.object_by_path(bpy.data.objects, slot['objects_paths']["id0"])
                 if obj and do_export(obj) and object_is_valid(obj):
                     slot_data["object"] = slot['objects_paths']["id0"]
                 else:
@@ -1343,13 +1372,53 @@ def process_scene_nla(scene, scene_data):
                 else:
                     force_mute_node(slot_data, "Bad param name")
 
-                slot_data["variabled"] = slot['param_var_dest']
+                if slot['param_variable_type'] == "NUMBER":
+                    slot_data["floats"]["ptp"] = 0
+                else:
+                    slot_data["floats"]["ptp"] = 1
 
             elif slot['type'] == "MOVE_CAMERA":
-                check_objects_paths(scene, slot, slot_data)
+                check_objects_paths(slot, slot_data)
 
             elif slot['type'] == "MOVE_TO":
-                check_objects_paths(scene, slot, slot_data)                
+                check_objects_paths(slot, slot_data)
+
+            elif slot['type'] == "TRANSFORM_OBJECT":
+                check_objects_paths(slot, slot_data)
+                #rotate axis if not variables
+                if not (slot_data["bools"]["try"] or slot_data["bools"]["trz"]):
+                    slot_data["floats"]["try"], slot_data["floats"]["trz"] = slot_data["floats"]["trz"], -slot_data["floats"]["try"]
+                if not (slot_data["bools"]["roy"] or slot_data["bools"]["roz"]):
+                    slot_data["floats"]["roy"], slot_data["floats"]["roz"] = slot_data["floats"]["roz"], -slot_data["floats"]["roy"]
+
+                if slot_data["common_usage_names"]["space_type"] == "WORLD":
+                    slot_data["common_usage_names"]["space_type"] = 0
+                elif slot_data["common_usage_names"]["space_type"] == "PARENT":
+                    slot_data["common_usage_names"]["space_type"] = 1
+                elif slot_data["common_usage_names"]["space_type"] == "LOCAL":
+                    slot_data["common_usage_names"]["space_type"] = 2
+
+            elif slot['type'] == "STRING":
+                #remove unused elements
+                if slot['param_string_operation'] != "SPLIT":
+                    del slot_data["variables"]["dst1"]
+                if slot['param_string_operation'] != "REPLACE":
+                    del slot_data["bools"]["id2"]
+                    del slot_data["variables"]["id2"]
+                    del slot_data["strings"]["id2"]
+                
+                if slot['param_string_operation'] == "JOIN":
+                    slot_data["floats"]["sop"] = 0
+                elif slot['param_string_operation'] == "FIND":
+                    slot_data["floats"]["sop"] = 1
+                elif slot['param_string_operation'] == "REPLACE":
+                    slot_data["floats"]["sop"] = 2
+                elif slot['param_string_operation'] == "SPLIT":
+                    slot_data["floats"]["sop"] = 3
+                elif slot['param_string_operation'] == "COMPARE":
+                    slot_data["floats"]["sop"] = 4
+            elif slot['type'] == "SPEAKER_PLAY" or slot['type'] == "SPEAKER_STOP":
+                check_objects_paths(slot, slot_data)
 
             elif slot['type'] == "NOOP":
                 pass
@@ -1360,9 +1429,9 @@ def process_scene_nla(scene, scene_data):
     # pprint.pprint(scene_data["b4w_logic_nodes"])
 
 
-def check_objects_paths(scene, slot, slot_data):
+def check_objects_paths(slot, slot_data):
     for o in slot["objects_paths"]:
-        obj = logic_node_tree.object_by_path(scene.objects, slot["objects_paths"][o])
+        obj = logic_node_tree.object_by_path(bpy.data.objects, slot["objects_paths"][o])
         if (obj and do_export(obj) and object_is_valid(obj)):
             pass
         else:
@@ -1501,6 +1570,9 @@ def process_object_type(obj, data, curve_as_curve):
                 warn("Object \"" + obj.name 
                         + "\" hasn't renderable data. Converted to EMPTY.")
 
+    elif obj.b4w_line_renderer:
+        new_type = "LINE";
+
     return new_type
 
 def process_object(obj, is_curve=False, is_hair=False):
@@ -1544,7 +1616,9 @@ def process_object(obj, is_curve=False, is_hair=False):
 
     # process varyous obj data
     if obj_data["type"] == "MESH":
-        process_mesh(data, obj)
+        # NOTE: process mesh returns unique uuid for every shared mesh with 
+        # different materials (assigned to Object) 
+        obj_data["data"] = OrderedDict({ "uuid": process_mesh(data, obj) })
     elif obj_data["type"] == "CURVE":
         process_curve(data)
     elif obj_data["type"] == "ARMATURE":
@@ -1563,7 +1637,7 @@ def process_object(obj, is_curve=False, is_hair=False):
         obj_data["proxy"] = None
 
     dupli_group = obj.dupli_group
-    if dupli_group:
+    if dupli_group and obj.dupli_type == "GROUP":
         obj_data["dupli_group"] = process_group(dupli_group)
         
         dg_uuid = obj_data["dupli_group"]["uuid"]
@@ -1588,20 +1662,24 @@ def process_object(obj, is_curve=False, is_hair=False):
     else:
         obj_data["parent"] = None
         obj_data["b4w_viewport_alignment"] = None
+        obj_data["pinverse_tsr"] = None
 
     obj_data["parent_type"] = obj.parent_type
     obj_data["parent_bone"] = obj.parent_bone
 
+    obj_data["b4w_cluster_data"] = OrderedDict()
+    obj_data["b4w_cluster_data"]["cluster_id"] = -1
 
     # NOTE: give more freedom to objs with edited normals
     obj_data["modifiers"] = []
-    if (obj_data["type"] == "MESH" and not (obj.b4w_apply_modifiers or obj.b4w_apply_scale)):
+    if (obj_data["type"] == "MESH"
+            and not (obj.b4w_apply_modifiers or obj.b4w_apply_scale or obj_auto_apply_modifiers(obj))):
         process_object_modifiers(obj_data["modifiers"], obj.modifiers, obj)
 
     if not is_hair:
         obj_data["constraints"] = process_constraints(obj.constraints,
                                         "object: \"" + obj.name + "\"")
-        obj_data["particle_systems"] = process_object_particle_systems(obj)
+        obj_data["particle_systems"] = process_object_particle_systems(obj, data)
     else:
         obj_data["constraints"] = []
         obj_data["particle_systems"] = []
@@ -1755,24 +1833,30 @@ def process_object(obj, is_curve=False, is_hair=False):
 
     rot = get_rotation_quat(obj)
     loc = obj.location
-    if (not (obj_data["type"] == "MESH" and obj.b4w_apply_scale)
+    if (not (obj_data["type"] == "MESH" and (obj.b4w_apply_scale or obj_auto_apply_scale(obj)))
         and not(obj_data["type"] == "EMPTY" and obj.type == "META")):
         sca = obj.scale
     else:
         sca = [1.0, 1.0, 1.0]
-        
+
     # resolving clean_parent_inverse issue
     if obj.parent:
         sca_parent = obj.parent.scale
         mat_inv_parent = obj.matrix_parent_inverse
-        scale = mat_inv_parent.to_scale()
+        pinv_scale = mat_inv_parent.to_scale()
+        pinv_rotation_quat = mat_inv_parent.to_quaternion()
+        pinv_translation = mat_inv_parent.to_translation()
         loc = mat_inv_parent * loc
-        if obj.parent.b4w_apply_scale:
-            scale = list(map(operator.mul, sca_parent, scale))
+        if obj.parent.b4w_apply_scale or obj_auto_apply_scale(obj.parent):
+            pinv_scale = list(map(operator.mul, sca_parent, pinv_scale))
             loc = list(map(operator.mul, sca_parent, loc))
 
-        sca = list(map(operator.mul, sca, scale))
+        sca = list(map(operator.mul, sca, pinv_scale))
         rot.rotate(mat_inv_parent)
+        obj_data["pinverse_tsr"] = round_iterable( 
+            [pinv_translation[0], pinv_translation[2], -pinv_translation[1], 
+            pinv_scale[0],
+            pinv_rotation_quat.x, pinv_rotation_quat.z, -pinv_rotation_quat.y, pinv_rotation_quat.w], 5)
 
     obj_data["location"] = round_iterable([loc[0], loc[2], -loc[1]], 5)
 
@@ -1967,7 +2051,7 @@ def process_object_nla(nla_tracks_data, nla_tracks, actions):
 
             # can be a speaker converted to an empty object
             curr_obj = _curr_stack["object"][-1]
-            if (strip.type == "SOUND" and (curr_obj.type != "SPEAKER" 
+            if (strip.type == "SOUND" and (curr_obj.type != "SPEAKER"
                     or curr_obj.data.sound is None)):
                 continue
 
@@ -2125,15 +2209,17 @@ def process_camera(camera):
             = round_num(camera.b4w_vertical_translation_max , 3)
 
     cam_data["b4w_use_zooming"] = camera.b4w_use_zooming
-    cam_data["b4w_hover_angle_min"] \
-            = round_num(camera.b4w_hover_angle_min, 6)
-    cam_data["b4w_hover_angle_max"] \
-            = round_num(camera.b4w_hover_angle_max, 6)
+    cam_data["b4w_hover_angle_min"] = camera.b4w_hover_angle_min
+    cam_data["b4w_hover_angle_max"] = camera.b4w_hover_angle_max
 
     cam_data["b4w_enable_hover_hor_rotation"] \
             = camera.b4w_enable_hover_hor_rotation
 
-    cam_data["b4w_use_panning"] = camera.b4w_use_panning;
+    cam_data["b4w_use_panning"] = camera.b4w_use_panning
+
+    cam_data["b4w_use_pivot_limits"] = camera.b4w_use_pivot_limits
+    cam_data["b4w_pivot_z_min"] = camera.b4w_pivot_z_min
+    cam_data["b4w_pivot_z_max"] = camera.b4w_pivot_z_max
 
     # translate to b4w coordinates
     b4w_target = [camera.b4w_target[0], camera.b4w_target[2], \
@@ -2221,7 +2307,7 @@ def process_lamp(lamp):
         lamp_data["spot_size"] = None
         lamp_data["spot_blend"] = None
 
-    lamp_data["b4w_generate_shadows"] = lamp.b4w_generate_shadows
+    lamp_data["b4w_generate_shadows"] = lamp.use_shadow
     lamp_data["b4w_dynamic_intensity"] = lamp.b4w_dynamic_intensity
     lamp_data["color"] = round_iterable(lamp.color, 4)
 
@@ -2542,15 +2628,15 @@ def process_texture(texture, uuid = None):
     _bpy_uuid_cache[tex_data["uuid"]] = texture
     _curr_stack["texture"].pop()
 
-def process_color_ramp(tex_data, ramp):
-    tex_data["color_ramp"] = OrderedDict()
-    tex_data["color_ramp"]["elements"] = []
+def process_color_ramp(data, ramp):
+    data["color_ramp"] = OrderedDict()
+    data["color_ramp"]["elements"] = []
 
     for el in ramp.elements:
         el_data = OrderedDict()
         el_data["position"] = round_num(el.position, 3)
         el_data["color"] = round_iterable(el.color, 3)
-        tex_data["color_ramp"]["elements"].append(el_data)
+        data["color_ramp"]["elements"].append(el_data)
 
 def process_image(image):
     if "export_done" in image and image["export_done"]:
@@ -2611,9 +2697,6 @@ def get_json_relative_filepath(path):
     return guard_slashes(os.path.normpath(path_relative))
 
 def process_mesh(mesh, obj_user):
-    if "export_done" in mesh and mesh["export_done"]:
-        return
-
     global _curr_stack
     _curr_stack["data"].append(mesh)
 
@@ -2621,12 +2704,25 @@ def process_mesh(mesh, obj_user):
 
     # update needed from bmesh introduction (blender >= 2.63)
     # also note change faces -> tessfaces, uv_textures -> tessface_uv_textures
-    mesh.calc_tessface()
     mesh.update()
+    mesh.calc_tessface()
 
     mesh_data = OrderedDict()
     mesh_data["name"] = mesh.name
-    mesh_data["uuid"] = gen_uuid(mesh)
+
+    # NOTE: mesh uniqueness
+    mat_names = ""
+    for slot in obj_user.material_slots:
+        # None for empty slot
+        if not slot.material:
+            raise ExportError("Incomplete mesh", mesh, "Material slot is empty")
+        
+        mat_names += "%" + slot.material.name
+
+    mesh_data["uuid"] = gen_uuid(mesh, mat_names)
+
+    if "export_done" in mesh and mesh["export_done"] and mesh_data["uuid"] in _export_uuid_cache:
+        return mesh_data["uuid"]
 
     # process mesh links
     # faces' material_index'es correspond to
@@ -2634,19 +2730,8 @@ def process_mesh(mesh, obj_user):
     # so we will save uuids here
     mesh_data["materials"] = []
 
-    index = 0
-    replaced_materials = OrderedDict()
     for slot in obj_user.material_slots:
-        if slot.link == "OBJECT":
-            slot_mat = slot.material
-            replaced_materials[index] = mesh.materials[index]
-            mesh.materials[index] = slot_mat
-        index += 1
-
-    for material in mesh.materials:
-        # None for empty slot
-        if not material:
-            raise ExportError("Incomplete mesh", mesh, "Material slot is empty")
+        material = slot.material
 
         if do_export(material):
 
@@ -2661,9 +2746,6 @@ def process_mesh(mesh, obj_user):
                 err(str(ex) + " Material: " + "\"" + _curr_stack["material"][-1].name + "\".")
                 _curr_stack["material"].pop()
                 _curr_stack["texture"] = []
-
-    for index in replaced_materials:
-        mesh.materials[index] = replaced_materials[index]
 
     # process object's props
     process_mesh_vertex_anim(mesh_data, obj_user)
@@ -2697,7 +2779,7 @@ def process_mesh(mesh, obj_user):
     vertex_colors = bool(mesh.vertex_colors)
     shape_keys = bool(obj_user.b4w_shape_keys) and "key_blocks" in dir(mesh.shape_keys)
 
-    if obj_user.b4w_apply_scale:
+    if obj_user.b4w_apply_scale or obj_auto_apply_scale(obj_user):
         sca_obj = obj_user.scale
         for v_index in range(len(mesh.vertices)):
             vert = mesh.vertices[v_index]
@@ -2706,9 +2788,7 @@ def process_mesh(mesh, obj_user):
             vert.co.z *= sca_obj[2]
 
     mesh_ptr = mesh.as_pointer()
-    bounding_data = b4w_bin.calc_bounding_data(mesh_ptr);
 
-    process_mesh_boundings(mesh_data, mesh, bounding_data)
     process_mesh_shape_keys(mesh_data, obj_user, mesh)
     if shape_keys:
         if not mesh.shape_keys.use_relative:
@@ -2741,30 +2821,37 @@ def process_mesh(mesh, obj_user):
     # NOTE: using original mesh.materials data for c-export instead of
     # derived mesh_data["materials"]
     if len(mesh_data["materials"]):
-        for mat_index in range(len(mesh.materials)):
-            material = mesh.materials[mat_index]
+        for mat_index in range(len(obj_user.material_slots)):
+            material = obj_user.material_slots[mat_index].material
             if do_export(material):
                 if material.type == "HALO":
                     disab_flat = True
                 else:
                     disab_flat = False
-                submesh_data = export_submesh(mesh, mesh_ptr, obj_user, \
-                        obj_ptr, mat_index, disab_flat, vertex_animation, \
-                        edited_normals, shape_keys, vertex_groups, vertex_colors, \
-                        bounding_data)
+                submesh_data = export_submesh(mesh, mesh_ptr, obj_user,
+                        obj_ptr, mat_index, disab_flat, vertex_animation,
+                        edited_normals, shape_keys, vertex_groups, vertex_colors,
+                        mesh_data)
                 mesh_data["submeshes"].append(submesh_data)
     else:
-        submesh_data = export_submesh(mesh, mesh_ptr, obj_user, obj_ptr, -1, \
-                False, vertex_animation, edited_normals, shape_keys, vertex_groups, \
-                vertex_colors, bounding_data)
+        submesh_data = export_submesh(mesh, mesh_ptr, obj_user, obj_ptr, -1,
+                False, vertex_animation, edited_normals, shape_keys, vertex_groups,
+                vertex_colors, mesh_data)
         mesh_data["submeshes"].append(submesh_data)
+
+    if len(mesh_data["materials"]) > 1:
+        mesh.calc_tessface()
+        bounding_data = b4w_bin.calc_bounding_data(mesh_ptr, -1)
+        process_mesh_boundings(mesh_data, mesh, bounding_data, "b4w_")
 
     _export_data["meshes"].append(mesh_data)
     _export_uuid_cache[mesh_data["uuid"]] = mesh_data
     _bpy_uuid_cache[mesh_data["uuid"]] = mesh
     _curr_stack["data"].pop()
 
-def process_mesh_boundings(mesh_data, mesh, bounding_data):
+    return mesh_data["uuid"]
+
+def process_mesh_boundings(mesh_data, mesh, bounding_data, pref):
     if (mesh.b4w_override_boundings):
         bounding_box = mesh.b4w_boundings
 
@@ -2775,7 +2862,7 @@ def process_mesh_boundings(mesh_data, mesh, bounding_data):
             raise ExportError("Wrong overrided bounding box", mesh, \
                               "Check the mesh's bounding box values")
 
-        dct = mesh_data["b4w_bounding_box"] = OrderedDict()
+        dct = mesh_data[pref + "bounding_box"] = OrderedDict()
         dct["max_x"] = round_num(bounding_box.max_x, 5)
         dct["min_x"] = round_num(bounding_box.min_x, 5)
 
@@ -2791,23 +2878,23 @@ def process_mesh_boundings(mesh_data, mesh, bounding_data):
         x_cen = (bounding_box.max_x + bounding_box.min_x) / 2
         y_cen = (bounding_box.max_y + bounding_box.min_y) / 2
         z_cen = (bounding_box.max_z + bounding_box.min_z) / 2
-
-        srad = math.sqrt(x_width * x_width + y_width * y_width + z_width * z_width)
-        crad = math.sqrt(x_width * x_width + y_width * y_width)
-        mesh_data["b4w_bounding_sphere_radius"] = round_num(srad, 5)
-        mesh_data["b4w_bounding_cylinder_radius"] = round_num(crad, 5)
-
         bounding_center = round_iterable([x_cen, z_cen, -y_cen], 5)
-        mesh_data["b4w_bounding_sphere_center"] = bounding_center
-        mesh_data["b4w_bounding_cylinder_center"] = bounding_center
 
         # calculate ellipsoid boundings
         sq3 = math.sqrt(3)
-        mesh_data["b4w_bounding_ellipsoid_axes"] = round_iterable([sq3 * x_width, sq3 * z_width, sq3 * y_width], 5)
-        mesh_data["b4w_bounding_ellipsoid_center"] = bounding_center
+        mesh_data[pref + "bounding_ellipsoid_axes"] = round_iterable([sq3 * x_width, sq3 * z_width, sq3 * y_width], 5)
+        mesh_data[pref + "bounding_ellipsoid_center"] = bounding_center
 
+        if pref:
+            srad = math.sqrt(x_width * x_width + y_width * y_width + z_width * z_width)
+            crad = math.sqrt(x_width * x_width + y_width * y_width)
+            mesh_data[pref + "bounding_sphere_radius"] = round_num(srad, 5)
+            mesh_data[pref + "bounding_cylinder_radius"] = round_num(crad, 5)
+
+            mesh_data[pref + "bounding_sphere_center"] = bounding_center
+            mesh_data[pref + "bounding_cylinder_center"] = bounding_center
     else:
-        dct = mesh_data["b4w_bounding_box"] = OrderedDict()
+        dct = mesh_data[pref + "bounding_box"] = OrderedDict()
         dct["max_x"] = round_num(bounding_data["max_x"], 5)
         dct["max_y"] = round_num(bounding_data["max_y"], 5)
         dct["max_z"] = round_num(bounding_data["max_z"], 5)
@@ -2815,44 +2902,45 @@ def process_mesh_boundings(mesh_data, mesh, bounding_data):
         dct["min_y"] = round_num(bounding_data["min_y"], 5)
         dct["min_z"] = round_num(bounding_data["min_z"], 5)
 
-        mesh_data["b4w_bounding_sphere_radius"] \
-                = round_num(bounding_data["srad"], 5)
-        mesh_data["b4w_bounding_cylinder_radius"] \
-                = round_num(bounding_data["crad"], 5)
-        mesh_data["b4w_bounding_sphere_center"] = round_iterable([
-            bounding_data["scen_x"],
-            bounding_data["scen_y"],
-            bounding_data["scen_z"]
-        ], 5)
-        mesh_data["b4w_bounding_cylinder_center"] = round_iterable([
-            bounding_data["ccen_x"],
-            bounding_data["ccen_y"],
-            bounding_data["ccen_z"]
-        ], 5)
-
-        mesh_data["b4w_bounding_ellipsoid_axes"] = round_iterable([
+        mesh_data[pref + "bounding_ellipsoid_axes"] = round_iterable([
             bounding_data["eaxis_x"],
             bounding_data["eaxis_y"],
             bounding_data["eaxis_z"]
         ], 5)
-        mesh_data["b4w_bounding_ellipsoid_center"] = round_iterable([
+        mesh_data[pref + "bounding_ellipsoid_center"] = round_iterable([
             bounding_data["ecen_x"],
             bounding_data["ecen_y"],
             bounding_data["ecen_z"]
         ], 5)
-    mesh_data["b4w_bounding_box_source"] = OrderedDict()
-    mesh_data["b4w_bounding_box_source"]["max_x"] = round_num(bounding_data["max_x"], 5)
-    mesh_data["b4w_bounding_box_source"]["max_y"] = round_num(bounding_data["max_y"], 5)
-    mesh_data["b4w_bounding_box_source"]["max_z"] = round_num(bounding_data["max_z"], 5)
-    mesh_data["b4w_bounding_box_source"]["min_x"] = round_num(bounding_data["min_x"], 5)
-    mesh_data["b4w_bounding_box_source"]["min_y"] = round_num(bounding_data["min_y"], 5)
-    mesh_data["b4w_bounding_box_source"]["min_z"] = round_num(bounding_data["min_z"], 5)
+        if pref:
+            mesh_data[pref + "bounding_sphere_radius"] \
+                    = round_num(bounding_data["srad"], 5)
+            mesh_data[pref + "bounding_cylinder_radius"] \
+                    = round_num(bounding_data["crad"], 5)
+            mesh_data[pref + "bounding_sphere_center"] = round_iterable([
+                bounding_data["scen_x"],
+                bounding_data["scen_y"],
+                bounding_data["scen_z"]
+            ], 5)
+            mesh_data[pref + "bounding_cylinder_center"] = round_iterable([
+                bounding_data["ccen_x"],
+                bounding_data["ccen_y"],
+                bounding_data["ccen_z"]
+            ], 5)
+    if pref:
+        mesh_data["b4w_bounding_box_source"] = OrderedDict()
+        mesh_data["b4w_bounding_box_source"]["max_x"] = round_num(bounding_data["max_x"], 5)
+        mesh_data["b4w_bounding_box_source"]["max_y"] = round_num(bounding_data["max_y"], 5)
+        mesh_data["b4w_bounding_box_source"]["max_z"] = round_num(bounding_data["max_z"], 5)
+        mesh_data["b4w_bounding_box_source"]["min_x"] = round_num(bounding_data["min_x"], 5)
+        mesh_data["b4w_bounding_box_source"]["min_y"] = round_num(bounding_data["min_y"], 5)
+        mesh_data["b4w_bounding_box_source"]["min_z"] = round_num(bounding_data["min_z"], 5)
 
 def get_mat_vc_channel_usage(mesh, mat_index, obj_user):
     vc_channel_usage = {}
 
     if mesh.vertex_colors:
-        mat = mesh.materials[mat_index] if mat_index >= 0 else None
+        mat = obj_user.material_slots[mat_index].material if mat_index >= 0 else None
 
         nodes_usage = vc_channel_nodes_usage(mat)
         dyn_grass_usage = vc_channel_dyn_grass_usage(mat)
@@ -3009,9 +3097,9 @@ def rgb_channels_to_mask(channel_name):
         mask |= 0b001
     return mask
 
-def export_submesh(mesh, mesh_ptr, obj_user, obj_ptr, mat_index, disab_flat, \
-        vertex_animation, edited_normals, shape_keys, vertex_groups, vertex_colors, \
-        bounding_data):
+def export_submesh(mesh, mesh_ptr, obj_user, obj_ptr, mat_index, disab_flat,
+        vertex_animation, edited_normals, shape_keys, vertex_groups, vertex_colors,
+        mesh_data):
 
     if vertex_animation:
         if len(obj_user.b4w_vertex_anim) == 0:
@@ -3027,10 +3115,20 @@ def export_submesh(mesh, mesh_ptr, obj_user, obj_ptr, mat_index, disab_flat, \
                             mesh, "It doesn't match with the mesh vertices " + \
                             "count for \"" + anim.name + "\"")
 
+    submesh_data = OrderedDict()
+    mesh.calc_tessface()
+    submesh_bounding_data = b4w_bin.calc_bounding_data(mesh_ptr, mat_index)
+    submesh_data["boundings"] = OrderedDict()
+    process_mesh_boundings(submesh_data["boundings"], mesh, submesh_bounding_data,
+            "")
+
+    if len(mesh_data["materials"]) <= 1:
+        process_mesh_boundings(mesh_data, mesh, submesh_bounding_data, "b4w_")
+
     is_degenerate_mesh = not bool(max( \
-            abs(bounding_data["max_x"] - bounding_data["min_x"]), \
-            abs(bounding_data["max_y"] - bounding_data["min_y"]), \
-            abs(bounding_data["max_z"] - bounding_data["min_z"])))
+            abs(submesh_bounding_data["max_x"] - submesh_bounding_data["min_x"]), \
+            abs(submesh_bounding_data["max_y"] - submesh_bounding_data["min_y"]), \
+            abs(submesh_bounding_data["max_z"] - submesh_bounding_data["min_z"])))
 
     vc_channel_usage = get_mat_vc_channel_usage(mesh, mat_index, obj_user)
     vc_mask_buffer = bytearray()
@@ -3050,7 +3148,6 @@ def export_submesh(mesh, mesh_ptr, obj_user, obj_ptr, mat_index, disab_flat, \
     except Exception as ex:
         raise ExportError("Incorrect mesh", mesh, str(ex))
 
-    submesh_data = OrderedDict()
     submesh_data["base_length"] = submesh["base_length"]
 
     int_props = ["indices"]
@@ -3395,6 +3492,9 @@ def process_particle(particle):
 
     part_data["b4w_billboard_align"] = bb_align
 
+    part_data["billboard_tilt"] = particle.billboard_tilt
+    part_data["billboard_tilt_random"] = particle.billboard_tilt_random
+
     part_data["b4w_coordinate_system"] = particle.b4w_coordinate_system
 
     part_data["b4w_enable_soft_particles"] = particle.b4w_enable_soft_particles
@@ -3476,6 +3576,8 @@ def process_world(world):
         return
     world["export_done"] = True
 
+    _curr_stack["object"].append(world)
+
     world_data = OrderedDict()
 
     world_data["name"] = world.name
@@ -3490,13 +3592,20 @@ def process_world(world):
     world_data["use_sky_blend"] = world.use_sky_blend
     world_data["use_sky_real"] = world.use_sky_real
 
+    world_data["b4w_use_default_animation"] = world.b4w_use_default_animation
+    world_data["b4w_anim_behavior"] = world.b4w_anim_behavior
+
     process_world_light_settings(world_data, world)
     process_world_sky_settings(world_data, world)
     process_world_mist_settings(world_data, world)
 
+    process_animation_data(world_data, world, bpy.data.actions)
+
     _export_data["worlds"].append(world_data)
     _export_uuid_cache[world_data["uuid"]] = world_data
     _bpy_uuid_cache[world_data["uuid"]] = world
+
+    _curr_stack["object"].pop()
 
 def process_world_light_settings(world_data, world):
     light_settings = world.light_settings
@@ -3812,7 +3921,7 @@ def obj_cons_target(cons, const_holder_name):
 
     return target_uuid
 
-def get_particle_system_scale(obj, psys, vert_group_name):
+def get_particle_system_scale(obj, obj_data, psys, vert_group_name):
     indices = []
     vertex_influence = []
     scales_data_bytearray = b4w_bin.calc_particle_scale(psys.as_pointer())
@@ -3825,28 +3934,38 @@ def get_particle_system_scale(obj, psys, vert_group_name):
 
     indices = struct.unpack('i' * f_v_num_len, 
             scales_data_bytearray["face_ver_num"])
-
     vg_index = obj.vertex_groups[vert_group_name].index
     scales = []
+
+    # NOTE: object's vertex groups refer to object's mesh when trying to 
+    # extract vertex weight, so it needs to assign the actual mesh to the 
+    # current object in case of "to_mesh()" operation, which generates another mesh
+    old_mesh = obj.data
+    obj.data = obj_data
+
     for i in range(len(psys.particles)):
         if psys.settings.emit_from != "VERT":
-            vert = obj.data.polygons[indices[i]].vertices
+            vert = obj_data.tessfaces[indices[i]].vertices
             scale = 0
+
             for j in range(0, len(vert)):
-                vert_num = vert[j].numerator
+                vert_index = vert[j]
                 weight = 0
-                for v_group in obj.data.vertices[vert_num].groups:
+                for v_group in obj_data.vertices[vert_index].groups:
                     if v_group.group == vg_index:
-                        weight = obj.vertex_groups[vert_group_name].weight(vert_num)
+                        weight = obj.vertex_groups[vert_group_name].weight(vert_index)
                 scale += weight * vertex_influence[i * 4 + j]
         else:
             scale = obj.vertex_groups[vert_group_name].weight(indices[i])
 
         scale = max(min(scale, 1), 0)
         scales.append(scale)
+
+    obj.data = old_mesh
+
     return scales
 
-def process_object_particle_systems(obj):
+def process_object_particle_systems(obj, obj_data):
     psystems_data = []
     for m in obj.modifiers:
         if m.type == 'PARTICLE_SYSTEM' and m.particle_system:
@@ -3858,6 +3977,8 @@ def process_object_particle_systems(obj):
                 psys_data["name"] = psys.name
                 psys_data["seed"] = psys.seed
 
+                if not len(obj_data.tessfaces):
+                    obj_data.calc_tessface()
                 # export particle transforms for hairs
                 # [x0,y0,z0,scale0,x1...]
                 if (psys.settings.type == "HAIR" and not
@@ -3872,7 +3993,7 @@ def process_object_particle_systems(obj):
 
                     vert_group_name = psys.vertex_group_length
                     if vert_group_name:
-                        scales = get_particle_system_scale(obj, psys, vert_group_name)
+                        scales = get_particle_system_scale(obj, obj_data, psys, vert_group_name)
 
                     for i in range(len(psys.particles)):
                         particle = psys.particles[i]
@@ -3981,6 +4102,24 @@ def process_node_tree(data, tree_source):
             if node.outputs["Generated"].is_linked:
                 data["use_orco_tex_coord"] = True
 
+        if node.type == "CURVE_VEC" or node.type == "CURVE_RGB":
+            node_data["curve_mapping"] = OrderedDict()
+            def extract_loc(point): return list(point.location.to_tuple())
+            def extract_handle_type(point): return point.handle_type
+            node_data["curve_mapping"]["curves_data"] = []
+            node_data["curve_mapping"]["curves_handle_types"] = []
+            node_data["curve_mapping"]["curve_extend"] = []
+            for curve in node.mapping.curves:
+                node_data["curve_mapping"]["curves_data"].append([point for point
+                        in map(extract_loc, curve.points)])
+                node_data["curve_mapping"]["curves_handle_types"].append([handle_type for handle_type
+                        in map(extract_handle_type, curve.points)])
+                node_data["curve_mapping"]["curve_extend"].append(curve.extend)
+
+        elif node.type == "VALTORGB":
+            process_color_ramp(node_data, node.color_ramp)
+            node_data["color_ramp"]["interpolation"] = node.color_ramp.interpolation
+
         if node.type == "GROUP":
             if node.node_tree.name == "B4W_REFRACTION" or node.node_tree.name == "REFRACTION":
                 # NOTE: don't rely on "b4w_render_refractions" scene property here
@@ -4085,6 +4224,11 @@ def process_node_tree(data, tree_source):
             else:
                 node_data["lamp"] = gen_uuid_dict(node.lamp_object)
 
+        elif node.type == "VECT_TRANSFORM":
+            node_data["vector_type"] = node.vector_type
+            node_data["convert_from"] = node.convert_from
+            node_data["convert_to"] = node.convert_to
+
         dct["nodes"].append(node_data)
 
     # node tree links
@@ -4158,7 +4302,6 @@ def process_node_group(data, node_group):
         data["use_orco_tex_coord"] = data["use_orco_tex_coord"] or ng_data["use_orco_tex_coord"]
         data["uv_vc_key"] += ng_data["uv_vc_key"]
         return
-    node_group.node_tree["export_done"] = True
     ng_data = OrderedDict()
     ng_data["name"] = node_group.node_tree.name
     ng_data["use_orco_tex_coord"] = False
@@ -4171,6 +4314,7 @@ def process_node_group(data, node_group):
     _export_data["node_groups"].append(ng_data)
     _export_uuid_cache[ng_data["uuid"]] = ng_data
     _bpy_uuid_cache[ng_data["uuid"]] = node_group
+    node_group.node_tree["export_done"] = True
 
 def process_world_texture_slots(world_data, world):
     slots = world.texture_slots
@@ -4182,9 +4326,9 @@ def process_world_texture_slots(world_data, world):
                 if not slot.texture:
                     raise MaterialError("No texture in the \"" + world.name + "\" world texture slot.")
                 if do_export(slot.texture):
-                    if slot.texture.b4w_use_sky != "OFF" and len(slot.texture.users_material) == 0:
+                    if slot.texture.b4w_use_sky != "OFF":
                         if slot.texture.type != "ENVIRONMENT_MAP":
-                            raise ExportError(slot.texture.type + " isn't supported", world)
+                            raise ExportError(slot.texture.type + " texture type is not supported as World texture", world)
                         elif not slot.texture.image is None and slot.texture.image.source == "MOVIE":
                             raise MaterialError("Environment map in the \"" + world.name \
                                     + "\" world texture slot cannot be a movie.")
@@ -4553,7 +4697,8 @@ class B4W_ExportProcessor(bpy.types.Operator):
         attach_export_properties(tags)
         for scene in bpy.data.scenes:
             # NOTE: update all scenes to avoid issue with particle systems
-            scene.update()
+            # not needed?
+            # scene.update()
             check_dupli_groups(scene.objects, _dg_counter)
             _dg_counter += 1
         process_components(tags)
@@ -4993,19 +5138,23 @@ def check_binaries():
         else:
             globals()["b4w_bin"] = m
 
+def check_version():
+    if (bpy.app.version[0] != blend4web.bl_info["blender"][0]
+            or bpy.app.version[1] != blend4web.bl_info["blender"][1]):
+        message = _("Blender %s is recommended for the Blend4Web addon. Current version is %s") % \
+                  (".".join(map(str, blend4web.bl_info["blender"][:-1])), ".".join(map(str, bpy.app.version[:-1])))
+        blend4web.init_mess.append(message)
+
+def log_warnings():
+    import sys
+    for m in blend4web.init_mess:
+        print("B4W Warning: %s" % m, file=sys.stderr)
+
 def register():
+    check_version()
     check_binaries()
-    bpy.utils.register_class(B4W_ExportProcessor)
-    bpy.utils.register_class(B4W_ExportPathGetter)
-    bpy.utils.register_class(ExportErrorDialog)
-    bpy.utils.register_class(FileErrorDialog)
-    bpy.utils.register_class(ExportMessagesDialog)
+    log_warnings()
     bpy.types.INFO_MT_file_export.append(b4w_export_menu_func)
 
 def unregister():
-    bpy.utils.unregister_class(B4W_ExportProcessor)
-    bpy.utils.unregister_class(B4W_ExportPathGetter)
-    bpy.utils.unregister_class(ExportErrorDialog)
-    bpy.utils.unregister_class(FileErrorDialog)
-    bpy.utils.unregister_class(ExportMessagesDialog)
     bpy.types.INFO_MT_file_export.remove(b4w_export_menu_func)

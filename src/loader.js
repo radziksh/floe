@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -570,6 +570,7 @@ function release_thread(thread) {
     // NOTE: thread.loaded_cb needed for aborted threads
 }
 
+exports.is_finished = is_finished;
 function is_finished() {
     var scheduler = get_scheduler();
     return scheduler.active_threads == 0;

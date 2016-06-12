@@ -1,19 +1,3 @@
-# Copyright (C) 2014-2015 Triumph LLC
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 import bpy
 import imp
 import mathutils
@@ -82,7 +66,7 @@ class B4W_DATA_PT_camera_dof(CameraButtonsPanel, Panel):
 
         split = layout.split()
         col = split.column()
-        col.prop(cam, "dof_object", text=_(""))
+        col.prop(cam, "dof_object", text="")
 
         col = split.column()
         sub = col.column()
@@ -113,7 +97,7 @@ class B4W_DATA_PT_camera(CameraButtonsPanel, Panel):
             col.label(text=_("Unsupported sensor type."), icon="ERROR")
 
         col = split.column(align=True)
-        col.prop(cam, "sensor_fit", text=_(""))
+        col.prop(cam, "sensor_fit", text="")
 
 class B4W_DATA_PT_speaker(SpeakerPanel, Panel):
     bl_label = _("Sound")
@@ -219,6 +203,97 @@ class B4W_DATA_PT_cone(SpeakerPanel, Panel):
         col.label(text=_("Volume:"))
         col.prop(spk, "cone_volume_outer", text=_("Outer"))
 
+class B4W_DATA_PT_shape_keys(MeshButtonsPanel, Panel):
+    bl_label = "Shape Keys"
+
+    @classmethod
+    def poll(cls, context):
+        engine = context.scene.render.engine
+        obj = context.object
+        return (obj and obj.type in {'MESH', 'LATTICE', 'CURVE', 'SURFACE'} and (engine in cls.COMPAT_ENGINES))
+
+    def draw(self, context):
+        layout = self.layout
+
+        ob = context.object
+        key = ob.data.shape_keys
+        kb = ob.active_shape_key
+
+        enable_edit = ob.mode != 'EDIT'
+        enable_edit_value = False
+
+        if ob.show_only_shape_key is False:
+            if enable_edit or (ob.type == 'MESH' and ob.use_shape_key_edit_mode):
+                enable_edit_value = True
+
+        row = layout.row()
+
+        rows = 2
+        if kb:
+            rows = 4
+        row.template_list("MESH_UL_shape_keys", "", key, "key_blocks", ob, "active_shape_key_index", rows=rows)
+
+        col = row.column()
+
+        sub = col.column(align=True)
+        sub.operator("object.b4w_shape_key_add", icon='ZOOMIN', text="")
+        sub.operator("object.shape_key_remove", icon='ZOOMOUT', text="").all = False
+        sub.menu("MESH_MT_shape_key_specials", icon='DOWNARROW_HLT', text="")
+
+        if kb:
+            col.separator()
+
+            sub = col.column(align=True)
+            sub.operator("object.shape_key_move", icon='TRIA_UP', text="").type = 'UP'
+            sub.operator("object.shape_key_move", icon='TRIA_DOWN', text="").type = 'DOWN'
+
+            split = layout.split(percentage=0.4)
+            row = split.row()
+            row.enabled = enable_edit
+            row.prop(key, "use_relative")
+
+            row = split.row()
+            row.alignment = 'RIGHT'
+
+            sub = row.row(align=True)
+            sub.label()  # XXX, for alignment only
+            subsub = sub.row(align=True)
+            subsub.active = enable_edit_value
+            subsub.prop(ob, "show_only_shape_key", text="")
+            sub.prop(ob, "use_shape_key_edit_mode", text="")
+
+            sub = row.row()
+            if key.use_relative:
+                sub.operator("object.shape_key_clear", icon='X', text="")
+            else:
+                sub.operator("object.shape_key_retime", icon='RECOVER_LAST', text="")
+
+            if key.use_relative:
+                if ob.active_shape_key_index != 0:
+                    row = layout.row()
+                    row.active = enable_edit_value
+                    row.prop(kb, "value")
+
+                    split = layout.split()
+
+                    col = split.column(align=True)
+                    col.active = enable_edit_value
+                    col.label(text="Range:")
+                    col.prop(kb, "slider_min", text="Min")
+                    col.prop(kb, "slider_max", text="Max")
+
+                    col = split.column(align=True)
+                    col.active = enable_edit_value
+                    col.label(text="Blend:")
+                    col.prop_search(kb, "vertex_group", ob, "vertex_groups", text="")
+                    col.prop_search(kb, "relative_key", key, "key_blocks", text="")
+
+            else:
+                layout.prop(kb, "interpolation")
+                row = layout.column()
+                row.active = enable_edit_value
+                row.prop(key, "eval_time")
+
 class B4W_DATA_PT_normals(MeshButtonsPanel, Panel):
     bl_label = _("Normals")
 
@@ -252,12 +327,18 @@ class B4W_DATA_PT_lamp(LampPanel, Panel):
             split = layout.split()
             col = split.column()
             sub = col.column()
-            sub.prop(lamp, "color", text=_(""))
+            sub.prop(lamp, "color", text="")
             sub.prop(lamp, "energy")
 
             if lamp.type in {'POINT', 'SPOT'}:
                 sub.label(text=_("Falloff:"))
-                sub.prop(lamp, "distance")
+                sub.prop(lamp, "falloff_type", text="")
+                if lamp.falloff_type != "INVERSE_SQUARE":
+                    row = layout.row()
+                    row.label(_("%s type is not supported.") % lamp.falloff_type,
+                            icon="ERROR")
+                else:
+                    sub.prop(lamp, "distance")
 
             if lamp.type == 'AREA':
                 col.prop(lamp, "distance")
@@ -272,14 +353,14 @@ class B4W_DATA_PT_lamp(LampPanel, Panel):
             row.prop(lamp, "b4w_dynamic_intensity", text=_("Dynamic Intensity"))
 
 class B4W_DataLampShadows(LampPanel, Panel):
-    bl_label = _("Shadows")
+    bl_label = _("Shadow")
     bl_idname = "B4W_DATA_PT_b4w_lamp_shadows"
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
         layout = self.layout
         lmp = context.lamp
-        layout.prop(lmp, "b4w_generate_shadows", text=_("Generate Shadows"))
+        layout.prop(lmp, "use_shadow", text=_("Shadow"))
 
 class B4W_DATA_PT_spot(LampPanel, Panel):
     bl_label = _("Spot Shape")
@@ -429,7 +510,7 @@ class B4W_CameraMovePanel(CameraButtonsPanel, Panel):
                 row.active = getattr(cam, "b4w_use_horizontal_clamping")
                 row.prop(cam, "b4w_rotation_left_limit", text=_("Left Angle"))
                 row.prop(cam, "b4w_rotation_right_limit", text=_("Right Angle"))
-                row.prop(cam, "b4w_horizontal_clamping_type", text=_(""))
+                row.prop(cam, "b4w_horizontal_clamping_type", text="")
 
                 row = col.row()
                 row.prop(cam, "b4w_use_vertical_clamping", 
@@ -439,11 +520,20 @@ class B4W_CameraMovePanel(CameraButtonsPanel, Panel):
                 row.active = getattr(cam, "b4w_use_vertical_clamping")
                 row.prop(cam, "b4w_rotation_down_limit", text=_("Down Angle"))
                 row.prop(cam, "b4w_rotation_up_limit", text=_("Up Angle"))
-                row.prop(cam, "b4w_vertical_clamping_type", text=_(""))
+                row.prop(cam, "b4w_vertical_clamping_type", text="")
 
             if cam.b4w_move_style == "TARGET":
                 row = col.row()
-                row.prop(cam, "b4w_use_panning", text=_("Use Panning Mode"));
+                row.prop(cam, "b4w_use_pivot_limits", text=_("Pivot Translation Limits"))
+                row = col.split(0.5, align=True)
+                row.active = getattr(cam, "b4w_use_pivot_limits")
+                row.alert = (getattr(cam, "b4w_pivot_z_min") 
+                        > getattr(cam, "b4w_pivot_z_max"))  
+                row.prop(cam, "b4w_pivot_z_min", text=_("MinZ"))
+                row.prop(cam, "b4w_pivot_z_max", text=_("MaxZ"))
+
+                row = col.row()
+                row.prop(cam, "b4w_use_panning", text=_("Use Panning Mode"))
 
 class B4W_DataSpeakerTypePanel(SpeakerPanel, Panel):
     bl_label = _("Speaker behavior")
@@ -473,39 +563,26 @@ class B4W_DATA_PT_custom_props(DataButtonsPanel, PropertyPanel, Panel):
             cls._property_type = bpy.types.Speaker
         elif context.armature:
             cls._property_type = bpy.types.Armature
+        elif context.curve:
+            cls._property_type = bpy.types.Curve
+        elif context.lattice:
+            cls._property_type = bpy.types.Lattice
+        elif context.lamp:
+            cls._property_type = bpy.types.Lamp
+        elif context.meta_ball:
+            cls._property_type = bpy.types.MetaBall
 
         return context.scene.render.engine in cls.COMPAT_ENGINES
 
-def register():
-    bpy.utils.register_class(B4W_DATA_PT_normals)
-    bpy.utils.register_class(B4W_DATA_PT_spot)
+class OperatorAddShapeKey(bpy.types.Operator):
+    bl_idname  = "object.b4w_shape_key_add"
+    bl_label   = p_("Add shape key to the object", "Operator")
+    bl_options = {"INTERNAL"}
 
-    bpy.utils.register_class(B4W_DATA_PT_camera)
-    bpy.utils.register_class(B4W_DATA_PT_camera_dof)
-    bpy.utils.register_class(B4W_DATA_PT_lamp)
-    bpy.utils.register_class(B4W_DATA_PT_speaker)
-    bpy.utils.register_class(B4W_DATA_PT_distance)
-    bpy.utils.register_class(B4W_DATA_PT_cone)
+    def execute(self, context):
+        obj = context.active_object
+        # auto apply default animaton
+        if not "b4w_shape_keys" in obj.keys():
+            obj.b4w_shape_keys = True
 
-    bpy.utils.register_class(B4W_DataSpeakerTypePanel)
-
-    bpy.utils.register_class(B4W_CameraMovePanel)
-    bpy.utils.register_class(B4W_DataLampShadows)
-    #bpy.utils.register_class(B4W_DATA_PT_custom_props)
-
-def unregister():
-    bpy.utils.unregister_class(B4W_DATA_PT_normals)
-    bpy.utils.unregister_class(B4W_DATA_PT_spot)
-
-    bpy.utils.unregister_class(B4W_DATA_PT_camera)
-    bpy.utils.unregister_class(B4W_DATA_PT_camera_dof)
-    bpy.utils.unregister_class(B4W_DATA_PT_lamp)
-    bpy.utils.unregister_class(B4W_DATA_PT_speaker)
-    bpy.utils.unregister_class(B4W_DATA_PT_distance)
-    bpy.utils.unregister_class(B4W_DATA_PT_cone)
-
-    bpy.utils.unregister_class(B4W_DataSpeakerTypePanel)
-
-    bpy.utils.unregister_class(B4W_CameraMovePanel)
-    bpy.utils.unregister_class(B4W_DataLampShadows)
-    #bpy.utils.unregister_class(B4W_DATA_PT_custom_props)
+        return bpy.ops.object.shape_key_add(from_mix=False)

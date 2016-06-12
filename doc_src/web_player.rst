@@ -1,130 +1,142 @@
-.. index:: веб-плеер
+.. index:: web player
 
 .. _web_player:
 
-*********
-Веб-плеер
-*********
+**********
+Web Player
+**********
 
-Веб-плеер представляет собой специализированное приложение для отображения моделей и сцен в режиме демонстрации.
+.. contents:: Table of Contents
+    :depth: 3
+    :backlinks: entry
+
+The web player is a special application for rendering models and scenes in a
+demonstration mode.
 
 
-Десктопная версия:
+Desktop version:
 
-.. image:: src_images/web_player/web_player_example.jpg
+.. image:: src_images/web_player/web_player_example.png
    :align: center
    :width: 100%
 
 |
 
-Мобильная версия:
+Mobile version:
 
-.. image:: src_images/web_player/web_player_example_mobile.jpg
+.. image:: src_images/web_player/web_player_example_mobile.png
    :align: center
    :width: 100%
 
 |
 
-Использование
+Usage
+-----
+
+You can copy the directory containing the web player files, namely
+``deploy/apps/webplayer``, from the Blend4Web SDK distribution and deploy it
+on your website. You can place the exported scene files on your website
+and specify the path to them (absolute or relative) with the ``load`` web
+player parameter.
+
+When you export into a single HTML file the web player interface is
+integrated automatically into it.
+
+
+Navigation
+----------
+
+The camera (in the ``Target`` and ``Eye`` modes) is controlled by the mouse
+with its button pressed or with the keys: ``W``, ``A``, ``S``, ``D``,
+``R``, ``F`` (forward, left, back, right, up, down). The ``numpad`` keys are
+also supported.
+
+Control Panel
 -------------
 
-Директорию с файлами веб-плеера ``deploy/apps/webplayer`` можно скопировать из дистрибутива Blend4Web SDK и разместить на сайте. Полученные в результате экспорта файлы сцен можно разместить на сайте и указать путь к ним (абсолютный или относительный) с помощью параметра веб-плеера ``load``.
+The web player's control panel is shown below.
 
-При экспорте в единый HTML файл интерфейс веб-плеера интегрируется автоматически.
-
-
-Навигация
----------
-
-Управление камерой (в режимах ``Target`` и ``Eye``) осуществляется мышью с нажатой кнопкой, а также клавишами ``W``, ``A``, ``S``, ``D``, ``R``, ``F``: вперед, влево, назад, вправо, вверх, вниз. Также поддерживаются стрелки и клавиши ``numpad``.
-
-Панель управления
------------------
-
-Ниже показана панель управления веб-плеера.
-
-.. image:: src_images/web_player/web_player_interface.jpg
+.. image:: src_images/web_player/web_player_interface.png
    :align: center
    :width: 100%
 
-1) показ / скрытие панели управления;
-2) включение / выключение полноэкранного режима;
-3) установка качества сцены;
-4) включение / выключение звука;
-5) включение / выключение автоматического поворота камеры вокруг сцены;
-6) запуск / остановка движка;
-7) открытие окно помощи;
-8) кнопка Твиттер;
-9) кнопка Facebook;
-10) кнопка Google+;
-11) кнопка ВКонтакте.
+1) show / hide control panel;
+2) fullscreen mode on / off;
+3) stereo rendering on / off;
+4) set the scene quality;
+5) sound on / off;
+6) camera auto rotation mode on / off;
+7) run / stop the engine;
+8) open the help window;
+9) tweet;
+10) share via Facebook;
+11) share via Google+;
+12) share via VK.
 
 .. _webplayer_attributes:
 
-Атрибуты
---------
+Attributes
+----------
 
-Веб-плеер принимает атрибуты из адресной строки браузера:
+Web player accepts attributes from the browser address line:
 
-.. image:: src_images/web_player/player_params.jpg
+.. image:: src_images/web_player/player_params.png
    :align: center
    :width: 100%
 
 |
 
-1) для загрузки сцены используется обязательный атрибут ``load``, в который помещается относительный путь к JSON файлу.
-2) необязательный атрибут ``fallback_image`` используется для установки фона, заменяющего сцену при возникновении ошибки WebGL.
-3) необязательный атрибут ``fallback_video`` используется для установки видео, заменяющего сцену при возникновении ошибки WebGL.
-   Может использоваться неоднократно с целью добавления видео файлов различных форматов.
-4) необязательный атрибут ``show_fps`` применяется для отображения счетчика кадров в секунду в правом верхнем углу плеера.
-5) необязательный атрибут ``autorotate`` используется для включения автоматического вращения камеры сразу после загрузки сцены.
-6) необязательный атрибут ``compressed_textures`` используется для включения загрузки уменьшенных текстур и текстур в формате с компрессией (DDS).
-7) необязательный атрибут ``alpha`` используется для установки прозрачности области отрисовки.
+1) the special attribute ``load`` is used to load the scene, this attribute contains relative path to a JSON file.
+2) in case of a WebGL error the optional ``fallback_image`` attribute is used to setup the background image instead of 3D content.
+3) in case of a WebGL error the optional ``fallback_video`` attribute is used to setup the background video instead of 3D content.
+   Can be used many times to add more video formats.
+4) the optional ``show_fps`` attribute is used to display the FPS counter in the player's top right corner.
+5) optional parameter ``autorotate`` is used to enable automatic camera rotation just after the scene loads.
+6) the ``compressed_textures`` optional parameter is used to enable loading of minified and compressed textures (in DDS format).
+7) optional ``alpha`` parameter is used to enable transparency for the rendering area.
+8) the optional ``no_social`` attribute is used to disable social networks buttons on the control panel.
 
 .. note::
 
-   Если указаны параметры ``fallback_image`` и ``fallback_video``, приоритет имеет ``fallback_image``.
+   If both ``fallback_image`` and ``fallback_video`` parameters are specified, the ``fallback_image`` parameter is used.
 
 .. _wp_title:
 
-Название сцены в заголовке
---------------------------
+Scene Name as Title
+-------------------
 
-По умолчанию веб-плеер устанавливает тег ``title`` равным ``Blend4Web Web Player``. С помощью мета-тега ``title``
-в настройках сцены можно изменить значение по умолчанию.
+By default the Web Player has the ``Blend4Web Web Player`` title. Assigning the meta tag ``title`` on the scene in Blender you can change that value to something else.
 
-.. image:: src_images/web_player/title.jpg
+.. image:: src_images/web_player/title.png
    :align: center
    :width: 100%
 
-Ошибки сцены
+Scene Errors
 ------------
 
-В случае некорректного использования веб-плеера выводятся сообщения об ошибках.
+If the player is used incorrectly it displays the corresponding errors.
 
 
-1) атрибутом ``load`` указан неверный путь к JSON файлу или данный файл неисправен;
+1) the ``load`` attribute specifies a wrong path to the JSON file or the file is corrupt;
 
-.. image:: src_images/web_player/error_wrong_json_path.jpg
+.. image:: src_images/web_player/error_wrong_json_path.png
    :align: center
    :width: 100%
 
 |
 
-2) атрибут ``load`` не найден или его значение пустое;
+2) the ``load`` attribute is not found or is void;
 
-.. image:: src_images/web_player/error_not_load_attr.jpg
+.. image:: src_images/web_player/error_not_load_attr.png
    :align: center
    :width: 100%
 
 |
 
-3) ошибка инициализации WebGL.
+3) WebGL initialization error.
 
-.. image:: src_images/web_player/error_webgl.jpg
+.. image:: src_images/web_player/error_webgl.png
    :align: center
    :width: 100%
 
 |
-
-

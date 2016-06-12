@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,11 @@
 b4w.module["__physics"] = function(exports, require) {
 
 var m_cfg      = require("__config");
-var m_cons     = require("__constraints");
 var m_debug    = require("__debug");
 var m_ipc      = require("__ipc");
-var m_mat4     = require("__mat4");
 var m_obj_util = require("__obj_util");
 var m_print    = require("__print");
 var m_quat     = require("__quat");
-var m_render   = require("__renderer");
 var m_scs      = require("__scenes");
 var m_trans    = require("__transform");
 var m_tsr      = require("__tsr");
@@ -45,7 +42,6 @@ var cfg_phy = m_cfg.physics;
 var cfg_def = m_cfg.defaults;
 var cfg_ldr = m_cfg.assets;
 
-var ANY_COL_ID_NUM = 0;
 var RAY_CMP_PRECISION = 0.0000001;
 
 var _phy_fps = 0;
@@ -55,7 +51,7 @@ var _scenes = [];
 var _bounding_objects = {};
 var _bounding_objects_arr = [];
 
-var _collision_ids = [];
+var _collision_ids = ["ANY"];
 
 // IDs always begin with 1
 var _unique_counter = {
@@ -203,6 +199,7 @@ exports.append_object = function(obj, scene) {
             else
                 var phy = init_static_mesh_physics(obj, batch, worker);
 
+            obj.physics = phy;
             // physics bundle
             var pb = {
                 batch: batch,
@@ -508,8 +505,9 @@ exports.update = function(timeline, delta) {
 
         // update physics water time
         var scene = _scenes[i];
-        var subs = m_scs.get_subs(scene, "MAIN_OPAQUE");
-        if (subs.water_params && subs.water_params.waves_height > 0.0) {
+        var wp = scene._render.water_params;
+        if (wp && wp.waves_height > 0.0) {
+            var subs = m_scs.get_subs(scene, "MAIN_OPAQUE");
             var wind = m_vec3.length(subs.wind);
             m_ipc.post_msg(_workers[i], m_ipc.OUT_SET_WATER_TIME, subs.time * wind);
         }
@@ -610,15 +608,11 @@ function get_unique_body_id() {
 
 function init_water_physics(batch, scene, worker) {
 
-    // NOTE: taking some params from subscene to match water rendering
-    var subs = m_scs.get_subs(scene, "MAIN_OPAQUE");
+    var wp = scene._render.water_params;
+    m_ipc.post_msg(worker, m_ipc.OUT_APPEND_WATER, wp.water_level);
 
-    var water_level = subs.water_level;
-    m_ipc.post_msg(worker, m_ipc.OUT_APPEND_WATER, water_level);
-
-    // TODO: get subscene water_params for proper water (not common one)
-    if (subs.water_params && batch.water_dynamics) {
-
+    // TODO: get water_params for proper water object (not the common one)
+    if (batch.water_dynamics) {
         var water_dyn_info = {};
         water_dyn_info["dst_noise_scale0"]  = batch.dst_noise_scale0;
         water_dyn_info["dst_noise_scale1"]  = batch.dst_noise_scale1;
@@ -632,15 +626,15 @@ function init_water_physics(batch, scene, worker) {
         water_dyn_info["dst_min_fac"]       = batch.dst_min_fac;
         water_dyn_info["waves_hor_fac"]     = batch.waves_hor_fac;
 
-        var waves_height   = subs.water_waves_height;
-        var waves_length   = subs.water_waves_length;
-        if (subs.use_shoremap) {
-            var size_x         = subs.shoremap_size[0];
-            var size_y         = subs.shoremap_size[1];
-            var center_x       = subs.shoremap_center[0];
-            var center_y       = subs.shoremap_center[1];
-            var max_shore_dist = subs.max_shore_dist;
-            var array_width    = subs.shoremap_tex_size;
+        var waves_height   = wp.waves_height;
+        var waves_length   = wp.waves_length;
+        if (wp.shoremap_image) {
+            var size_x         = wp.shoremap_size[0];
+            var size_y         = wp.shoremap_size[1];
+            var center_x       = wp.shoremap_center[0];
+            var center_y       = wp.shoremap_center[1];
+            var max_shore_dist = wp.max_shore_dist;
+            var array_width    = wp.shoremap_tex_size;
             m_ipc.post_msg(worker, m_ipc.OUT_ADD_WATER_WRAPPER, water_dyn_info, size_x,
                            size_y, center_x, center_y, max_shore_dist,
                            waves_height, waves_length, array_width,
@@ -675,15 +669,13 @@ function init_static_mesh_physics(obj, batch, worker) {
             indices, trans, friction, restitution, collision_id_num,
             collision_margin, collision_group, collision_mask);
 
-    var phy = init_physics(body_id);
+    var phy = init_physics(body_id, "STATIC_MESH");
     phy.collision_id = collision_id;
     phy.collision_id_num = collision_id_num;
     return phy;
 }
 
 function col_id_num(id) {
-    if (id == "ANY")
-        return ANY_COL_ID_NUM;
 
     var num = _collision_ids.indexOf(id);
     if (num == -1) {
@@ -693,16 +685,10 @@ function col_id_num(id) {
         return num;
 }
 
-function col_id_by_num(num) {
-    if (num == ANY_COL_ID_NUM)
-        return "ANY";
-    else
-        return _collision_ids[num];
-}
-
-function init_physics(body_id) {
+function init_physics(body_id, type) {
     var phy = {
         body_id: body_id,
+        type: type,
         mass: 0,
         is_ghost: false,
         simulated: true,
@@ -751,7 +737,7 @@ function init_ghost_mesh_physics(obj, batch, worker) {
             indices, trans, collision_id_num, collision_margin, collision_group,
             collision_mask);
 
-    var phy = init_physics(body_id);
+    var phy = init_physics(body_id, "STATIC_MESH");
     phy.is_ghost = true;
     phy.collision_id = collision_id;
     phy.collision_id_num = collision_id_num;
@@ -829,7 +815,7 @@ function init_bounding_physics(obj, compound_children, worker) {
     _bounding_objects[body_id] = obj;
     _bounding_objects_arr.push(obj);
 
-    var phy = init_physics(body_id);
+    var phy = init_physics(body_id, "BOUNDING");
     phy.type = physics_type;
     phy.mass = mass;
     phy.is_ghost = is_ghost;
@@ -1472,10 +1458,15 @@ function vector_to_world(obj, vx_local, vy_local, vz_local, dest) {
  * Move the object by applying the force in the world space.
  */
 exports.apply_force = apply_force;
-function apply_force(obj, fx_local, fy_local, fz_local) {
+function apply_force(obj, fx_local, fy_local, fz_local, use_world) {
 
     var f_world = _vec3_tmp;
-    vector_to_world(obj, fx_local, fy_local, fz_local, f_world);
+    if (use_world) {
+        f_world[0] = fx_local;
+        f_world[1] = fy_local;
+        f_world[2] = fz_local;
+    } else
+        vector_to_world(obj, fx_local, fy_local, fz_local, f_world);
 
     var body_id = obj.physics.body_id;
 
@@ -2205,10 +2196,15 @@ exports.debug_workers = function() {
     }
 }
 
-exports.remove_bounding_object = function(obj) {
-    var ind = _bounding_objects_arr.indexOf(obj);
-    if (ind == -1)
-        m_print.error("Object " + obj.name + " doesn't have bounding physics");
+exports.remove_object = function(obj) {
+
+    if (obj.physics.type == "BOUNDING") {
+        var ind = _bounding_objects_arr.indexOf(obj);
+        if (ind == -1)
+            m_print.error("Object " + obj.name + " doesn't have bounding physics");
+        delete _bounding_objects[body_id];
+        _bounding_objects_arr.splice(ind, 1);
+    }
 
     var body_id = obj.physics.body_id
 
@@ -2219,9 +2215,6 @@ exports.remove_bounding_object = function(obj) {
 
     if (has_collision_impulse_test(obj))
         clear_collision_impulse_test(obj);
-
-    delete _bounding_objects[body_id];
-    _bounding_objects_arr.splice(ind, 1);
 
     var bundles = scene._physics.bundles;
 

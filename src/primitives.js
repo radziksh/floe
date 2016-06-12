@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,19 +32,16 @@ var m_util  = require("__util");
 
 var cfg_def  = m_cfg.defaults;
 
-exports.generate_lines = function(num) {
+exports.generate_line = function() {
     var submesh = m_util.create_empty_submesh("LINE");
 
-    var points = [];
-    for (var i = 0; i < num * 2; i++)
-        points.push(i);
-
     var va_frame = m_util.create_empty_va_frame();
-    va_frame["a_point"] = new Float32Array(points);
+    va_frame["a_position"] = new Float32Array(3);
+    va_frame["a_direction"] = new Float32Array(3);
 
     submesh.va_frames[0] = va_frame;
-    submesh.indices = new Uint32Array(points);
-    submesh.base_length = num * 2;
+    submesh.indices = new Uint32Array(1);
+    submesh.base_length = 1;
 
     return submesh;
 }
@@ -125,6 +122,8 @@ exports.generate_multigrid = function(num_cascads, subdivs, detailed_dist) {
 
     var indices      = [];
     var positions    = [];
+    var tangents     = [];
+    var normals      = [];
 
     var prev_x = 0;
     var prev_z = 0;
@@ -194,6 +193,8 @@ exports.generate_multigrid = function(num_cascads, subdivs, detailed_dist) {
                             } else
                                 var cascad_step = delta_x;
                             positions.push(x, cascad_step, z);
+                            normals.push(0,1,0);
+                            tangents.push(1,0,0);
                             last_added_ind++; 
                         }
                         indices_in_row.push(idx0);
@@ -330,12 +331,18 @@ exports.generate_multigrid = function(num_cascads, subdivs, detailed_dist) {
                      idx0 + 7, idx0 + 3, idx0 + 1,
                      idx0 + 5, idx0 + 4, idx0 + 7,
                      idx0 + 7, idx0 + 4, idx0 + 6);
+        for (var i = 0; i < 8; i++) {
+            normals.push(0,1,0);
+            tangents.push(1,0,0);
+        }
     }
 
     // construct submesh
     var va_frame = m_util.create_empty_va_frame();
 
     va_frame["a_position"] = new Float32Array(positions);
+    va_frame["a_tangent"] = new Float32Array(tangents);
+    va_frame["a_normal"] = new Float32Array(normals);
 
     var submesh = m_util.create_empty_submesh("multigrid_plane");
 

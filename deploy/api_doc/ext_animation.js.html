@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: ext/animation.js</title>
+    <title>Source: ext/animation.js | Blend4Web API Reference</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -200,34 +200,6 @@ exports.is_animated = function(obj) {
 
 /**
  * Return the names of all available animations.
- * @method module:animation.get_actions
- * @returns {String[]} Animation names.
- * @deprecated Use {@link module:animation.get_anim_names|animation.get_anim_names} instead.
- */
-exports.get_actions = function() {
-    m_print.error_deprecated("get_actions", "get_anim_names");
-    var anames = [];
-    var actions = m_anim.get_all_actions();
-    for (var i = 0; i &lt; actions.length; i++)
-        anames.push(m_anim.strip_baked_suffix(actions[i]["name"]));
-
-    return anames;
-}
-
-/**
- * Return the name of the applied animation.
- * @method module:animation.get_current_action
- * @param {Object3D} obj Object 3D
- * @param {AnimSlot} [slot_num = SLOT_0] Animation slot number
- * @deprecated Use {@link module:animation.get_current_anim_name|animation.get_current_anim_name} instead.
- */
-exports.get_current_action = function(obj, slot_num) {
-    m_print.error_deprecated("get_current_action", "get_current_anim_name");
-    return exports.get_current_anim_name(obj, slot_num);
-}
-
-/**
- * Return the names of all available animations.
  * @method module:animation.get_anim_names
  * @param {Object3D} obj Object 3D
  * @returns {String[]} Array of animation names.
@@ -366,29 +338,6 @@ exports.is_play = function(obj, slot_num) {
     slot_num = slot_num || m_anim.SLOT_0;
     return m_anim.is_play(obj, slot_num);
 }
-/**
- * Set the current frame.
- * @method module:animation.set_current_frame_float
- * @param {Object3D} obj Object 3D
- * @param {Number} cff Current frame
- * @param {AnimSlot} [slot_num = SLOT_0] Animation slot number
- * @deprecated Use {@link module:animation.set_frame|animation.set_frame} instead.
- */
-exports.set_current_frame_float = function(obj, cff, slot_num) {
-    m_print.error_deprecated("set_current_frame_float", "set_frame");
-    exports.set_frame(obj, cff, slot_num);
-}
-/**
- * Get the current frame.
- * @method module:animation.get_current_frame_float
- * @param {Object3D} obj Object 3D
- * @param {AnimSlot} [slot_num = SLOT_0] Animation slot number
- * @deprecated Use {@link module:animation.get_frame|animation.get_frame} instead
- */
-exports.get_current_frame_float = function(obj, slot_num) {
-    m_print.error_deprecated("get_current_frame_float", "use get_frame");
-    return exports.get_frame(obj, slot_num);
-}
 
 /**
  * Set the current frame of the object's animation.
@@ -487,27 +436,6 @@ exports.get_speed = function(obj, slot_num) {
 }
 
 /**
- * Get animation frame range.
- * @method module:animation.get_frame_range
- * @param {Object3D} obj Object 3D
- * @param {AnimSlot} [slot_num = SLOT_0] Animation slot number
- * @returns {?Array} Frame range pair or null for incorrect object
- * @deprecated Use {@link module:animation.get_anim_start_frame|animation.get_anim_start_frame} and {@link module:animation.get_anim_length|animation.get_anim_length} instead
- */
-exports.get_frame_range = function(obj, slot_num) {
-    m_print.error_once("get_frame_range() deprecated, use get_anim_start_frame() and get_anim_length() instead");
-    if (m_anim.is_animated(obj)) {
-        slot_num = slot_num || m_anim.SLOT_0;
-        var anim_slot = obj.anim_slots[slot_num];
-        if (anim_slot)
-            // GARBAGE
-            return [anim_slot.start, anim_slot.start + anim_slot.length];
-    }
-
-    return null;
-}
-
-/**
  * Get the starting frame of the object's animation.
  * @method module:animation.get_anim_start_frame
  * @param {Object3D} obj Object 3D
@@ -545,35 +473,6 @@ exports.get_anim_length = function(obj, slot_num) {
     }
 
     return -1;
-}
-
-/**
- * Whether the object's animation playback should be looped or not.
- * @method module:animation.cyclic
- * @param {Object3D} obj Object 3D
- * @param {Boolean} cyclic_flag
- * @param {AnimSlot} [slot_num = SLOT_0] Animation slot number
- * @deprecated Use {@link module:animation.set_behavior|animation.set_behavior} instead.
- */
-exports.cyclic = function(obj, cyclic_flag, slot_num) {
-    m_print.error_deprecated("cyclic", "set_behavior");
-    var behavior = cyclic_flag ? m_anim.AB_CYCLIC : m_anim.AB_FINISH_RESET;
-    exports.set_behavior(obj, behavior, slot_num);
-}
-/**
- * Check if the object's animation is looped.
- * @method module:animation.is_cyclic
- * @param {Object3D} obj Object 3D
- * @param {AnimSlot} [slot_num = SLOT_0] Animation slot number
- * @deprecated Use {@link module:animation.get_behavior|animation.get_behavior} instead.
- */
-exports.is_cyclic = function(obj, slot_num) {
-    m_print.error_deprecated("is_cyclic", "get_behavior");
-    if (!m_anim.is_animated(obj))
-        return false;
-
-    slot_num = slot_num || m_anim.SLOT_0;
-    return m_anim.is_cyclic(obj, slot_num);
 }
 
 /**
@@ -619,26 +518,6 @@ exports.apply_smoothing = function(obj, trans_period, quat_period, slot_num) {
     slot_num = slot_num || m_anim.SLOT_0;
     if (m_anim.is_animated(obj))
         m_anim.apply_smoothing(obj, trans_period, quat_period, slot_num);
-}
-
-/**
- * Update object animation (set the pose)
- * @method module:animation.update_object_animation
- * @param {Object3D} obj Object 3D
- * @param {Number} elapsed Animation delay
- * @param {AnimSlot} [slot_num = SLOT_0] Animation slot number
- * @param {Boolean} [force_update = false] Update animation even stopped one.
- * @deprecated Use {@link module:animation.set_frame|animation.set_frame} instead.
- */
-exports.update_object_animation = function(obj, elapsed, slot_num, force_update) {
-    m_print.error_deprecated("update_object_animation", "set_frame");
-    if (!m_anim.is_animated(obj))
-        return;
-
-    slot_num = slot_num || m_anim.SLOT_0;
-    elapsed = elapsed || 0;
-    force_update = force_update || false;
-    m_anim.update_object_animation(obj, elapsed, slot_num, force_update);
 }
 
 /**
@@ -778,13 +657,47 @@ exports.set_skel_mix_factor = function(armobj, factor, time) {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gp_conf.html">gp_conf</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hmd_conf.html">hmd_conf</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-input.html">input</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-logic_nodes.html">logic_nodes</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-math.html">math</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Dec 22 2015 20:09:38 GMT+0300 (MSK)
+    Blend4Web API Reference (generated by JSDoc 3.4.0 on Tue May 31 2016 15:33:56 GMT+0300 (MSK))
+    <a href="https://www.blend4web.com">www.blend4web.com</a>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+  (function() {
+    if (window.document.domain != "www.blend4web.com")
+      return;
+
+    (function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter24512171 = new Ya.Metrika({
+                    id:24512171,
+                    clickmap:false,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");
+  })();
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/24512171" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
 </footer>
 
 <script> prettyPrint(); </script>

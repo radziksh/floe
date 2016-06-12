@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import getopt, json, os, sys, zipfile, re
+import getopt, json, os, sys, time, zipfile, re, shutil
 
 # for UNIX-like OSes only
 import fnmatch
@@ -11,7 +11,7 @@ SRC=os.path.join(os.path.abspath(os.path.dirname(__file__)), "..")
 DEST=os.path.join(SRC, "deploy", "pub")
 GPL_TEMPLATE=os.path.join(SRC, "scripts", "templates", "gpl_header.license")
 EULA_TEMPLATE=os.path.join(SRC, "scripts", "templates", "eula_header.license")
-ADDON_PATH=os.path.join("blender_scripts", "addons", "blend4web")
+ADDON_PATH=os.path.join("addons", "blend4web")
 
 LICENSE_PATHS=[
     {
@@ -31,8 +31,21 @@ LICENSE_PATHS=[
 def help():
     print("Usage: make_dist.py [-v version] [-f] DIST_FILE")
 
+def create_blender_scripts_dir():
+    path_to_blender_scripts = os.path.join(SRC, "blender_scripts", "addons")
+    if os.path.isdir(path_to_blender_scripts):
+        remove_blender_scripts_dir()
+    path_to_addons = os.path.join(SRC, "addons")
+    shutil.copytree(path_to_addons, path_to_blender_scripts)
+
+def remove_blender_scripts_dir():
+    path_to_blender_scripts = os.path.join(SRC, "blender_scripts")
+    shutil.rmtree(path_to_blender_scripts)
+
 def process_dist_list(dist_path, version, force):
     print("Creating a distribution archive from " + str(dist_path))
+
+    create_blender_scripts_dir()
 
     try:
         dist_file = open(dist_path, "r")
@@ -96,16 +109,10 @@ def process_dist_list(dist_path, version, force):
                         path_root_rel == "deploy/apps/viewer/assets.json"):
                     assets = assets_cleanup(path_curr_rel, pos_patterns,
                             neg_patterns)
-                    # modify access rights
-                    info = zipfile.ZipInfo(path_arc)
-                    info.external_attr = 0o664 << 16
-                    z.writestr(info, assets)
+                    zip_str(z, path_arc, assets)
                 elif path_root_rel == "index.html":
                     index = index_cleanup(path_curr_rel, basename_dest, version)
-                    # modify access rights
-                    info = zipfile.ZipInfo(path_arc)
-                    info.external_attr = 0o664 << 16
-                    z.writestr(info, index)
+                    zip_str(z, path_arc, index)
                 else:
                     src = None
                     for rule in LICENSE_PATHS:
@@ -121,16 +128,23 @@ def process_dist_list(dist_path, version, force):
                                     src = insert_license(path_curr_rel, rule["file_type"], EULA_TEMPLATE)
 
                     if src:
-                        # modify access rights
-                        info = zipfile.ZipInfo(path_arc)
-                        info.external_attr = 0o664 << 16
-                        z.writestr(info, src)
+                        zip_str(z, path_arc, src)
                     else:
                         z.write(path_curr_rel, path_arc)
 
     z.close()
 
+    remove_blender_scripts_dir()
+
     print("Archive created: " + str(path_dest))
+
+def zip_str(zfile, path, data):
+    info = zipfile.ZipInfo(path, time.localtime(time.time())[:6])
+    # modify access rights
+    info.external_attr = 0o664 << 16
+    # default is ZIP_STORED
+    info.compress_type = zipfile.ZIP_DEFLATED
+    zfile.writestr(info, data)
 
 def insert_license(path, file_type, license_path):
     try:

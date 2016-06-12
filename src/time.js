@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ b4w.module["__time"] = function(exports, require) {
 
 var m_cfg   = require("__config");
 var m_print = require("__print");
-var m_util  = require("__util");
 
 // engine's global timeline (time since initialization)
 var _timeline = 0;
@@ -73,7 +72,8 @@ exports.set_timeline = function(timeline) {
     }
 }
 
-exports.get_timeline = function() {
+exports.get_timeline = get_timeline;
+function get_timeline() {
     return _timeline;
 }
 
@@ -160,7 +160,8 @@ exports.reset = function(id) {
     _animator_counter = 0;
 }
 
-exports.get_framerate = function() {
+exports.get_framerate = get_framerate;
+function get_framerate() {
     if (m_cfg.animation.framerate !== -1)
         return m_cfg.animation.framerate;
     else
@@ -169,6 +170,10 @@ exports.get_framerate = function() {
 
 exports.set_framerate = function(value) {
     _framerate = value;
+}
+
+exports.get_frame = function(timeline) {
+    return timeline*get_framerate();
 }
 
 }

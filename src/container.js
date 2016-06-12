@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ var m_anchors = require("__anchors");
 var m_cfg     = require("__config");
 var m_data    = require("__data");
 var m_hud     = require("__hud");
-var m_obj     = require("__objects");
 var m_print   = require("__print");
 var m_scenes  = require("__scenes");
 var m_time    = require("__time");
@@ -274,11 +273,6 @@ function resize(width, height, update_canvas_css) {
         m_hud.update_dim();
     }
 
-    if (navigator.userAgent.match(/iPhone/i) ||
-        navigator.userAgent.match(/iPad/i) ||
-        navigator.userAgent.match(/iPod/i))
-            cfg_def.canvas_resolution_factor = 1;
-
     var cw = Math.floor(width * cfg_def.canvas_resolution_factor);
     var ch = Math.floor(height * cfg_def.canvas_resolution_factor);
 
@@ -287,9 +281,10 @@ function resize(width, height, update_canvas_css) {
         ch *= window.devicePixelRatio;
     }
 
-    if (m_data.is_primary_loaded()) {
-        var scene = m_scenes.get_active();
-        var sc_render = scene._render;
+    // use only main scene for the canvas resizing
+    var main_scene = m_scenes.get_main();
+    if (main_scene) {
+        var sc_render = main_scene._render;
         cw = Math.floor(cw * sc_render.resolution_factor);
         ch = Math.floor(ch * sc_render.resolution_factor);
     }

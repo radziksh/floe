@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,6 +39,12 @@
  * Typed three-dimensional vector. Can be created with {@link module:vec3.create}.
  * @typedef {Float32Array} Vec3
  */
+
+/**
+ * Line set in parametric form
+ * @typedef ParametricLine
+ * @type {Float32Array(6)}
+*/
 
 /**
  * Typed four-dimensional vector. Can be created with {@link module:vec4.create}.
@@ -121,6 +127,7 @@
  * @type {Number}
  * @see {@link module:transform.SPACE_LOCAL},
  * {@link module:transform.SPACE_WORLD}
+ * @deprecated Not needed anymore.
  */
 
 /**

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +20,18 @@
 /**
  * Engine debugging API.
  * @module debug
- * @local DebugWireframeMode
+ * @local DebugViewMode
  * @local StageloadCallback
  * @local LoadedCallback
+ * @local CodeTestCallback
+ * @local EqualsFunction
+ * @local OkFunction
  */
 b4w.module["debug"] = function(exports, require) {
 
-var m_batch    = require("__batch");
 var m_cfg      = require("__config");
 var m_ctl      = require("__controls");
+var m_cont     = require("__container");
 var m_debug    = require("__debug");
 var m_ext      = require("__extensions");
 var m_load     = require("__loader");
@@ -43,15 +46,20 @@ var m_sfx      = require("__sfx");
 var m_shaders  = require("__shaders");
 var m_textures = require("__textures");
 var m_util     = require("__util");
-var m_vec3     = require("vec3");
+var m_vec3     = require("__vec3");
 
 var cfg_def = m_cfg.defaults;
 
 var PERF_NUM_CALLS = 10;
+var EPS = 0.000001;
 
+var _called_funcs = [];
+var _tested_func_name = "";
+var _test_result = true;
+var _vec2_tmp = new Float32Array(2);
 /**
- * Debug wireframe mode.
- * @typedef DebugWireframeMode
+ * Debug view mode.
+ * @typedef DebugViewMode
  * @type {Number}
  */
 
@@ -67,34 +75,67 @@ var PERF_NUM_CALLS = 10;
  */
 
 /**
- * Debug wireframe mode: turn off wireframe view.
- * @const {DebugWireframeMode} module:debug.WM_NONE
+ * Code test callback.
+ * @callback CodeTestCallback
+ * @param {EqualsFunction} equals Сomparison function.
+ * @param {OkFunction} ok Code test function.
  */
-exports.WM_NONE = m_debug.WM_NONE;
 
 /**
- * Debug wireframe mode: turn on the black-and-white wireframe view.
- * @const {DebugWireframeMode} module:debug.WM_OPAQUE_WIREFRAME
+ * Return the comparison result of entrace params.
+ * @callback EqualsFunction
+ * @param {*} result Real function result.
+ * @param {*} exp_result Expected result.
  */
-exports.WM_OPAQUE_WIREFRAME = m_debug.WM_OPAQUE_WIREFRAME;
+
+ /**
+ * Check code crash.
+ * @callback OkFunction
+ * @param {*} result Real function result.
+ */
+
 
 /**
- * Debug wireframe mode: turn on the transparent (superimposed on the source color) wireframe view.
- * @const {DebugWireframeMode} module:debug.WM_TRANSPARENT_WIREFRAME
+ * Debug view mode: turn off debug view.
+ * @const {DebugViewMode} module:debug.DV_NONE
  */
-exports.WM_TRANSPARENT_WIREFRAME = m_debug.WM_TRANSPARENT_WIREFRAME;
+exports.DV_NONE = m_debug.DV_NONE;
 
 /**
- * Debug wireframe mode: turn on the wireframe view with the front/back faces coloration.
- * @const {DebugWireframeMode} module:debug.WM_FRONT_BACK_VIEW
+ * Debug view mode: turn on the black-and-white wireframe view.
+ * @const {DebugViewMode} module:debug.DV_OPAQUE_WIREFRAME
  */
-exports.WM_FRONT_BACK_VIEW = m_debug.WM_FRONT_BACK_VIEW;
+exports.DV_OPAQUE_WIREFRAME = m_debug.DV_OPAQUE_WIREFRAME;
 
 /**
- * Debug wireframe mode: turn on the debug spheres view.
- * @const {DebugWireframeMode} module:debug.WM_DEBUG_SPHERES
+ * Debug view mode: turn on the transparent (superimposed on the source color) wireframe view.
+ * @const {DebugViewMode} module:debug.DV_TRANSPARENT_WIREFRAME
  */
-exports.WM_DEBUG_SPHERES = m_debug.WM_DEBUG_SPHERES;
+exports.DV_TRANSPARENT_WIREFRAME = m_debug.DV_TRANSPARENT_WIREFRAME;
+
+/**
+ * Debug view mode: turn on the wireframe view with the front/back faces coloration.
+ * @const {DebugViewMode} module:debug.DV_FRONT_BACK_VIEW
+ */
+exports.DV_FRONT_BACK_VIEW = m_debug.DV_FRONT_BACK_VIEW;
+
+/**
+ * Debug view mode: turn on the debug spheres view.
+ * @const {DebugViewMode} module:debug.DV_DEBUG_SPHERES
+ */
+exports.DV_DEBUG_SPHERES = m_debug.DV_DEBUG_SPHERES;
+
+/**
+ * Debug view mode: turn on the clusters view.
+ * @const {DebugViewMode} module:debug.DV_CLUSTERS_VIEW
+ */
+exports.DV_CLUSTERS_VIEW = m_debug.DV_CLUSTERS_VIEW;
+
+/**
+ * Debug view mode: turn on the batches view.
+ * @const {DebugViewMode} module:debug.DV_BATCHES_VIEW
+ */
+exports.DV_BATCHES_VIEW = m_debug.DV_BATCHES_VIEW;
 
 /**
  * Print info about the physics worker.
@@ -337,10 +378,13 @@ exports.num_draw_calls = function() {
     }
 
     var reflect_subs = m_scenes.subs_array(scene, ["MAIN_PLANE_REFLECT",
-                                                   "MAIN_CUBE_REFLECT"]);
+                                                   "MAIN_PLANE_REFLECT_BLEND",
+                                                   "MAIN_CUBE_REFLECT",
+                                                   "MAIN_CUBE_REFLECT_BLEND"]);
     for (var i = 0; i < reflect_subs.length; i++) {
         var subs = reflect_subs[i];
-        if (subs.type == "MAIN_PLANE_REFLECT")
+        if (subs.type == "MAIN_PLANE_REFLECT" ||
+                    subs.type == "MAIN_PLANE_REFLECT_BLEND")
             number += subs.bundles.length;
         else
             number += 6 * subs.bundles.length;
@@ -374,7 +418,7 @@ exports.geometry_stats = function() {
 
         var subs = subscenes[i];
 
-        if (subs.type == "SINK" || subs.type == "WIREFRAME")
+        if (subs.type == "SINK" || subs.type == "DEBUG_VIEW")
             continue;
 
         var bundles = subs.bundles;
@@ -709,31 +753,35 @@ exports.check_finite = function(o) {
  * Set debugging parameters.
  * @method module:debug.set_debug_params
  * @param {DebugParams} params Debug parameters
- * @cc_externs wireframe_mode wireframe_edge_color
+ * @cc_externs debug_view_mode wireframe_edge_color debug_colors_seed
  */
 exports.set_debug_params = function(params) {
     var active_scene = m_scenes.get_active();
-    var subs_wireframe = m_scenes.get_subs(active_scene, "WIREFRAME");
+    var subs_debug_view = m_scenes.get_subs(active_scene, "DEBUG_VIEW");
 
-    if (subs_wireframe) {
-        if (typeof params.wireframe_mode == "number") {
-            switch (params.wireframe_mode) {
-            case m_debug.WM_NONE:
-            case m_debug.WM_OPAQUE_WIREFRAME:
-            case m_debug.WM_TRANSPARENT_WIREFRAME:
-            case m_debug.WM_FRONT_BACK_VIEW:
-            case m_debug.WM_DEBUG_SPHERES:
-                m_scenes.set_wireframe_mode(subs_wireframe, params.wireframe_mode);
+    if (subs_debug_view) {
+        if (typeof params.debug_view_mode == "number") {
+            switch (params.debug_view_mode) {
+            case m_debug.DV_NONE:
+            case m_debug.DV_OPAQUE_WIREFRAME:
+            case m_debug.DV_TRANSPARENT_WIREFRAME:
+            case m_debug.DV_FRONT_BACK_VIEW:
+            case m_debug.DV_DEBUG_SPHERES:
+            case m_debug.DV_CLUSTERS_VIEW:
+            case m_debug.DV_BATCHES_VIEW:
+                m_scenes.set_debug_view_mode(subs_debug_view, params.debug_view_mode);
                 break;
             default:
-                m_print.error("set_debug_params(): Wrong wireframe mode");
+                m_print.error("set_debug_params(): Wrong debug view mode");
                 break;
             }
         }
+        if (typeof params.debug_colors_seed == "number")
+            m_scenes.set_debug_colors_seed(subs_debug_view, params.debug_colors_seed);
         if (typeof params.wireframe_edge_color == "object")
-            m_scenes.set_wireframe_edge_color(subs_wireframe, params.wireframe_edge_color);
+            m_scenes.set_wireframe_edge_color(subs_debug_view, params.wireframe_edge_color);
     } else
-        throw("Wireframe subscene not found.");
+        throw("Debug view subscene not found.");
 }
 
 exports.get_error_quantity = function() {
@@ -1017,6 +1065,116 @@ exports.test_performance = function(callback) {
         m_debug.process_timer_queries(subs);
         callback(subs.debug_render_time);
     }, 100);
+}
+
+function call(func, name) {
+    var decor_func = function() {
+        _called_funcs.push(decor_func);
+        _tested_func_name = name;
+        return func.apply(func, arguments);
+
+    }
+    return decor_func;
+}
+
+exports.start_debug = function(module_name) {
+    _called_funcs = [];
+    _test_result = true;
+    var module = require(module_name);
+    for (var name in module)
+        if (typeof module[name] === "function")
+            module[name] = call(module[name], name);
+}
+exports.check_debug_result = function() {
+    return _test_result;
+}
+/**
+ * Test code.
+ * @method module:debug.test
+ * @param {String} test_name Test name
+ * @param {CodeTestCallback} callback Callback
+ */
+exports.test = function(test_name, callback) {
+    try {
+        callback();
+        return true;
+    } catch(e) {
+        _test_result = false;
+        console.error(test_name + " test was failed. ", e);
+        return false;
+    }
+}
+
+/**
+ * Compare color picked at the center of the screen with reference RGBA vector.
+ * @param {RGBA} ref_color Reference RGBA vector to compare with.
+ */
+exports.pix = function(ref_color) {
+    var canvas_w = m_cont.get_viewport_width();
+    var canvas_h = m_cont.get_viewport_height();
+
+    var canvas_x = canvas_w / 2;
+    var canvas_y = canvas_h / 2;
+
+    m_cont.resize(canvas_w, canvas_h, false);
+
+    var scene = m_scenes.get_active();
+    var graph = scene._render.graph;
+    var subs = m_scgraph.find_on_screen(graph);
+    if (!subs)
+        m_util.panic("Couldn't find onscreen subscene");
+
+    var cam = subs.camera;
+    var viewport_xy = m_cont.canvas_to_viewport_coords(canvas_x, canvas_y,
+            _vec2_tmp, subs.camera);
+
+    viewport_xy[1] = cam.height - viewport_xy[1];
+    var color = m_render.read_pixels(cam.framebuffer, viewport_xy[0],
+            viewport_xy[1]);
+
+    eqv(ref_color, color);
+}
+
+exports.eqs = function(result, exp_result) {
+    if (JSON.stringify(result) != JSON.stringify(exp_result))
+        throw "Wrong result. Function: " + _tested_func_name;
+}
+
+exports.eqv = eqv;
+function eqv(result, exp_result, eps) {
+    if (typeof exp_result != typeof result)
+        throw "Wrong expected data type.";
+    if (result.length != exp_result.length)
+        throw "Wrong expected vector length.";
+    var eps = eps ? eps : EPS;
+    for (var i = 0; i < result.length; i++)
+        if (exp_result[i] > result[i] + eps || exp_result[i] < result[i] - eps)
+            throw "Wrong result.";
+}
+
+exports.eqf = function(result, exp_result, eps) {
+    if (typeof exp_result != "number")
+        throw "Wrong expected data type.";
+    var eps = eps ? eps : EPS;
+    if (exp_result > result + eps || exp_result < result - eps)
+        throw "Wrong result.";
+}
+
+exports.eq = function(result, exp_result) {
+    if (result !== exp_result)
+        throw "Wrong result.";
+}
+
+exports.stat = function(module_name) {
+    var module = require(module_name);
+    for (var name in module)
+        if (_called_funcs.indexOf(module[name]) == -1)
+            console.warn(name + " function wasn't called.");
+}
+
+exports.ok = function(exp) {
+    if (!Boolean(exp))
+        throw "Wrong result. Function: " + _tested_func_name;
 }
 
 }

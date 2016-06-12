@@ -21,6 +21,8 @@ from pathlib import Path
 from html.parser import HTMLParser
 from collections import OrderedDict
 
+import project_util
+from project_util import unix_path, get_proj_cfg, proj_cfg_value, cwd_rel_to_abs, cfg_create_list
 
 # console text colors
 GREEN  = '\033[92m'
@@ -36,7 +38,7 @@ DEFAULT_ENGINE_TYPE_OPT = "external"
 DEFAULT_JS_OPTIMIZATION_OPT = "simple"
 
 DEFAULT_PHYS_USING_OPT = True
-DEFAULT_SMAA_USING_OPT = True
+DEFAULT_SMAA_USING_OPT = False
 
 URANIUM_FILE_NAME      = "uranium.js"
 URANIUM_FILE_NAME_BIN  = "uranium.js.mem"
@@ -47,8 +49,10 @@ ENGINE_ADV_FILE_NAME   = "b4w.min.js"
 ENGINE_WHITE_FILE_NAME = "b4w.whitespace.min.js"
 ENGINE_SIM_FILE_NAME   = "b4w.simple.min.js"
 
+# ignore these files during compilation/deployment
+COMP_DEPL_IGNORE = ['project.py', '.b4w_project', '.b4w_icon.*']
+
 _base_dir      = None
-_curr_work_dir = None
 _cc_dir        = None
 _engine_dir    = None
 _src_dir       = None
@@ -132,10 +136,10 @@ class HTMLProcessor(HTMLParser):
             self.title = data
 
 
-def run(argv, base_dir, curr_work_dir):
+def run(argv, base_dir):
     sys.path.append(join(base_dir, "scripts"))
 
-    fill_global_paths(base_dir, curr_work_dir)
+    fill_global_paths(base_dir)
 
     try:
         opts, args = getopt.getopt(argv[1:], "hp:",
@@ -147,144 +151,76 @@ def run(argv, base_dir, curr_work_dir):
 
     proj_path = None
 
-    if exists(join(curr_work_dir, ".b4w_project")):
-        proj_path = curr_work_dir
+    cwd = os.getcwd()
+    if exists(join(cwd, ".b4w_project")):
+        proj_path = cwd
 
     no_colorama = False
 
     for o, a in opts:
         if o == "--help" or o == "-h":
-
-            if not len(args):
-                help()
-                sys.exit(0)
-            else:
-                arg = args[0]
-
-                if arg == "init":
-                    help_init()
-                if arg == "list":
-                    help_list()
-                if arg == "compile":
-                    help_compile()
-                if arg == "deploy":
-                    help_deploy()
-                if arg == "reexport":
-                    help_reexport()
-                if arg == "convert_resources":
-                    help_convert_resources()
-                if arg == "check_deps":
-                    help_check_deps()
-                if arg == "import":
-                    help_import()
-                if arg == "export":
-                    help_export()
-                if arg == "remove":
-                    help_remove()
-
-                sys.exit(0)
-
+            run_help()
         elif o == "--no-colorama":
             no_colorama = True
         elif o == "--project" or o == "-p":
             # works for absolute paths too
             proj_path = cwd_rel_to_abs(a)
-    else:
-        if not len(args):
-            help()
-            sys.exit(0)
 
     if not no_colorama:
         import colorama
         colorama.init()
 
-    if len(args) == 2 and len(opts) == 0:
-        # allow execution without any "-", "--" options
-        if not "help" in args and not "--help" in args and not "-h" in args:
-            if args[0] == "init":
-                run_init(args[1:])
-            elif args[0] == "check_deps":
-                run_check_deps(args[1:])
-            elif args[0] == "import":
-                run_import(args[1:])
-            elif args[0] == "export":
-                run_export(args[1:])
-            else:
-                help()
-                sys.exit(0)
+    if not len(args):
+        help("Specify project management command")
+        sys.exit(1)
+
+    cmd = args[0]
+
+    if cmd == "help":
+        if len(args) > 1:
+            run_help(args[1])
         else:
-            if "init" in args:
-                help_init()
-            if "list" in args:
-                help_list()
-            if "compile" in args:
-                help_compile()
-            if "deploy" in args:
-                help_deploy()
-            if "reexport" in args:
-                help_reexport()
-            if "convert_resources" in args:
-                help_convert_resources()
-            if "check_deps" in args:
-                help_check_deps()
-            if "import" in args:
-                help_import()
-            if "export" in args:
-                help_export()
-            if "remove" in args:
-                help_remove()
-
-    elif len(args) > 0 and not "help" in args:
-        arg = args[0]
-
-        if arg == "init":
-            run_init(args[1:])
-        elif arg == "list":
-            run_list(args[1:])
-        elif arg == "compile":
-            if not proj_path:
-                help("Project directory not found")
-                sys.exit(1)
-
-            run_compile(args[1:], proj_path)
-        elif arg == "deploy":
-            if not proj_path:
-                help("Project directory not found")
-                sys.exit(1)
-
-            run_deploy(args[1:], proj_path)
-        elif arg == "remove":
-            if not proj_path:
-                help("Project directory not found")
-                sys.exit(1)
-
-            run_remove(args[1:], proj_path)
-        elif arg == "reexport":
-            if not proj_path:
-                help("Project directory not found")
-                sys.exit(1)
-
-            run_reexport(args[1:], proj_path)
-        elif arg == "convert_resources":
-            if not proj_path:
-                help("Project directory not found")
-                sys.exit(1)
-
-            run_convert_resources(args[1:], proj_path)
-        elif arg == "check_deps":
-            run_check_deps(args[1:])
-        elif arg == "import":
-            run_import(args[1:])
-        elif arg == "export":
-            run_export(args[1:])
-        else:
-            help("Specify project management command")
+            run_help()
+    if cmd == "init":
+        run_init(args[1:])
+    elif cmd == "list":
+        run_list(args[1:])
+    elif cmd == "compile":
+        if not proj_path:
+            help("Project directory not found")
             sys.exit(1)
-    elif len(args) == 1 and args[0] == "help":
-        help()
-        sys.exit(0)
+        run_compile(args[1:], proj_path)
+    elif cmd == "convert_resources":
+        if not proj_path:
+            help("Project directory not found")
+            sys.exit(1)
+        run_convert_resources(args[1:], proj_path)
+    elif cmd == "reexport":
+        if not proj_path:
+            help("Project directory not found")
+            sys.exit(1)
+        run_reexport(args[1:], proj_path)
+    elif cmd == "remove":
+        if not proj_path:
+            help("Project directory not found")
+            sys.exit(1)
+        run_remove(args[1:], proj_path)
+    elif cmd == "deploy":
+        if not proj_path:
+            help("Project directory not found")
+            sys.exit(1)
+        run_deploy(args[1:], proj_path)
+    elif cmd == "check_deps":
+        run_check_deps(args[1:])
+    elif cmd == "import":
+        run_import(args[1:])
+    elif cmd == "export":
+        run_export(args[1:])
+    else:
+        help("Wrong project management command: " + cmd)
+        sys.exit(1)
 
-def fill_global_paths(base_dir, curr_work_dir):
+def fill_global_paths(base_dir):
     global _base_dir, _curr_work_dir, _cc_dir, _src_dir, _js_cc_params, _engine_dir, _java_exec
 
     # sdk base directory
@@ -293,9 +229,8 @@ def fill_global_paths(base_dir, curr_work_dir):
     if platform.system() == "Windows":
         _java_exec = normpath(join(base_dir, "tools", "java", "win",
                                    "openjdk-1.7.0", "bin", "java.exe"))
-
-    # current working directory
-    _curr_work_dir = curr_work_dir
+    elif not check_dependencies(["java"], False):
+        _java_exec = ""
 
     # path to closure compiler directory
     _cc_dir = join(base_dir, "tools", "closure-compiler")
@@ -312,6 +247,45 @@ def fill_global_paths(base_dir, curr_work_dir):
 
     # engine sources directory
     _src_dir = normpath(join(base_dir, "src"))
+
+def run_help(cmd=""):
+    if cmd == "":
+        # display generic help
+        help()
+        sys.exit(0)
+    elif cmd == "init":
+        help_init()
+        sys.exit(0)
+    elif cmd == "list":
+        help_list()
+        sys.exit(0)
+    elif cmd == "compile":
+        help_compile()
+        sys.exit(0)
+    elif cmd == "deploy":
+        help_deploy()
+        sys.exit(0)
+    elif cmd == "reexport":
+        help_reexport()
+        sys.exit(0)
+    elif cmd == "convert_resources":
+        help_convert_resources()
+        sys.exit(0)
+    elif cmd == "check_deps":
+        help_check_deps()
+        sys.exit(0)
+    elif cmd == "import":
+        help_import()
+        sys.exit(0)
+    elif cmd == "export":
+        help_export()
+        sys.exit(0)
+    elif cmd == "remove":
+        help_remove()
+        sys.exit(0)
+    else:
+        help("Wrong project management command: " + cmd)
+        sys.exit(1)
 
 
 def help(err=""):
@@ -350,9 +324,9 @@ def help_print_err(err, subcmd=""):
     """
     Print formatted error message and hint for --help option
     """
-    print("     " + "-"*(len(err)))
-    print("   ", RED, err, ENDCOL)
-    print("     " + "-"*(len(err)))
+    print("     " + "-"*(len(err)), file=sys.stderr)
+    print("   ", RED, err, ENDCOL, file=sys.stderr)
+    print("     " + "-"*(len(err)), file=sys.stderr)
 
     if subcmd:
         subcmd_str = " " + subcmd + " "
@@ -360,23 +334,26 @@ def help_print_err(err, subcmd=""):
         subcmd_str = " "
 
     print("     " +
-          "-"*(len("   Try './project.py" + subcmd_str + "--help' for more information.")))
+          "-"*(len("   Try './project.py" + subcmd_str + "--help' for more information.")),
+          file=sys.stderr)
     print(BLUE, "   ", "Try '", GREEN, "./project.py" + subcmd_str + "--help'",
-          BLUE, "for more information.", ENDCOL)
+          BLUE, "for more information.", ENDCOL, file=sys.stderr)
     print("     " +
-          "-"*(len("   Try './project.py" + subcmd_str + "--help' for more information.")))
+          "-"*(len("   Try './project.py" + subcmd_str + "--help' for more information.")),
+          file=sys.stderr)
 
 def run_init(args):
     """
     Create a Blend4Web project directory structure for the given project.
     """
     try:
-        opts, args = getopt.getopt(args, "C:BASPT:t:o:b:h",
+        opts, args = getopt.getopt(args, "C:BASPU:T:t:o:b:h",
                            ["author=",
                             "bundle",
                             "copy-app-templates",
                             "copy-scene-templates",
                             "copy-project-script",
+                            "url-params=",
                             "title=",
                             "engine-type=",
                             "optimization=",
@@ -392,6 +369,7 @@ def run_init(args):
     do_copy_app_templates = False
     do_copy_scene_templates = False
     do_copy_project_script = False
+    url_params = ""
     engine_type = DEFAULT_ENGINE_TYPE_OPT
     opt_level = DEFAULT_JS_OPTIMIZATION_OPT
 
@@ -408,6 +386,8 @@ def run_init(args):
             do_copy_scene_templates = True
         elif o == "--copy-project-script" or o == "-P":
             do_copy_project_script = True
+        elif o == "--url-params" or o == "-U":
+            url_params = a
         elif o == "--title" or o == "-T":
             title = a
         elif o == "--engine-type" or o == "-t":
@@ -426,16 +406,22 @@ def run_init(args):
 
     name = args[0]
 
+    webplayer_proj = engine_type in ["webplayer_html", "webplayer_json"]
+
     if bundle:
-        engine_type = "update";
-        opt_level = "simple";
-        print("Creating a new bundled up project")
-    elif engine_type == "webplayer_json":
-        print("Creating a new webplayer json project")
-    elif engine_type == "webplayer_html":
-        print("Creating a new webplayer html project")
+        if not webplayer_proj:
+            engine_type = "update"
+            opt_level = "simple"
+        bundled_msg = "bundled up "
     else:
-        print("Creating a new project")
+        bundled_msg = ""
+
+    if engine_type == "webplayer_json":
+        print("Creating a new " + bundled_msg + "webplayer json project")
+    elif engine_type == "webplayer_html":
+        print("Creating a new " + bundled_msg + "webplayer html project")
+    else:
+        print("Creating a new " + bundled_msg + "project")
     print("")
     print("Name:            ", name)
     if title:
@@ -455,7 +441,7 @@ def run_init(args):
         build_dir = join(_base_dir, "deploy", "apps", name)
         assets_dir = join(_base_dir, "deploy", "assets", name)
 
-    if engine_type == "webplayer_json" or engine_type == "webplayer_html":
+    if webplayer_proj:
         build_dir = dev_dir
 
     dev_dir_rel = unix_path(relpath(dev_dir, _base_dir))
@@ -502,7 +488,8 @@ def run_init(args):
     b4w_proj_cfg["info"] = OrderedDict([
         ("author", author),
         ("name", name),
-        ("title", title)
+        ("title", title),
+        ("icon", "")
     ])
 
     b4w_proj_cfg["paths"] = OrderedDict([
@@ -526,9 +513,13 @@ def run_init(args):
     ])
 
     b4w_proj_cfg["deploy"] = OrderedDict([
-        ("assets_path_prefix", ""),
+        ("assets_path_dest", "assets"),
+        ("assets_path_prefix", "assets"),
         ("override", "")
     ])
+
+    if url_params:
+        b4w_proj_cfg["url_params"] = project_util.csv_str_to_dict(url_params)
 
     with open(b4w_proj_file, "w") as configfile:
         b4w_proj_cfg.write(configfile)
@@ -536,11 +527,11 @@ def run_init(args):
     if do_copy_project_script:
         copy_project_script(_base_dir, dev_dir)
 
-    if do_copy_app_templates:
+    if do_copy_app_templates and not webplayer_proj:
         copy_app_templates(name, dev_dir, _base_dir, _src_dir, bundle, title)
 
-        # copy engine (compile with engine_type=update)
-        if bundle:
+        # copy engine now for engine_type=update
+        if engine_type == "update":
             run_compile([], dev_dir)
 
     if do_copy_scene_templates:
@@ -549,17 +540,18 @@ def run_init(args):
 
     print(GREEN + "Project Created" + ENDCOL)
 
-def unix_path(path):
-    # only relative paths allowed
-    assert not os.path.isabs(path)
-    return path.replace('\\', '/')
+def sdk_rel_to_abs(rel_path, base_dir=None):
+    """Get absoulte path from the relative to base dir (SDK root)"""
+    if not base_dir:
+        base_dir = _base_dir
+    return normpath(join(base_dir, rel_path))
 
-def cfg_create_list(l):
-    return ";".join(l) + ";"
+def sdk_rel_to_abs_paths(rel_paths, base_dir=None):
+    """Get absoulte paths from the relative to base dir (SDK root) ones"""
+    if not base_dir:
+        base_dir = _base_dir
+    return [normpath(join(base_dir, p)) for p in rel_paths]
 
-def cfg_extract_list(s):
-    s_list = s.strip(";").split(";")
-    return [i.strip(" ") for i in s_list]
 
 def help_init(err=""):
     """
@@ -593,10 +585,7 @@ def copy_app_templates(proj_name, dev_dir, base_dir, src_dir, bundle, title):
 
     # Checks
 
-    if bundle:
-        out_html_file = join(dev_dir, proj_name + ".html")
-    else:
-        out_html_file = join(dev_dir, proj_name + "_dev.html")
+    out_html_file = join(dev_dir, proj_name + ".html")
     if exists(out_html_file):
         print("  file " + unix_path(relpath(out_html_file, base_dir)) +
                 " already exists")
@@ -769,45 +758,6 @@ Display a list with all available applications.
 Option:
     -h, --help     show this help and exit""")
 
-def get_proj_cfg(proj_dir):
-    """
-    Get the cfg_parser object from '.b4w_project' file.
-    """
-    b4w_proj_cfg = configparser.ConfigParser()
-    b4w_proj_cfg.read(join(proj_dir, ".b4w_project"))
-
-    return b4w_proj_cfg
-
-
-def proj_cfg_value(cfg_parser, section, option, fallback=None):
-    """
-    Get the value from the cfg_parser via section and option.
-    """
-    if not cfg_parser:
-        return fallback
-
-    val = cfg_parser.get(section, option, fallback = fallback)
-
-    # provide fallback for empty options too 
-    if val == "" or val == fallback:
-        return fallback
-
-    if (option == "blend_dirs" or
-        option == "assets_dirs" or
-        option == "apps" or
-        option == "js_ignore" or
-        option == "css_ignore"):
-
-        return cfg_extract_list(val)
-    elif (option == "override" or
-          option == "use_physics" or
-          option == "use_smaa_textures"):
-
-        return cfg_parser.getboolean(section, option)
-    else:
-        return val
-
-
 def run_compile(args, proj_path):
     proj_cfg      = get_proj_cfg(proj_path)
     dev_proj_path = proj_path
@@ -843,20 +793,26 @@ def run_compile(args, proj_path):
         opts, args = getopt.getopt(args,
                             "ht:o:a:v:j:c:fm",
                            ["help",
+                            "engine-type=",
                             "engine_type=",
                             "optimization=",
                             "app=",
                             "version=",
+                            "js-ignore=",
                             "js_ignore=",
+                            "css-ignore=",
                             "css_ignore=",
+                            "use-physics",
                             "use_physics",
+                            "use-smaa-textures"
                             "use_smaa_textures"])
     except getopt.GetoptError as err:
         help_compile("Incorrect command line arguments")
         sys.exit(1)
 
+    # NOTE: underscores are only for compatibility, remove ASAP
     for o, a in opts:
-        if o == "--engine_type" or o == "-t":
+        if o == "--engine-type" or o == "--engine_type" or o == "-t":
             engine_type = get_engine_type(a)
         elif o == "--optimization" or o == "-o":
             opt_level = get_opt_level(a)
@@ -864,13 +820,13 @@ def run_compile(args, proj_path):
             app_html_files.append(cwd_rel_to_abs(a))
         elif o == "--version" or o == "-v":
             version = a
-        elif o == "--js_ignore" or o == "-j":
+        elif o == "--js-ignore" or o == "--js_ignore" or o == "-j":
             js_ignore.append(a)
-        elif o == "--css_ignore" or o == "-c":
+        elif o == "--css-ignore" or o == "--css_ignore" or o == "-c":
             css_ignore.append(a)
-        elif o == "--use_physics" or o == "-f":
+        elif o == "--use-physics" or o == "--use_physics" or o == "-f":
             use_physics = a
-        elif o == "--use_smaa_textures" or o == "-m":
+        elif o == "--use-smaa-textures" or o == "--use_smaa_textures" or o == "-m":
             use_smaa_textures = a
         elif o == "--help" or o == "-h":
             help_compile()
@@ -880,7 +836,8 @@ def run_compile(args, proj_path):
         help_compile("Compile option not available")
         sys.exit(1)
 
-    if engine_type == "COMPILE" and not check_dependencies(["java"]):
+    if engine_type == "COMPILE" and not _java_exec:
+        help_compile("Compile engine type requires Java")
         sys.exit(1)
 
     if not exists(dev_proj_path):
@@ -889,7 +846,7 @@ def run_compile(args, proj_path):
 
     if not len(apps_html_files):
         apps_html_files = sdk_rel_to_abs_paths(proj_cfg_value(proj_cfg,
-            "compile", "apps", []))
+                "compile", "apps", []))
 
     if not len(js_ignore):
         js_ignore = proj_cfg_value(proj_cfg, "compile", "js_ignore", [])
@@ -968,21 +925,6 @@ def get_opt_level(option_str):
         help_compile("Incorrect optimization option")
         sys.exit(1)
 
-def sdk_rel_to_abs(rel_path, base_dir=None):
-    """Get absoulte path from the relative to base dir (SDK root)"""
-    if not base_dir:
-        base_dir = _base_dir
-    return normpath(join(base_dir, rel_path))
-
-def sdk_rel_to_abs_paths(rel_paths, base_dir=None):
-    """Get absoulte paths from the relative to base dir (SDK root) ones"""
-    if not base_dir:
-        base_dir = _base_dir
-    return [normpath(join(base_dir, p)) for p in rel_paths]
-
-def cwd_rel_to_abs(rel_path):
-    """Get absoulte paths from the relative to current dir ones"""
-    return normpath(join(_curr_work_dir, rel_path))
 
 def check_proj_struct(project_path, app_names):
     """
@@ -1014,14 +956,6 @@ def check_proj_struct(project_path, app_names):
             help_compile("Main HTML file must be in the root directory")
             sys.exit(0)
 
-
-def check_is_ext_path(is_ext_path):
-    """
-    Checks if path is out of sdk directory.
-    """
-    if is_ext_path:
-        help_compile("External path already exist")
-        sys.exit(0)
 
 
 def compile_app(html_file="", **kwargs):
@@ -1066,7 +1000,7 @@ def compile_app(html_file="", **kwargs):
         if exists(build_proj_path):
             shutil.rmtree(build_proj_path)
         shutil.copytree(dev_proj_path, build_proj_path,
-                ignore=shutil.ignore_patterns('.b4w_project'))
+                ignore=shutil.ignore_patterns(*COMP_DEPL_IGNORE))
 
     build_proj_path_obj = Path(build_proj_path)
 
@@ -1215,7 +1149,7 @@ def compile_html(**kwargs):
             meta_item += "\n    <meta "
 
             for i in item:
-                meta_item += i[0] + "=" + "'" + i[1] + "' "
+                meta_item += i[0] + "=" + '"' + i[1] + '" '
 
             meta_item += "/>"
 
@@ -1238,10 +1172,10 @@ def compile_html(**kwargs):
 
     if engine_type != "EXTERNAL":
         if use_physics:
-            copy_smaa_to_proj_path(build_proj_path);
+            copy_phys_to_proj_path(build_proj_path);
 
         if use_smaa_textures:
-            copy_phys_to_proj_path(build_proj_path);
+            copy_smaa_to_proj_path(build_proj_path);
 
         if engine_type == "COPY":
             engine_src = engine_file_name
@@ -1268,7 +1202,7 @@ def compile_html(**kwargs):
 
         inner_text.append(
             "\n    <link type='text/css' rel='stylesheet' href='" +
-            normpath(join(rel, app_name)) +
+            unix_path(normpath(join(rel, app_name))) +
             ".min.css" + suffix + "'/>")
 
     for css in parser.css:
@@ -1288,7 +1222,7 @@ def compile_html(**kwargs):
     if engine_src:
         inner_text.append(
             "\n    <script type='text/javascript' src='" +
-            engine_src + suffix + "'></script>")
+            unix_path(engine_src) + suffix + "'></script>")
 
     for js in parser.js:
         if "no_compile" in js:
@@ -1309,7 +1243,7 @@ def compile_html(**kwargs):
 
         inner_text.append(
             "\n    <script type='text/javascript' src='" +
-            normpath(join(rel, app_name)) + ".min.js" + suffix + "'></script>")
+            unix_path(normpath(join(rel, app_name))) + ".min.js" + suffix + "'></script>")
 
     inner_text.append("\n</head>\n")
     inner_text.extend(new_body_lines)
@@ -1343,12 +1277,33 @@ def change_assets_path(new_engine_path, assets_path):
         file_data = engine_file.read()
         engine_file.close()
         new_data = file_data.replace("ASSETS=../../assets/",
-                                     "ASSETS=" + assets_path + "assets/")
+                                     "ASSETS=" + assets_path + "/")
 
         engine_file = open(str(js_file), "w")
         engine_file.write(new_data)
         engine_file.close()
 
+def change_b4w_path(new_app_dir):
+    """
+    Modifies path to engine in the standalone application.
+    """
+    new_app_dir_obj = Path(normpath(new_app_dir))
+    html_paths = list(new_app_dir_obj.rglob('*.html'))
+
+    for html_path in html_paths:
+        html_file = open(str(html_path), "r")
+        file_data = html_file.read()
+        html_file.close()
+
+        new_path = unix_path(relpath(join(new_app_dir, "common"),
+                os.path.dirname(str(html_path))))
+
+        new_data = re.sub("(src\s*=')([\w/.]*)(b4w.[\w.]*min.js)", "\\1" +
+                new_path + "/\\3", file_data)
+
+        html_file = open(str(html_path), "w")
+        html_file.write(new_data)
+        html_file.close()
 
 def compile_css(css_paths, file_name):
     # yuicompressor executive file
@@ -1358,9 +1313,9 @@ def compile_css(css_paths, file_name):
     CSS_YP_PARAMS = [_java_exec, "-jar", css_yc_path]
 
     for parent in css_paths:
-        with open(normpath(join(parent, 'temp_css.css')),'wb') as temp_css:
+        with open(normpath(join(parent, 'temp_css.css')), 'wb') as temp_css:
             for filename in css_paths[parent]:
-                with open(filename,'rb') as f:
+                with open(filename, 'rb') as f:
                     shutil.copyfileobj(f, temp_css, 1024*1024*10)
 
         output_css_path = join(parent, file_name + ".min.css")
@@ -1388,7 +1343,7 @@ def append_externs_items(paths, externs_gen_file):
     for path in paths:
         abs_path = str(path)
 
-        f = open(abs_path)
+        f = open(abs_path, encoding = "utf-8")
         text = f.read()
         f.close()
 
@@ -1417,12 +1372,13 @@ def compile_js(js_paths, file_name, opt_level, engine_type):
             normpath(join(_base_dir, "scripts", "compile_b4w.py"))]
 
     # closure compiler externs
-    EXTERNS = [normpath(join(_cc_dir, "extern_modules.js")),
-               normpath(join(_cc_dir, "extern_jquery-1.9.js")),
-               normpath(join(_cc_dir, "w3c_dom1.js")),
-               normpath(join(_cc_dir, "extern_fullscreen.js")),
-               normpath(join(_cc_dir, "extern_gl-matrix.js")),
-               normpath(join(_cc_dir, "extern_pointerlock.js"))]
+    if opt_level == "ADVANCED_OPTIMIZATIONS":
+        EXTERNS = [normpath(join(_cc_dir, "extern_modules.js")),
+                   normpath(join(_cc_dir, "extern_jquery-1.9.js")),
+                   normpath(join(_cc_dir, "w3c_dom1.js")),
+                   normpath(join(_cc_dir, "extern_fullscreen.js")),
+                   normpath(join(_cc_dir, "extern_gl-matrix.js")),
+                   normpath(join(_cc_dir, "extern_pointerlock.js"))]
 
     GLOBALS_PATH = normpath(join(_base_dir, "deploy", "globals_detect"))
 
@@ -1451,27 +1407,31 @@ def compile_js(js_paths, file_name, opt_level, engine_type):
 
             js_adv_params = list.copy(_js_cc_params)
 
-            apps_dir = join(_base_dir, "apps_dev")
-
-            externs_gen_file = tempfile.NamedTemporaryFile(mode="r+", suffix=".js", delete=False)
-
-            addons_path_obj = Path(join(_src_dir, "addons"))
-            ext_path_obj    = Path(join(_src_dir, "ext"))
-
-            addons = addons_path_obj.rglob('*.js')
-            ext    = ext_path_obj.rglob('*.js')
-
-            append_externs_items(addons, externs_gen_file)
-            append_externs_items(ext, externs_gen_file)
-
-
-            externs_gen_file.seek(0)
-
-            EXTERNS.append(externs_gen_file.name)
+            externs_gen_file = None
 
             if opt_level == "ADVANCED_OPTIMIZATIONS":
+                apps_dir = join(_base_dir, "apps_dev")
+
+                externs_gen_file = tempfile.NamedTemporaryFile(mode="r+", suffix=".js", delete=False)
+
+                addons_path_obj = Path(join(_src_dir, "addons"))
+                ext_path_obj    = Path(join(_src_dir, "ext"))
+
+                addons = addons_path_obj.rglob('*.js')
+                ext    = ext_path_obj.rglob('*.js')
+
+                append_externs_items(addons, externs_gen_file)
+                append_externs_items(ext, externs_gen_file)
+
+                externs_gen_file.seek(0)
+
+                ext_adv = list.copy(EXTERNS)
+
+                ext_adv.append(externs_gen_file.name)
+
                 prepared_src_ext = ["--externs=" + join(apps_dir, x)
-                                               for x in EXTERNS]
+                                               for x in ext_adv]
+
                 js_adv_params.extend(prepared_src_ext)
 
             js_adv_params.extend(prepared_src_js)
@@ -1483,14 +1443,18 @@ def compile_js(js_paths, file_name, opt_level, engine_type):
             # NOTE: fixes deadlocks on windows
             proc = subprocess.Popen(js_adv_params, stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT, universal_newlines=True)
-            print(proc.communicate()[0])
+            output = proc.communicate()[0]
 
-            externs_gen_file.close()
+            if len(output):
+                print(output)
 
-            try:
-                os.remove(externs_gen_file.name)
-            except:
-                print("File ", externs_gen_file.name, " not found")
+            if externs_gen_file:
+                externs_gen_file.close()
+
+                try:
+                    os.remove(externs_gen_file.name)
+                except:
+                    print("File ", externs_gen_file.name, " not found")
 
         for js in js_paths[parent]:
             _temporary_files.append(js)
@@ -1585,6 +1549,9 @@ def exist_js(included_files, files, app_path_name):
     processed_files = {}
 
     for item in included_files:
+        if not 'src' in item:
+            continue
+
         js_src = normpath(join(app_path_name, item["src"]))
 
         if "no_compile" in item:
@@ -1614,7 +1581,7 @@ def print_wrapper(output_path):
     print("    " + "-"*(len(output_path) + len("  Compiling : ")))
 
 
-def check_dependencies(dependencies):
+def check_dependencies(dependencies, do_print=True):
     missing_progs = get_missing_progs(dependencies)
     needed_progs = {}
 
@@ -1622,7 +1589,8 @@ def check_dependencies(dependencies):
         if dep == "java":
             needed_progs["Java"] = True
     for prog in needed_progs:
-        print("Couldn't find", prog)
+        if do_print:
+            print("Couldn't find", prog)
     if len(missing_progs) > 0:
         return False
     return True
@@ -1646,10 +1614,10 @@ Compile the project's application(s).
 
 Options:
     -a, --app=APP             specify source application html file
-    -c, --css_ignore          skip css file
-    -j, --js_ignore           skip js file
+    -c, --css-ignore          skip css file
+    -j, --js-ignore           skip js file
     -o, --optimization=TYPE   set javaScript optimization type
-    -t, --engine_type=TYPE    specify b4w engine type (external, copy, compile, update)
+    -t, --engine-type=TYPE    specify b4w engine type (external, copy, compile, update)
     -v, --version             add version to js and css urls
     -h, --help                show this help and exit""")
 
@@ -1679,6 +1647,7 @@ def run_convert_resources(args, proj_path):
     conv_path = join(_base_dir, "scripts", "converter.py")
 
     for assets_dir in assets_dirs:
+        # NOTE: crashes if some utility is not found
         print("Processing directory: " + relpath(assets_dir, _base_dir))
         print("Resizing textures")
         subprocess.check_call([python_path, conv_path, "-d", assets_dir, "resize_textures"])
@@ -1699,7 +1668,7 @@ Usage: project.py [-p|--project PROJECT] convert_resources [OPTION]...
 Convert project resources (textures/audio/video) to alternative formats.
 
 Options:
-    -s, --assets   specify source assets directory
+    -s, --assets   source assets directory
     -h, --help     show this help and exit""")
 
 
@@ -1709,7 +1678,7 @@ def run_reexport(args, proj_path):
     """
     try:
         opts, args = getopt.getopt(args, "hs:b:",
-                ["help", "assets=", "blender_exec="])
+                ["help", "assets=", "blender-exec=", "blender_exec="])
     except getopt.GetoptError as err:
         help_reexport("Incorrect command line arguments")
         sys.exit(1)
@@ -1726,7 +1695,7 @@ def run_reexport(args, proj_path):
             sys.exit(0)
         elif o == "--assets" or o == "-s":
             assets_dirs.append(cwd_rel_to_abs(a))
-        elif o == "--blender_exec" or o == "-b":
+        elif o == "--blender-exec" or o == "--blender_exec" or o == "-b":
             blender_exec = a
 
     if not len(assets_dirs):
@@ -1753,7 +1722,7 @@ Rexport project *.blend files.
 
 Options:
     -s, --assets         specify source assets directory
-    -b, --blender_exec   path to blender executable
+    -b, --blender-exec   path to blender executable
     -h, --help           show this help and exit""")
 
 
@@ -1795,98 +1764,128 @@ def run_deploy(args, proj_path):
     Deploy project into the external directory with all required files.
     """
     proj_cfg    = get_proj_cfg(proj_path)
+    
+    proj_name = proj_cfg_value(proj_cfg, "info", "name", basename(proj_path))
     engine_type = proj_cfg_value(proj_cfg, "compile", "engine_type")
 
     try:
         opts, args = getopt.getopt(args,
-                                   "e:s:d:ot:",
-                                   ["assets_path=",
-                                    "assets=",
-                                    "dir=",
+                                    "e:E:os:t:h",
+                                   ["assets-dest=",
+                                    "assets-prefix=",
                                     "override",
-                                    "engine_type="])
+                                    "assets=",
+                                    "engine-type=",
+                                    "help"])
     except getopt.GetoptError as err:
         help_deploy("Incorrect command line arguments")
         sys.exit(1)
 
+    deploy_abs_path = None
+
     deploy_rel_path = proj_cfg_value(proj_cfg, "paths", "deploy_dir")
-
-    deploy_abs_path = ""
-
     if deploy_rel_path:
         deploy_abs_path = normpath(join(_base_dir, deploy_rel_path))
 
-    assets_paths         = proj_cfg_value(proj_cfg, "paths", "assets_dirs", [])
+    assets_path_dest     = proj_cfg_value(proj_cfg, "deploy",
+            "assets_path_dest", "assets")
+    assets_path_prefix   = proj_cfg_value(proj_cfg, "deploy",
+            "assets_path_prefix", "assets")
     remove_exist_ext_dir = proj_cfg_value(proj_cfg, "deploy", "override", False)
-    assets_path_prefix   = proj_cfg_value(proj_cfg, "deploy", "assets_path_prefix", "")
     build_proj_path      = sdk_rel_to_abs(proj_cfg_value(proj_cfg, "paths",
                            "build_dir", normpath(join(_base_dir, "deploy", "apps",
                            basename(proj_path)))))
 
-    if not isdir(build_proj_path):
-        help_deploy("Build project path is not exist")
-        sys.exit(1)
+    assets_dirs = []
 
     for o, a in opts:
-        if o == "--assets_path" or o == "-e":
+        if o == "--assets-dest" or o == "-e":
+            assets_path_dest = unix_path(normpath(a))
+        elif o == "--assets-prefix" or o == "-E":
             assets_path_prefix = a
-        elif o == "--assets" or o == "-s":
-            assets_paths.append(cwd_rel_to_abs(a))
-        elif o == "--dir" or o == "-d":
-            deploy_abs_path = cwd_rel_to_abs(a)
         elif o == "--override" or o == "-o":
             remove_exist_ext_dir = True
-        elif o == "--engine_type" or o == "-t":
+        elif o == "--assets" or o == "-s":
+            assets_dirs.append(cwd_rel_to_abs(a))
+        elif o == "--engine-type" or o == "-t":
             engine_type = a
+        elif o == "--help" or o == "-h":
+            help_deploy()
+            sys.exit(0)
 
-    if engine_type not in ["compile", "copy", "update", "webplayer_json", "webplayer_html"]:
-        help_deploy("Engine type not allowed")
+    if not len(assets_dirs):
+        assets_dirs = sdk_rel_to_abs_paths(proj_cfg_value(proj_cfg, "paths",
+                "assets_dirs", []))
+
+    if len(args):
+        deploy_abs_path = cwd_rel_to_abs(args[0])
+
+
+    if not isdir(build_proj_path):
+        help_deploy("Build project directory does not exist")
         sys.exit(1)
 
     if not deploy_abs_path:
         help_deploy("You must specify deploy directory")
         sys.exit(1)
 
-    if exists(deploy_abs_path):
+    if isdir(deploy_abs_path):
         if remove_exist_ext_dir:
             shutil.rmtree(deploy_abs_path)
+            archive = None
         else:
-            help_deploy("Deploy directory is already exists")
+            help_deploy("Deploy directory already exists")
             sys.exit(1)
+    elif guess_zip(deploy_abs_path):
+        archive = deploy_abs_path
+        tmpdir_obj = tempfile.TemporaryDirectory()
+        deploy_abs_path = join(tmpdir_obj.name, "archive_content_dir")
+    else:
+        archive = None
 
     shutil.copytree(build_proj_path, deploy_abs_path,
-            ignore=shutil.ignore_patterns('.b4w_project'))
+            ignore=shutil.ignore_patterns(*COMP_DEPL_IGNORE))
 
-    for assets_path in assets_paths:
-        if exists(join(_base_dir, assets_path)):
-            shutil.copytree(join(_base_dir, assets_path),
-                            join(deploy_abs_path, "assets",
-                                 basename(normpath(assets_path))))
+    for assets_dir in assets_dirs:
+        if exists(assets_dir):
+            shutil.copytree(assets_dir, join(deploy_abs_path, assets_path_dest,
+                    basename(normpath(assets_dir))))
 
-    change_assets_path(deploy_abs_path, assets_path_prefix)
 
-    if engine_type == "webplayer_json":
+    if engine_type == "external":
+        common_path = normpath(join(_base_dir, "deploy", "apps", "common"))
+        shutil.copytree(common_path, join(deploy_abs_path, "common"))
+        change_b4w_path(deploy_abs_path)
+    elif engine_type == "webplayer_json":
         webplayer_path = normpath(join(_base_dir, "deploy", "apps", "webplayer"))
 
         for f in glob.glob(join(webplayer_path, '*.*')):
             shutil.copy(f, deploy_abs_path)
 
-    print(GREEN + "Deployed" + ENDCOL)
+    change_assets_path(deploy_abs_path, assets_path_prefix)
+
+    if archive:
+        print("Compressing deployed project")
+        compress_dir(archive, deploy_abs_path, proj_name)
+
+    print(GREEN + "Project " + proj_name + " has been deployed" + ENDCOL)
 
 def help_deploy(err=""):
     if err:
         help_print_err(err, "deploy")
     else:
         print("""\
-Usage: project.py [-p|--project PROJECT] deploy [OPTION]... DIRECTORY
+Usage: project.py [-p|--project PROJECT] deploy [OPTION]... [DIRECTORY]
 Deploy the project into the given directory.
 
 Options:
-    -s, --assets        specify source assets directory
-    -e, --assets_path   specify assets url
-    -d, --dir           deploy deirectory
-    -o, --override      remove deploy dir if its exists
-    -h, --help          display this help and exit""")
+    -e, --assets-dest       destination assets directory ("assets" by default)
+    -E, --assets-prefix     assets URL prefix ("assets" by default)
+    -o, --override          remove deploy dir if it exists
+    -s, --assets            override project's assets directory(s)
+    -t, --engine-type=TYPE  override project's engine type config
+                            (external, copy, compile, update)
+    -h, --help              display this help and exit""")
 
 
 def run_check_deps(args):
@@ -1955,7 +1954,7 @@ def run_import(args):
             help_import("Invalid imported project directory")
             sys.exit(1)
 
-    elif mimetypes.guess_type(input_base_path)[0] in ["application/zip", "application/x-zip-compressed"]:
+    elif guess_zip(input_base_path):
         tmpdir_obj = tempfile.TemporaryDirectory()
         tmpdir = tmpdir_obj.name
 
@@ -2088,7 +2087,7 @@ def run_export(args):
     if isdir(path_dst):
         print("Destination directory already exists")
         sys.exit(1)
-    elif mimetypes.guess_type(path_dst)[0] in ["application/zip", "application/x-zip-compressed"]:
+    elif guess_zip(path_dst):
         tmpdir_obj = tempfile.TemporaryDirectory()
         base_dir_dst = tmpdir_obj.name
         archive = True
@@ -2157,13 +2156,27 @@ def run_export(args):
 
     if archive:
         print("Compressing project archive")
-        z = zipfile.ZipFile(path_dst, "w", compression=zipfile.ZIP_DEFLATED)
-        basename_dest = basename(path_dst).split(".zip")[0]
-        for root, dirs, files in os.walk(base_dir_dst):
-            for file in files:
-                path = join(root, file)
-                path_arc = join(basename_dest, relpath(path, base_dir_dst))
-                z.write(path, path_arc)
+        compress_dir(path_dst, base_dir_dst)
+
+def compress_dir(archive, directory, root_arc=None):
+    z = zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED)
+
+    # calc archive root directory based on archive name
+    if not root_arc:
+        root_arc = basename(archive).split(".zip")[0]
+
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            path = join(root, file)
+            path_arc = join(root_arc, relpath(path, directory))
+            z.write(path, path_arc)
+
+def guess_zip(path):
+    if (mimetypes.guess_type(path)[0] in
+            ["application/zip", "application/x-zip-compressed"]):
+        return True
+    else:
+        return False
 
 def help_export(err=""):
     if err:

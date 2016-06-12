@@ -3,36 +3,39 @@
     You can adapt this file completely to your liking, but it should at least
     contain the root `toctree` directive.
 
-Содержание
-==========
+Table of Contents
+=================
 
 .. toctree::
     :maxdepth: 2
 
     about.rst
-    features.rst
-    first_steps.rst
+    engine_features.rst
     setup.rst
     workflow.rst
+    project_manager.rst
     viewer.rst
     web_player.rst
     addon.rst
+    scene_settings.rst
     objects.rst
+    meshes.rst
+    normal_editor.rst
     camera.rst
-    materials.rst
-    textures.rst
+    materials.rst   
     node_materials.rst
+    logic_editor.rst
     lighting.rst
     postprocessing_effects.rst
+    stereo_rendering.rst
+    textures.rst
     particles.rst
     particles_instancing.rst
     animation.rst
     outdoor_rendering.rst
-    gamma_alpha.rst
+    colors.rst
     audio.rst
-    physics.rst
-    nla.rst
-    logic_editor.rst
+    physics.rst    
     developers.rst
     developers_advanced.rst
     git_short_manual.rst

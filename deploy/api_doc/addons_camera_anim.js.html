@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: addons/camera_anim.js</title>
+    <title>Source: addons/camera_anim.js | Blend4Web API Reference</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -51,7 +51,6 @@ var m_util  = require("util");
 var m_vec3  = require("vec3");
 var m_quat  = require("quat");
 
-var PI = Math.PI;
 var ROTATION_OFFSET = 0.2;
 var ROTATION_LIMITS_EPS = 1E-6;
 var DEFAULT_CAM_LIN_SPEED = 1;
@@ -299,27 +298,34 @@ exports.track_to_target = function(cam_obj, target, rot_speed, zoom_mult,
 function init_limited_rotation_ratio(obj, limits, auto_rotate_ratio) {
     var phi = m_cam.get_camera_angles(obj, _vec2_tmp)[0];
 
-    var delts = get_delta_to_limits(phi, limits.left, limits.right, _vec2_tmp2);
+    var delts = get_delta_to_limits(obj, phi, limits.left, limits.right, _vec2_tmp2);
 
     return auto_rotate_ratio * Math.min(1, delts[0] / ROTATION_OFFSET,
             delts[1] / ROTATION_OFFSET);
 }
 
-function get_delta_to_limits(angle, limit_from, limit_to, dest) {
+function get_delta_to_limits(obj, angle, limit_left, limit_right, dest) {
     // accurate delta calculation
-    var delta_to_min = m_util.angle_wrap_0_2pi(angle - limit_from);
-    var delta_to_max = m_util.angle_wrap_0_2pi(limit_to - angle);
+    var diff_left = m_util.angle_wrap_0_2pi(angle - limit_left);
+    var delta_to_left = Math.min(diff_left, 2 * Math.PI - diff_left);
+    var diff_right = m_util.angle_wrap_0_2pi(limit_right - angle);
+    var delta_to_right = Math.min(diff_right, 2 * Math.PI - diff_right);
 
     // some precision errors could be near the limits
-    if (Math.abs(delta_to_min) &lt; ROTATION_LIMITS_EPS 
-            || 2 * Math.PI - Math.abs(delta_to_min) &lt; ROTATION_LIMITS_EPS)
-        delta_to_min = 0;
-    if (Math.abs(delta_to_max) &lt; ROTATION_LIMITS_EPS 
-            || 2 * Math.PI - Math.abs(delta_to_max) &lt; ROTATION_LIMITS_EPS)
-        delta_to_max = 0;
+    if (Math.abs(delta_to_left) &lt; ROTATION_LIMITS_EPS 
+            || 2 * Math.PI - Math.abs(delta_to_left) &lt; ROTATION_LIMITS_EPS)
+        delta_to_left = 0;
+    if (Math.abs(delta_to_right) &lt; ROTATION_LIMITS_EPS 
+            || 2 * Math.PI - Math.abs(delta_to_right) &lt; ROTATION_LIMITS_EPS)
+        delta_to_right = 0;
 
-    dest[0] = delta_to_min;
-    dest[1] = delta_to_max;
+    if (m_cam.is_eye_camera(obj)) {
+        dest[0] = delta_to_right; // to min angle
+        dest[1] = delta_to_left; // to max angle
+    } else {
+        dest[0] = delta_to_left; // to min angle
+        dest[1] = delta_to_right; // to max angle
+    }
 
     return dest;
 }
@@ -338,7 +344,7 @@ function get_delta_to_limits(angle, limit_from, limit_to, dest) {
  * while the next call will disable auto-rotation.
  * @param {Number} auto_rotate_ratio Rotation speed multiplier
  * @param {AutoRotateDisabledCallback} [callback] Callback to be executed when auto-rotation is disabled
- * @param {Boolean} Disable camera auto-rotation after mouse scrolling.
+ * @param {Boolean} [disable_on_mouse_wheel] Disable camera auto-rotation after mouse scrolling.
  */
 exports.auto_rotate = function(auto_rotate_ratio, callback, disable_on_mouse_wheel) {
 
@@ -374,7 +380,7 @@ exports.auto_rotate = function(auto_rotate_ratio, callback, disable_on_mouse_whe
                 disable_cb();
             else if ((move_style == m_cam.MS_TARGET_CONTROLS 
                     || move_style == m_cam.MS_EYE_CONTROLS) 
-                    &amp;&amp; m_cam.has_horizontal_limits(obj)) {
+                    &amp;&amp; m_cam.has_horizontal_rot_limits(obj)) {
 
                 var curr_limits = (move_style == m_cam.MS_EYE_CONTROLS) 
                         ? m_cam.eye_get_horizontal_limits(obj, _limits_tmp)
@@ -395,7 +401,7 @@ exports.auto_rotate = function(auto_rotate_ratio, callback, disable_on_mouse_whe
         var value = m_ctl.get_sensor_value(obj, id, 0);
 
         var phi = m_cam.get_camera_angles(obj, _vec2_tmp)[0];
-        var delts = get_delta_to_limits(phi, angle_limits.left, angle_limits.right,
+        var delts = get_delta_to_limits(obj, phi, angle_limits.left, angle_limits.right,
                 _vec2_tmp2);
 
         if (delts[1] > rot_offset 
@@ -488,7 +494,7 @@ exports.check_auto_rotate = function() {
  */
 
 /**
- * Smoothly move the camera to the target point.
+ * Smoothly move the camera to the target point. Intended for STATIC cameras only.
  * @param {(Object3D|tsr)} cam_obj Camera object 3D
  * @param {(Object3D|tsr)} point_obj Target point object 3D
  * @param {Number} cam_lin_speed Camera linear speed, meters per second
@@ -578,7 +584,7 @@ exports.move_camera_to_point = function(cam_obj, point_obj, cam_lin_speed, cam_a
  */
 
 /**
- * Smoothly rotate the camera.
+ * Smoothly rotate the camera. Intended for non-STATIC cameras.
  * @param {Object3D} cam_obj Camera object 3D
  * @param {Number} angle_phi Horisontal rotation angle
  * @param {Number} angle_theta Vertical rotation angle
@@ -586,6 +592,11 @@ exports.move_camera_to_point = function(cam_obj, point_obj, cam_lin_speed, cam_a
  * @param {RotateCameraCallback} [cb] Finishing callback
  */
 exports.rotate_camera = function(cam_obj, angle_phi, angle_theta, time, cb) {
+    if (m_cam.get_move_style(cam_obj) == m_cam.MS_STATIC) {
+        m_print.error("rotate_camera(): not supported for STATIC cameras");
+        return;
+    }
+
     if (_is_camera_rotating)
         return;
 
@@ -688,13 +699,47 @@ exports.is_rotating = function() {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gp_conf.html">gp_conf</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hmd_conf.html">hmd_conf</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-input.html">input</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-logic_nodes.html">logic_nodes</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-math.html">math</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Dec 22 2015 20:09:38 GMT+0300 (MSK)
+    Blend4Web API Reference (generated by JSDoc 3.4.0 on Tue May 31 2016 15:33:56 GMT+0300 (MSK))
+    <a href="https://www.blend4web.com">www.blend4web.com</a>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+  (function() {
+    if (window.document.domain != "www.blend4web.com")
+      return;
+
+    (function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter24512171 = new Ya.Metrika({
+                    id:24512171,
+                    clickmap:false,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");
+  })();
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/24512171" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
 </footer>
 
 <script> prettyPrint(); </script>

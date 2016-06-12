@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Audio System &mdash; User Manual: Blend4Web vv15.12</title>
+  <title>Audio &mdash; Blend4Web 16.05 User Manual</title>
   
 
   
@@ -32,9 +32,9 @@
   
         <link rel="author" title="About these documents"
               href="about.html"/>
-    <link rel="top" title="User Manual: Blend4Web vv15.12" href="index.html"/>
+    <link rel="top" title="Blend4Web 16.05 User Manual" href="index.html"/>
         <link rel="next" title="Physics" href="physics.html"/>
-        <link rel="prev" title="Gamma and Alpha" href="gamma_alpha.html"/> 
+        <link rel="prev" title="Color Management" href="colors.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -61,7 +61,7 @@
           
           
             <div class="version">
-              v15.12
+              v16.05
             </div>
           
         
@@ -84,36 +84,39 @@
           
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="about.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
-<li class="toctree-l1"><a class="reference internal" href="first_steps.html">Quick Install</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setup.html">Installing the SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="engine_features.html">Engine Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Installing and Updating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project_manager.html">Project Manager</a></li>
 <li class="toctree-l1"><a class="reference internal" href="viewer.html">Scene Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="web_player.html">Web Player</a></li>
-<li class="toctree-l1"><a class="reference internal" href="addon.html">The Add-on</a></li>
+<li class="toctree-l1"><a class="reference internal" href="addon.html">Addon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="scene_settings.html">Scene Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="objects.html">Objects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="normal_editor.html">Normal Editor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="camera.html">Camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="materials.html">Materials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="textures.html">Textures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="node_materials.html">Node Materials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Logic Nodes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lighting.html">Lighting, Shadows and Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="postprocessing_effects.html">Postprocessing Effects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stereo_rendering.html">Stereo Rendering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="textures.html">Textures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="particles.html">Particle System. Fluids</a></li>
 <li class="toctree-l1"><a class="reference internal" href="particles_instancing.html">Particle System. Instancing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="animation.html">Animation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="outdoor_rendering.html">Outdoor Rendering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gamma_alpha.html">Gamma and Alpha</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Audio System</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#id2">Audio Source Settings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#encoding">Processing and Decoding</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id4">Supported formats (containers):</a></li>
+<li class="toctree-l1"><a class="reference internal" href="outdoor_rendering.html">Outdoor Effects</a></li>
+<li class="toctree-l1"><a class="reference internal" href="colors.html">Color Management</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Audio</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#audio-source-settings">Audio Source Settings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#processing-and-decoding">Processing and Decoding</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#supported-formats-containers">Supported formats (containers):</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="physics.html">Physics</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nla.html">Non-Linear Animation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Visual Programming</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers.html">For Application Developers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developers_advanced.html">For Engine Developers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="git_short_manual.html">Team Work. Using Git</a></li>
@@ -138,12 +141,17 @@
 
       
       <div class="wy-nav-content">
+        <div id="lang_cont">
+          <a href="#">RU</a>
+          <a href="#">EN</a>
+          <a href="#">ZH</a>
+        </div>
         <div class="rst-content">
           <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Audio System</li>
+    <li>Audio</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -156,17 +164,30 @@
            <div itemprop="articleBody">
             
   <div class="section" id="audio">
-<span id="id1"></span><h1>Audio System<a class="headerlink" href="#audio" title="Permalink to this headline">¶</a></h1>
+<span id="id1"></span><h1><a class="toc-backref" href="#id2">Audio</a><a class="headerlink" href="#audio" title="Permalink to this headline">¶</a></h1>
+<div class="contents topic" id="table-of-contents">
+<p class="topic-title first">Table of Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#audio" id="id2">Audio</a><ul>
+<li><a class="reference internal" href="#audio-source-settings" id="id3">Audio Source Settings</a></li>
+<li><a class="reference internal" href="#processing-and-decoding" id="id4">Processing and Decoding</a><ul>
+<li><a class="reference internal" href="#supported-formats-containers" id="id5">Supported formats (containers):</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
 <p>Audio sources are created in Blender. The standard <code class="docutils literal"><span class="pre">Speaker</span></code> object is used.</p>
-<a class="reference internal image-reference" href="_images/speaker.jpg"><img alt="_images/speaker.jpg" class="align-center" src="_images/speaker.jpg" style="width: 100%;" /></a>
+<a class="reference internal image-reference" href="_images/speaker.png"><img alt="_images/speaker.png" class="align-center" src="_images/speaker.png" style="width: 100%;" /></a>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
-<div class="section" id="id2">
-<h2>Audio Source Settings<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="audio-source-settings">
+<h2><a class="toc-backref" href="#id3">Audio Source Settings</a><a class="headerlink" href="#audio-source-settings" title="Permalink to this headline">¶</a></h2>
 <p>Speaker parameters can be set up on the <code class="docutils literal"><span class="pre">Properties</span></code> panel under the <code class="docutils literal"><span class="pre">Object</span> <span class="pre">Data</span></code> tab.</p>
 <p>The engine supports all the standard Blender sound parameters and some engine-specific settings.</p>
-<p><em>Speaker behavior</em>:</p>
+<p><em>Speaker Behavior</em>:</p>
 <blockquote>
 <div><p>The behavior of the audio source.</p>
 <p><code class="docutils literal"><span class="pre">Positional</span></code> &#8212; high-quality sound with spatial positioning and directivity (conicity). The Web Audio API is used for sound rendering. Playback performance of such sounds is the least and so use them only for short samples.</p>
@@ -176,63 +197,50 @@
 <p>The following options are available on the <code class="docutils literal"><span class="pre">Sound</span></code> panel:</p>
 <p><em>Volume</em></p>
 <blockquote>
-<div><p>Speaker volume</p>
-</div></blockquote>
+<div>Speaker volume</div></blockquote>
 <p><em>Random Volume</em></p>
 <blockquote>
-<div><p>Additional volume randomization. The resulting value is calculated as for the delay.</p>
-</div></blockquote>
+<div>Additional volume randomization. The resulting value is calculated as for the delay.</div></blockquote>
 <p><em>Pitch</em></p>
 <blockquote>
-<div><p>Sound playback velocity.</p>
-</div></blockquote>
+<div>Sound playback velocity.</div></blockquote>
 <p><em>Random Pitch</em></p>
 <blockquote>
-<div><p>Additional randomization of the sound playback speed. The resulting value is calculated as for the delay.</p>
-</div></blockquote>
+<div>Additional randomization of the sound playback speed. The resulting value is calculated as for the delay.</div></blockquote>
 <p><em>Fade-In</em></p>
 <blockquote>
-<div><p>Fade-in time interval.</p>
-</div></blockquote>
+<div>Fade-in time interval.</div></blockquote>
 <p><em>Fade-Out</em></p>
 <blockquote>
-<div><p>Fade-out time interval.</p>
-</div></blockquote>
-<p><em>Disable doppler</em></p>
+<div>Fade-out time interval.</div></blockquote>
+<p><em>Disable Doppler</em></p>
 <blockquote>
-<div><p>Ignore source&#8217;s frequency shift upon its moving.</p>
-</div></blockquote>
-<p><em>Cyclic play</em></p>
+<div>Ignore source&#8217;s frequency shift upon its moving.</div></blockquote>
+<p><em>Cyclic Play</em></p>
 <blockquote>
-<div><p>Loop the sound playback.</p>
-</div></blockquote>
+<div>Loop the sound playback.</div></blockquote>
 <p><em>Delay</em></p>
 <blockquote>
-<div><p>Delay before sound playback starts.</p>
-</div></blockquote>
+<div>Delay before sound playback starts.</div></blockquote>
 <p><em>Random Delay</em></p>
 <blockquote>
-<div><p>Additional delay randomization. The resulting value is calculated according to the formula <span class="math">\(Delay_{result} = Delay + Delay_{random} * Random_{[0-1]}\)</span>.</p>
-</div></blockquote>
+<div>Additional delay randomization. The resulting value is calculated according to the formula <span class="math">\(Delay_{result} = Delay + Delay_{random} * Random_{[0-1]}\)</span>.</div></blockquote>
 <p><em>Loop</em></p>
 <blockquote>
-<div><p>Loop the sound playback. Contrary to the <code class="docutils literal"><span class="pre">Cyclic</span> <span class="pre">play</span></code> option it guarantees a zero delay upon repeat. The option is available only for sound sources with <code class="docutils literal"><span class="pre">Positional</span></code> or <code class="docutils literal"><span class="pre">Background</span> <span class="pre">Sound</span></code> behavior.</p>
-</div></blockquote>
+<div>Loop the sound playback. Contrary to the <code class="docutils literal"><span class="pre">Cyclic</span> <span class="pre">play</span></code> option it guarantees a zero delay upon repeat. The option is available only for sound sources with <code class="docutils literal"><span class="pre">Positional</span></code> or <code class="docutils literal"><span class="pre">Background</span> <span class="pre">Sound</span></code> behavior.</div></blockquote>
 <a class="reference internal image-reference" href="_images/speaker_settings.png"><img alt="_images/speaker_settings.png" class="align-center" src="_images/speaker_settings.png" style="width: 100%;" /></a>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
 </div>
-<div class="section" id="encoding">
-<span id="id3"></span><h2>Processing and Decoding<a class="headerlink" href="#encoding" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="id4">
-<h3>Supported formats (containers):<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="processing-and-decoding">
+<span id="encoding"></span><h2><a class="toc-backref" href="#id4">Processing and Decoding</a><a class="headerlink" href="#processing-and-decoding" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="supported-formats-containers">
+<h3><a class="toc-backref" href="#id5">Supported formats (containers):</a><a class="headerlink" href="#supported-formats-containers" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p class="first">ogg, Vorbis codec (Chrome, Firefox)</p>
-</li>
+<li>ogg, Vorbis codec (Chrome, Firefox)</li>
 <li>mp3 (Chrome, Safari)</li>
-<li><p class="first">mp4, AAC codec (Chrome, Safari)</p>
-</li>
+<li>mp4, AAC codec (Chrome, Safari)</li>
 </ul>
 <p>It is recommended to use <strong>Ogg</strong> as it is an open standard, is widespread in browsers and provides good sound quality. The optimal format in respect to the quality and compatibility is 48kHz/16bit. Single-channel sound (mono) is used to store shot samples while two-channel sound (stereo) is used for music playback.</p>
 <p>Converting resources between different formats is described in the <a class="reference internal" href="developers.html#converter"><span>corresponding section</span></a>.</p>
@@ -250,7 +258,7 @@
         <a href="physics.html" class="btn btn-neutral float-right" title="Physics" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="gamma_alpha.html" class="btn btn-neutral" title="Gamma and Alpha" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="colors.html" class="btn btn-neutral" title="Color Management" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -259,15 +267,49 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, Triumph LLC.
-      Last updated on 2015-12-22.
+        &copy; Copyright 2014-2016, Triumph.
+      Last updated on 2016-05-31.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+  <a href="https://www.blend4web.com">www.blend4web.com</a>
+
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+  (function() {
+    if (window.document.domain != "www.blend4web.com")
+      return;
+
+    (function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter24512171 = new Ya.Metrika({
+                    id:24512171,
+                    clickmap:false,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");
+  })();
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/24512171" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
 
 </footer>
-
         </div>
       </div>
 
@@ -282,7 +324,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'v15.12',
+            VERSION:'v16.05',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
@@ -305,6 +347,36 @@
   <script type="text/javascript">
       jQuery(function () {
           SphinxRtdTheme.StickyNav.enable();
+
+          var lang_cont = $("#lang_cont");
+          var links = lang_cont.children();
+
+          var link_ru = links[0];
+          var link_en = links[1];
+          var link_zh = links[2];
+
+          var loc = document.location.href;
+
+          var href_ru = loc;
+          var href_en = loc;
+          var href_zh = loc; 
+
+          if (loc.search("/ru/") != -1) {
+              href_en = loc.replace("/ru/", "/en/");
+              href_zh = loc.replace("/ru/", "/zh/");
+          } else if (loc.search("/en/") != -1) {
+              href_ru = loc.replace("/en/", "/ru/");
+              href_zh = loc.replace("/en/", "/zh/");
+          } else {
+              href_ru = loc.replace("/zh/", "/ru/");
+              href_en = loc.replace("/zh/", "/en/");
+          }
+
+          link_ru.href = href_ru;
+          link_en.href = href_en;
+          link_zh.href = href_zh;
+
+          lang_cont.css("display", "inline-block")
       });
   </script>
    

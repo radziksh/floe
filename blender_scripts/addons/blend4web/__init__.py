@@ -1,24 +1,8 @@
-# Copyright (C) 2014-2015 Triumph LLC
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 bl_info = {
     "name": "Blend4Web",
     "author": "Blend4Web Development Team",
-    "version": (15, 12, 0),
-    "blender": (2, 76, 0),
+    "version": (16, 5, 0),
+    "blender": (2, 77, 0),
     "b4w_format_version": "5.07",
     "location": "File > Import-Export",
     "description": "Tool for interactive 3D visualization on the Internet",
@@ -48,7 +32,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)),
     "lib"))
 
 b4w_modules = [
-    "bgl_draw",
+    "bgl_camera_limits",
     "translator",
     "init_validation",
     "properties",
@@ -60,11 +44,11 @@ b4w_modules = [
     "camera_target_copier",
     "viewport_align",
     "vertex_normals",
+    "viewport_settings",
     "vertex_groups_to_materials",
     "shore_distance_baker",
     "remove_unused_vgroups",
     "boundings_draw",
-    "mass_reexport",
     "render_engine",
     "update_checker",
     "custom_nodeitems_builtins",
@@ -82,6 +66,9 @@ from bpy.props import StringProperty, IntProperty, BoolProperty
 PATH_TO_ASSETS = "apps_dev/viewer"
 ASSETS_NAME = "assets.json"
 NODE_TREE_BLEND = "b4w_nodes.blend"
+
+# addon initialization messages
+init_mess = []
 
 @bpy.app.handlers.persistent
 def add_asset_file(arg):
@@ -140,22 +127,6 @@ def fix_cam_limits_storage(arg):
             cam.b4w_use_zooming = cam["b4w_use_distance_limits"]
             del cam["b4w_use_distance_limits"]            
 
-# NOTE: for compatibility with old versions
-@bpy.app.handlers.persistent
-def fix_obj_export_props(arg):
-    for obj in bpy.data.objects:
-        if obj.type == "MESH":
-            if obj.b4w_apply_scale:
-                obj.b4w_apply_scale = True
-            elif obj.b4w_apply_modifiers:
-                obj.b4w_apply_modifiers = True
-            elif "b4w_export_edited_normals" in obj.keys():
-                obj["b4w_export_edited_normals"] = True
-            elif obj.b4w_loc_export_vertex_anim:
-                obj.b4w_loc_export_vertex_anim = True
-            elif obj.b4w_shape_keys:
-                obj.b4w_shape_keys = True
-
 @bpy.app.handlers.persistent
 def old_edited_normals_convert(arg):
     try:
@@ -195,6 +166,19 @@ def nla_slots_to_nodetree_convert():
             except:
                 tb = traceback.format_exc()
                 print("CONVERSION OF NLA SLOTS FAILED: %s" % tb)
+
+def index_by_var_name(collection, name):
+    for i in range(len(collection)):
+        if collection[i].name == name:
+            return i
+    return -1
+
+@bpy.app.handlers.persistent
+def update_animated_glsl_mat(arg):
+    if(bpy.context.window_manager.b4w_viewport_settings.update_material_animation):
+        for m in bpy.data.materials:
+            m.diffuse_color[0] = m.diffuse_color[0]
+        bpy.context.scene.update()
 
 @bpy.app.handlers.persistent
 def logic_nodetree_reform(arg):
@@ -250,9 +234,27 @@ def logic_nodetree_reform(arg):
                         if not "dur" in node.bools:
                             node.bools.add()
                             node.bools[-1].name = "dur"
-                        if not "dur" in node.floats:
+                        # fix aftereffect of the bug
+                        # https://www.blend4web.com/en/forums/topic/1398/
+                        tmp = []
+                        dur = 0
+                        for d in node.durations:
+                            if d.name == "dur":
+                                tmp.append(d)
+                        if len(tmp) > 0:
+                            dur = node.durations["dur"].float
+                            while "dur" in node.durations:
+                                ind = index_by_var_name(node.durations, "dur")
+                                if dur == 0:
+                                    dur = node.durations[ind].float
+                                node.durations.remove(ind)
+
+                        if not "dur" in node.durations:
                             node.durations.add()
                             node.durations[-1].name = "dur"
+                        node.durations["dur"].float = dur
+                        #
+
                         if not "dur" in node.variables_names:
                             node.variables_names.add()
                             node.variables_names[-1].name = "dur"
@@ -276,6 +278,123 @@ def logic_nodetree_reform(arg):
                             if node.type == "SPEAKER_PLAY":
                                 node.bools[-1].bool = True
 
+                    if node.type == "SEND_REQ":
+                        if not "prs" in node.bools:
+                            node.bools.add()
+                            node.bools[-1].name = "prs"
+                            node.bools[-1].bool = True
+                        if not "enc" in node.bools:
+                            node.bools.add()
+                            node.bools[-1].name = "enc"
+                            node.bools[-1].bool = True
+                        if not "dst" in node.variables_names:
+                            node.variables_names.add()
+                            node.variables_names[-1].name = "dst"
+                        if not "dst1" in node.variables_names:
+                            node.variables_names.add()
+                            node.variables_names[-1].name = "dst1"
+                        if not "ct" in node.bools:
+                            node.bools.add()
+                            node.bools[-1].name = "ct"
+                        if not "ct" in node.strings:
+                            node.strings.add()
+                            node.strings[-1].name = "ct"
+
+                    if node.type in ["SEND_REQ", "REDIRECT"]:
+                        if not "url" in node.strings:
+                            node.strings.add()
+                            node.strings[-1].name = "url"
+                            def_url = "https://www.blend4web.com" if "param_url" not in node else node["param_url"]
+                            node.strings[-1].string = def_url
+                        if not "url" in node.bools:
+                            node.bools.add()
+                            node.bools[-1].name = "url"
+                        if not "url" in node.variables_names:
+                            node.variables_names.add()
+                            node.variables_names[-1].name = "url"        
+
+                    if node.type == "PAGEPARAM":
+                        if not "hsh" in node.bools:
+                            node.bools.add()
+                            node.bools[-1].name = "hsh"
+
+                    if node.type == "REGSTORE":
+                        if not "gl" in node.bools:
+                            node.bools.add()
+                            node.bools[-1].name = "gl"
+
+                    # moving old properties to variables_names
+                    if node.type in ["MATH", "CONDJUMP", "PAGEPARAM", "REGSTORE"]:
+                        if not "v1" in node.variables_names:
+                            node.variables_names.add()
+                            node.variables_names[-1].name = "v1"
+                            var = "R1" if "param_var1" not in node else node["param_var1"]
+                            node.variables_names[-1].variable = var
+                            if "param_var1" in node:
+                                del node["param_var1"]
+                        if not "v2" in node.variables_names:
+                            node.variables_names.add()
+                            node.variables_names[-1].name = "v2"
+                            var = "R1" if "param_var2" not in node else node["param_var2"]
+                            node.variables_names[-1].variable = var
+                            if "param_var2" in node:
+                                del node["param_var2"]
+                        if not "vd" in node.variables_names:
+                            node.variables_names.add()
+                            node.variables_names[-1].name = "vd"
+                            var = "R1" if "param_var_dest" not in node else node["param_var_dest"]
+                            node.variables_names[-1].variable = var
+                            if "param_var_dest" in node:
+                                del node["param_var_dest"]
+                    if node.type in ["MATH", "CONDJUMP", "REGSTORE"]:
+                        if not "inp1" in node.floats:
+                            node.floats.add()
+                            node.floats[-1].name = "inp1"
+                            node.floats[-1].float = 0 if "param_number1" not in node else node["param_number1"]
+                            if "param_number1" in node:
+                                del node["param_number1"]
+                    if node.type in ["MATH", "CONDJUMP"]:
+                        if not "inp2" in node.floats:
+                            node.floats.add()
+                            node.floats[-1].name = "inp2"
+                            node.floats[-1].float = 0 if "param_number2" not in node else node["param_number2"]
+                            if "param_number2" in node:
+                                del node["param_number2"]
+                    if node.type in ["REGSTORE"]:
+                        if not "inp1" in node.strings:
+                            node.strings.add()
+                            node.strings[-1].name = "inp1"
+                            node.strings[-1].string = "" if "param_string1" not in node else node["param_string1"]
+                            if "param_string1" in node:
+                                del node["param_string1"]
+
+                    if node.type == "GET_TIMELINE":
+                        if not "nla" in node.bools:
+                            node.bools.add()
+                            node.bools[-1].name = "nla"
+                            node.bools[-1].bool = True
+
+                    if node.type in ["PLAY_ANIM", "STOP_ANIM"]:
+                        if not "env" in node.bools:
+                            node.bools.add()
+                            node.bools[-1].name = "env"
+
+                    if node.type == "CONDJUMP":
+                        if not "str" in node.bools:
+                            node.bools.add()
+                            node.bools[-1].name = "str"
+                        if not "inp1" in node.strings:
+                            node.strings.add()
+                            node.strings[-1].name = "inp1"
+                        if not "inp2" in node.strings:
+                            node.strings.add()
+                            node.strings[-1].name = "inp2"
+
+                    if node.type == "ENTRYPOINT":
+                        if not "js" in node.bools:
+                            node.bools.add()
+                            node.bools[-1].name = "js"
+
 def init_runtime_addon_data():
     p = bpy.context.user_preferences.addons[__package__].preferences
     if p.b4w_autodetect_sdk_path == "":
@@ -289,11 +408,10 @@ def init_runtime_addon_data():
 
 def register():
 
-    bpy.app.translations.register("B4WTranslator", translator.get_translation_dict())
+    bpy.utils.register_module(__name__)
     # core
     properties.register()
     logic_node_tree.register()
-    interface.register()
     exporter.register()
     html_exporter.register()
 
@@ -301,84 +419,52 @@ def register():
     vertex_normals.register()
     vertex_anim_baker.register()
     boundings_draw.register()
-    remove_unused_vgroups.register()
+    viewport_settings.register()
     shore_distance_baker.register()
     anim_baker.register()
 
     # other operators
-    camera_target_copier.register()
-
-    viewport_align.register()
-
-    vertex_groups_to_materials.register()
-
+    update_checker.register()
+    bgl_camera_limits.register()
+    render_engine.register()
+    custom_nodeitems_builtins.register()
     server.register()
-
-    mass_reexport.register()
-
-    bgl_draw.register()
-
-    addon_prefs.register()
+    translator.register()
+    interface.register()
 
     init_runtime_addon_data()
 
-    bpy.app.handlers.scene_update_pre.append(init_validation.validate_version)
-    update_checker.register()
     bpy.app.handlers.load_post.append(add_asset_file)
     bpy.app.handlers.load_post.append(add_node_tree)
     bpy.app.handlers.load_post.append(fix_cam_limits_storage)
-    bpy.app.handlers.load_post.append(fix_obj_export_props)
-    bpy.app.handlers.scene_update_pre.append(server.init_server)
+    bpy.app.handlers.scene_update_pre.append(init_validation.check_addon_dir)
     bpy.app.handlers.load_post.append(old_edited_normals_convert)
     bpy.app.handlers.load_post.append(logic_nodetree_reform)
-
-    bpy.app.handlers.load_post.append(mass_reexport.load_reexport_paths)
-
-    do_not_register = False
-    for arg in sys.argv:
-        if arg.startswith("b4w_lang"):
-            do_not_register = True
-
-    if not do_not_register:
-        render_engine.register()
-        custom_nodeitems_builtins.register()
+    # tweak for viewport
+    bpy.app.handlers.frame_change_post.append(update_animated_glsl_mat)
 
 def unregister():
 
-    do_not_unregister = False
-    for arg in sys.argv:
-        if arg.startswith("b4w_lang"):
-            do_not_unregister = True
+    bpy.utils.unregister_module(__name__)
 
-    if not do_not_unregister:
-        render_engine.unregister()
-        custom_nodeitems_builtins.unregister()
+    render_engine.unregister()
+    custom_nodeitems_builtins.unregister()
 
-    mass_reexport.unregister()
-    bgl_draw.unregister()
+    bgl_camera_limits.unregister()
     logic_node_tree.unregister()
 
     properties.unregister()
-    interface.unregister()
     exporter.unregister()
     html_exporter.unregister()
-    anim_baker.unregister()
-    vertex_anim_baker.unregister()
-    camera_target_copier.unregister()
-    viewport_align.unregister()
 
     vertex_normals.unregister()
-    vertex_groups_to_materials.unregister()
     shore_distance_baker.unregister()
-    remove_unused_vgroups.unregister()
     boundings_draw.unregister()
+    viewport_settings.unregister()
     server.B4WLocalServer.shutdown()
-    server.unregister()
-
     update_checker.unregister()
-    addon_prefs.unregister()
-
-    bpy.app.translations.unregister("B4WTranslator")
+    interface.unregister()
+    translator.unregister()
 
 if __name__ == "__main__":
     register()

@@ -67,7 +67,7 @@ uniform vec4 u_sun_quaternion;
 #endif
 
 
-#if NORMAL_TEXCOORD || REFLECTION_TYPE == REFL_PLANE
+#if NORMAL_TEXCOORD || REFLECTION_TYPE == REFL_PLANE || REFRACTIVE
 uniform mat3 u_view_tsr_frag;
 #endif
 
@@ -126,9 +126,6 @@ uniform samplerCube u_mirrormap;
 #if SHADOW_USAGE == SHADOW_MAPPING_OPAQUE
 uniform sampler2D u_shadow_mask;
 #elif SHADOW_USAGE == SHADOW_MAPPING_BLEND
-# if PERSPECTIVE_SHADOW_CAST
-uniform float u_perspective_cast_far_bound;
-# endif
 uniform vec4 u_pcf_blur_radii;
 uniform vec4 u_csm_center_dists;
 uniform PRECISION sampler2D u_shadow_map0;
@@ -309,8 +306,11 @@ void main(void) {
     mat3 tbn_matrix = mat3(v_tangent.xyz, binormal, sided_normal);
 #endif
 
-#if NORMAL_TEXCOORD
+#if NORMAL_TEXCOORD || REFRACTIVE
     mat4 view_matrix = tsr_to_mat4(u_view_tsr_frag);
+#endif
+
+#if NORMAL_TEXCOORD
     vec2 texcoord_norm = normalize(view_matrix * vec4(v_normal, 0.0)).st;
     texcoord_norm = texcoord_norm * vec2(0.495) + vec2(0.5);
 #endif
@@ -456,11 +456,11 @@ void main(void) {
 # endif
 #endif  // TEXTURE_COLOR0_CO
 
-    vec3 D = u_diffuse_intensity * diffuse_color.rgb;
-
 #if SHADELESS
-    vec3 color = D;
+    vec3 color = diffuse_color.rgb;
 #else // SHADELESS
+
+    vec3 D = u_diffuse_intensity * diffuse_color.rgb;
 
     // ambient
     vec3 environment_color = u_environment_energy * get_environment_color(normal);
@@ -549,7 +549,9 @@ void main(void) {
 #endif  // ALPHA
 
 #if REFRACTIVE
-    color = mix(material_refraction(v_tex_pos_clip, normal.xz * u_refr_bump), color, alpha);
+    vec2 normal_view = -(view_matrix * vec4(normal, 0.0)).xy;
+    color = mix(material_refraction(v_tex_pos_clip, normal_view * u_refr_bump),
+                color, alpha);
     alpha = 1.0;
 #endif
 

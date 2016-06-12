@@ -19,7 +19,8 @@ exports.init = function() {
         physics_enabled: false,
         show_fps: true,
         alpha: false,
-        autoresize: true
+        autoresize: true,
+        console_verbose: true
     });
 }
 
@@ -29,8 +30,6 @@ function init_cb(canvas_elem, success) {
         console.log("b4w init failure");
         return;
     }
-
-    m_app.enable_controls();
     load();
 }
 

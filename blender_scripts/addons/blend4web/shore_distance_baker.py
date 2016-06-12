@@ -1,19 +1,3 @@
-# Copyright (C) 2014-2015 Triumph LLC
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 import bpy
 import math 
 import time 
@@ -231,7 +215,7 @@ def nearest_vertices(tiles, num_x_tiles, tile_x_length, tile_y_length,
     max_tile_dist_sqr = 0
     ind_max = -1
 
-    # generater list of nearest tiles
+    # generate list of nearest tiles
     for i in range(len(tiles)):
         if len(tiles[i]) != 0:
             x = i % num_x_tiles
@@ -257,7 +241,7 @@ def nearest_vertices(tiles, num_x_tiles, tile_x_length, tile_y_length,
                     tiles_heap[ind_max] = i
                     dists_heap[ind_max] = tile_dist_sqr
 
-                    # find heap's new maximum
+                    # find a heap's new maximum
                     heap_max = 0
                     for j in range (heap_size):
                         local_dist = dists_heap[j]
@@ -267,7 +251,7 @@ def nearest_vertices(tiles, num_x_tiles, tile_x_length, tile_y_length,
 
                     max_tile_dist_sqr = heap_max
 
-    # generate list of nearest vertexes
+    # generate a list of nearest vertices
     vert_list = []
     for i in tiles_heap:
         vert_list.extend(tiles[i])
@@ -314,7 +298,7 @@ def run():
         old_dst_co_list[i * 3 + 1] = dst_ver_list[i].co[1]
         old_dst_co_list[i * 3 + 2] = dst_ver_list[i].co[2]
 
-    # transform dst vertices to world space
+    # transform dst vertices to the world space
     for vert_dst in dst_ver_list:
         vert_dst.co = obj_dst.matrix_world * vert_dst.co
 
@@ -341,11 +325,11 @@ def run():
 
             old_objs_src_co_list.append(old_src_co_list)
 
-            # transform src vertices to world space
+            # transform src vertices to the world space
             for vert_src in src_ver_list:
                 vert_src.co = obj.matrix_world * vert_src.co
 
-    # set water level to z coord of destination object
+    # set water level to the z coord of destination object
     level = obj_dst.location[2]
 
     # set starting search values
@@ -354,7 +338,7 @@ def run():
     miny =  1000000.0
     maxy = -1000000.0
 
-    # generate list consisting only from vertices wich z is close to level
+    # generate list consisting only from vertices wich z is close to the level
     src_ver_selected = []
     for src_ver_list in objs_src_ver_list:
         for vert_src in src_ver_list:
@@ -522,15 +506,7 @@ def store_to_texture(data, x_max, x_min, y_max, y_min, max_shore_dist,
     dst_texture.image.pixels = data
 
 def register():
-    bpy.utils.register_class(B4W_ShoreDistanceBaker)
-    bpy.utils.register_class(B4W_ShoreDistanceBakerUI)
-    bpy.utils.register_class(BakeErrorDialog)
-
     init_properties()
 
 def unregister():
-    bpy.utils.unregister_class(B4W_ShoreDistanceBaker)
-    bpy.utils.unregister_class(B4W_ShoreDistanceBakerUI)
-    bpy.utils.unregister_class(BakeErrorDialog)
-
     clear_properties()

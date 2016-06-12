@@ -1,108 +1,105 @@
 .. _animation:
 
-.. index:: анимация
+.. index:: animation
 
-********
-Анимация
-********
+*********
+Animation
+*********
 
-В общем случае, к анимации относятся изменения параметров объектов во времени.
-Движком поддерживаются следующие типы анимации:
+.. contents:: Table of Content
+    :depth: 3
+    :backlinks: entry
 
-* Объектная анимация. Заключается в трансформации объекта в пространстве как
-  единого целого.
+In general animation is changing the object's parameters in time. The engine supports the following types of animation:
 
-* Скелетная анимация, то есть деформация геометрии объекта с помощью системы
-  костей (скиннинг). Сюда же относится анимация костей в арматурном объекте с
-  целью прикрепления объектов к костям.
+* Object animation means the transformation of an object as a whole.
 
-* Вертексная анимация. Заключается в покадровой записи деформаций объекта с их
-  последующим воспроизведением.
+* Skeletal Animation, i.e. object deformation using bones. Animation
+  of a standalone armature object is also supported (for parenting to bones).
 
-* Параметризация источников звука. Изменяемые параметры: громкость
-  (``Volume``) и высота звука (``Pitch``).
+* Vertex animation. An object's deformations can be recorded as frames and
+  then reproduced in the engine.
 
-* Анимация выходного значения ноды ``Value`` в нодовом материале.
+* Audio sources parametrization. Speaker's ``Volume`` and ``Pitch`` can be
+  animated.
 
-* Процедурная анимация в виде колебаний объекта под действием ветра. Описано
-  :ref:`отдельно <wind>`.
+* Animation of the ``Value`` node output in node materials.
 
-* Эмиссия частиц из источника. Описано в :ref:`соответствующем разделе <particles>`.
+* Wind bending - a procedural animation. Described :ref:`separately <wind>`.
 
-Управление анимацией
-====================
+* Particle emission. Described in the :ref:`corresponding section <particles>`.
 
-Управление анимацией в движке осуществляется одним из двух способов:
+Animation Control
+=================
 
-#. Автоматически, с помощью активации панели ``Animation`` и указания поведения анимации
-   ``Behavior`` в свойствах объекта. В данном случае будет осуществлён
-   поиск доступного метода и в случае положительного результата, объект
-   анимируется с момента загрузки сцены. В случае скелетной анимации, по
-   умолчанию воспроизводится актор, назначенный на объекте в окне ``Action
-   Editor``.
+There are two ways to control animation in the engine:
 
-#. Программно, используя функции модуля движка ``animation``.
+#. Automatically, activating the ``Animation`` panel and choosing the 
+   ``Behavior`` parameter in the object's properties. In this case an
+   appropriate animation method will be chosen by the engine and the
+   object's animation playback will start just after a scene is loaded.
+   In case of skeletal animation the action which is assigned to the
+   object in the ``Action Editor`` window is played by default.
 
-Для отладки анимации имеет смысл использовать интерфейс ``Animation``
-программы-просмотрщика, рассмотренный в :ref:`соответствующем разделе <viewer>`.
+#. In an application via API using the ``animation`` module methods.
+
+It's useful to use the ``Animation`` interface for tweaking animation.
+This is covered in the :ref:`corresponding section <viewer>`.
 
 
 .. _whole_object_anim:
 
-Объектная анимация
-==================
+Object Animation
+================
 
-Изменяемые параметры: координаты центра (``Location``), поворот (``Rotation``) и масштабирование (``Scale``).
+The parameters that can be animated are the center coordinates (``Location``), ``Rotation`` and ``Scale``.
 
-.. image:: src_images/animation/wind_generator.jpg
+.. image:: src_images/animation/wind_generator.png
    :align: center
    :width: 100%
 
 |
 
-Осуществляется с помощью добавления ключей анимации для движения объекта в программе Blender и
-их последующего воспроизведения в движке.
+Animation keyframes can be added for an object motion in Blender and then reproduced in the engine.
 
-Поддерживаются следующие типы ключей:
+The following keyframe types are supported:
 
 * *Location*
 
-* *Rotation* -- необходимо осуществлять в режиме ``Quaternion(WXYZ)`` либо ``XYZ Euler``.
+* *Rotation* -- the ``Quaternion(WXYZ)`` or ``XYZ Euler`` mode is required.
 
-* *Scale* -- для получения корректных результатов, фактор масштабирования должен
-  быть одинаковым вдоль любых из осей.
+* *Scale* -- for correct results the scale factor should be the same along all 3 axes. 
 
-* *LocRot* -- комбинация *Location* и *Rotation*.
+* *LocRot* -- a combination of *Location* and *Rotation*.
 
-* *LocScale* -- комбинация *Location* и *Scale*.
+* *LocScale* -- a combination of *Location* and *Scale*.
 
-* *LocRotScale* -- комбинация *Location*, *Rotation* и *Scale*.
+* *LocRotScale* -- a combination of *Location*, *Rotation* and *Scale*.
 
-* *RotScale* -- комбинация *Rotation* и *Scale*.
+* *RotScale* -- a combination of *Rotation* and *Scale*.
 
-В случае анимации объекта-меша, необходимо включение опции ``Force Dynamic Object`` панели ``Rendering Properties`` на
-вкладке свойств объекта.
+If a mesh object is animated it is required to activate the ``Force Dynamic Object`` option on the ``Rendering Properties`` panel under the object properties tab.
 
+.. _skeletal_animation:
 
-Скиннинг и скелетная анимация
-=============================
+Skinning and Skeletal Animation
+===============================
 
-.. image:: src_images/animation/rig.jpg
+.. image:: src_images/animation/rig.png
    :align: center
    :width: 100%
 
 |
 
-Для осуществления скелетной анимации, кроме деформируемого объекта-меша требуется
-объект-арматура. Осуществляется в четыре этапа:
+For skeletal animation both a mesh object and an armature object are needed. The four steps should be carried out:
 
-#. Создание скелета объекта в арматурном объекте.
-#. Назначение вертексных групп в объекте-меше и их привязка к костям. Может быть осуществлено, например, методом "раскраски" весов (weight painting).
-#. Анимация костей в арматурном объекте. Используются те же ключи, что и в случае
-   объектной анимации.
-#. В случае нетривиальных видов скелетной анимации, включающих инверсную кинематику,
-   требуется стадия запекания анимационных акторов (блок ``Action`` в Blender).
-   Запекание производится с помощью интерфейса ``Bake Skeletal Animation``, расположенного на панели инструментов ``Blend4Web``:
+#. Create the object's "skeleton" in the armature object. 
+#. Assign vertex groups in the mesh object and link them to the bones. This can be performed by weight painting f   or example. 
+#. Animate the bones in the pose mode of the armature object.
+   The same keyframe types can be used as for the object animation.
+#. When inverse kinematics (IK) or other nontrivial structures are used, an additional
+   step is required to bake the animations (``Action`` datablocks in Blender). Baking
+   can be performed using the ``Bake Skeletal Animation`` interface located on the ``Blend4Web``:
 
 .. image:: src_images/animation/skeletal_anim_baker.png
    :align: center
@@ -112,83 +109,198 @@
 
 .. _animation_bake:
 
-Запекание производится при выделенном арматурном объекте. Элементы интерфейса ``Bake Skeletal Animation``:
+Baking parameters
+-----------------
 
+Baking is performed with the armature object selected.
 
-* Окно со списком запекаемых акторов -- запекать только те акторы, которые
-  указаны в списке, иначе запекать все возможные акторы.
+The actors that will be baked are listed in the window with the list of actors. If the list is empty, all available actors will be baked.
 
-* *Name* -- имя текущего актора из списка запекаемых акторов.
+*Name*
+    The current action name from the list of actions being baked.
 
-* *Optimize Keyframes* -- произвести оптимизацию ключей анимации после запекания. В
-  случае получения некорректных результатов, рекомендуется отключить опцию.
+*Optimize Keyframes*
+    Optimize the animation keyframes after baking. In case of incorrect results
+    it's recommended to turn this option off.
 
-* *Bake* -- произвести запекание. После успешного окончания процесса на
-  сцене появляются акторы с именами вида *ИМЯ_B4W_BAKED*. Данные акторы будут
-  автоматически назначены на арматурном объекте и воспроизведены в движке.
-  Стоит отметить, что работа подобных акторов в Blender не гарантируется.
+*Use Blender's Native Baker*
+    Use Blender's animation baker (the ``Bake Action`` option) instead of Blend4Web's.
+    Blender animation baker's settings differ from Blend4Web's.
+
+*Bake*
+    Perform baking. If the process is completed successfully, actions with names of
+    *B4W_BAKED_ACTOR_NAME* type appear in the scene. These actions can be assigned
+    to the armature object and played back in the engine. It's worth noting that appropriate
+    functioning of such actions in Blender is not guaranteed.
 
 .. note::
-    Движок поддерживает не более 4-х вертексных групп на каждом из вертексов,
-    эти группы отбираются по величине влияния или "веса" вертекса. В процессе
-    загрузки исходного файла со сценой "веса" вертексов проходят через процедуру
-    нормализации, т.е. их сумма приводится в единице.
+    The engine supports up to 4 vertex groups per vertex. If the number of vertex groups
+    exceeds 4, the vertex groups with the most influence are selected. When the scene is loaded,
+    the vertex weights are normalized i.e. their sum is reduced to 1.
 
-    Для удаления вертексных групп, которые не используются арматурой, можно воспользоваться
-    кнопкой ``Clean Unused Vertex Groups`` в одноименной панели.
+    To remove vertex groups which are not used by armature, use button ``Remove Clean Unused Vertex Groups``.
 
     .. image:: src_images/animation/vgroups_cleaner.png
        :align: center
        :width: 100%
 
-В Blend4Web присутствует начальная поддержка ограничителей для костей. На сегодняшний день поддерживается только один тип ограничителя, ``Copy Transform``. Это позволяет привязывать арматуру к различным объектам, в том числе физическим (ragdoll). Поддержка других ограничителей ожидается в будущих версиях.
+Blend4Web also has initial support of the armature constraints. For now, the only supported constraint type is ``Copy Transform``. It can be used to attach an armature to an object, producing effects such as ragdoll. Support of the other types of constraints will be added in further releases.
 
-Вертексная анимация
-===================
+Vertex Animation
+================
 
-.. image:: src_images/animation/flag.jpg
+.. image:: src_images/animation/flag.png
    :align: center
    :width: 100%
 
 |
 
-Позволяет записать любые изменения геометрии объекта-меша. Необходимо учитывать,
-что каждый кадр вертексной анимации эквивалентен мешу. Не рекомендуется создание
-длинной анимации для высокополигонального меша, поскольку это может привести к
-существенному возрастанию размера исходного и экспортируемого файлов, а также
-замедлить работу движка.
+Allows to record any geometry changes of a mesh object. Note that every vertex animation frame counts as a mesh. It's not recommended to make a long animation for a high-poly mesh, as it can increase the size of the source and exported files significantly and can also slow down the work of the engine.
 
 .. _ver_anim:
 
-Для запекания вертексной анимации предусмотрен инструмент ``Bake Vertex Animation``, 
-расположенный на панели инструментов ``Blend4Web``.
+A special tool is used for baking vertex animation - ``Bake Vertex Animation`` - located on the ``Blend4Web`` tools panel.
 
-.. image:: src_images/animation/vertex_anim_baker.jpg
+.. image:: src_images/animation/animation_vertex_baker.png
    :align: center
    :width: 100%
 
+Baking parameters
+-----------------
 
-Параметризация источников звука
-===============================
+*Name*
+    The name that will be assigned to the baked animation.
 
-На объектах-спикерах дополнительно поддерживаются следующие типы анимационных
-ключей:
+*Start*
+    The baking will start from this frame.
 
-* *Volume* -- громкость звука источника.
+*End*
+    The baking will end at this frame.
 
-* *Pitch* -- высота звука источника.
+*Allow NLA*
+    Allows using :ref:`NLA <nla>` to control the baked animation.
 
-Параметризация источников звука по своей сути повторяет объектную анимацию.
+*Status*
+    In this string, the number of frames of the baked animation is shown.
+    If the baking hasn't been performed yet, the word ``Empty`` is shown instead.
+
+*Bake*
+    The animation baking is performed by pressing this button.
+
+.. note::
+    For vertex animation to work correctly, the ``Export Vertex Animation`` parameter (``Export Options`` section of the ``Object`` panel) of the selected object should be enabled.
+
+
+.. _default_animation:
+
+Default Animation
+=================
+
+Blend4Web also has an option to automatically play object's animation. To do it, you need to enable the ``Apply Default Animation`` parameter in the ``Animation`` section of the ``Object`` panel of an object you want to animate. Skeletal and object animation types are supported.
+
+.. image:: src_images/animation/animation_apply_default_animation.png
+   :align: center
+   :width: 100%
+
+Animation starts to play right after the application startup and plays very similar to the :ref:`Play Timeline <nla_play_timeline>` node, only without an option to set up the start and end markers (instead, it always starts from the first frame of the timeline and ends with the last). You can also set up animation behavior, like in the :ref:`Play Animation <nla_select_play>` node.
+
+.. _nla:
+
+Non-Linear Animation
+====================
+
+.. _nla_editor:
+
+NLA Editor
+----------
+
+The Blender's non-linear editor lets us set the scene's behavior in a comfortable way. With its help we can implement simple scenarios. This way coding is not needed for simple scenes and applications.
+
+.. image:: src_images/animation/simple_machinima.png
+   :align: center
+   :width: 100%
+
+|
+
+The engine supports controlling the following entities:
+
+* Any animation the parameters of which can be presented with Actions
+
+* Audio playback
+
+* Particles emission (in the form of a connection with the global timeline)
+
+.. image:: src_images/animation/nla_editor.png
+   :align: center
+   :width: 100%
+   
+
+Usage
+.....
+
+#. Activate the ``NLA`` panel under the ``Scene`` tab.
+#. In the ``NLA Editor`` set up the required behavior for the scene.
+#. Choose the animation time interval on the ``Timeline`` panel.
+
+
+Additional settings
+...................
+
+The *NLA > Cyclic NLA* scene setting activates the cyclic NLA animation mode.
+
+.. note::
+    In order to use vertex animation, enable  "Allow NLA" option on the :ref:`vertex animation panel <ver_anim>`.
+
+Limitations
+...........
+
+* A simultaneous playback of different types of animation for the same object is not supported. 
+
+Controlling via API
+--------------------
+
+Non-linear animation playback can be controlled via API methods of the ``nla.js`` module.
+
+.. code-block:: javascript
+
+    // ...
+    var m_nla = require("nla");
+    // ...
+    m_nla.set_frame(150);
+    // ...
+    var frame = m_nla.get_frame();
+    // ...
+    m_nla.play();
+    // ...
+    m_nla.stop();
+    // ...
+
+  
+Please note, that if the :ref:`Logic Editor <logic_editor>` is used, the ``set_frame``, ``play``, ``stop`` methods are not available.
+
+
+.. _speaker_animation:
+
+Audio Source Parametrization
+============================
+
+In addition the following animation key types are supported for the speaker objects: 
+
+* *Volume*
+
+* *Pitch*
+
+Audio sources parametrization in essence follows object animation.
 
 
 .. _node_anim:
 
-Анимация нод Value и RGB
-========================
+Animation of Value and RGB Nodes
+================================
 
-В нодовых материалах поддерживается воспроизведение анимационных ключей, проставленных на нодах ``Value`` и ``RGB``.
+Playback of keyframes inserted on ``Value`` and ``RGB`` nodes is supported in node materials.
 
-.. image:: src_images/animation/node_value_anim.jpg
+.. image:: src_images/animation/node_value_anim.png
    :align: center
 
 |
@@ -199,9 +311,9 @@
 |
 
 .. note::
-    Анимация числовых и цветовых значений в других нодах не поддерживается.
+    Animation of numerical and color values on other nodes is not supported.
 
-Может быть также использована для создания треков в :ref:`редакторе нелинейной анимации <nla_editor>`. Поддерживается несколько анимированных нод ``Value`` и ``RGB`` в одном материале. Значения нод могут быть также установлены программно с помощью методов ``set_nodemat_value`` и ``set_nodemat_rgb`` модуля ``objects``.
+Can be also used to create tracks in the :ref:`non-linear animation editor <nla_editor>`. Multiple animated ``Value`` or ``RGB`` nodes are supported per single material. Values of these nodes can be also modified via API, by using the ``set_nodemat_value`` and ``set_nodemat_rgb`` methods of the ``objects`` module.
 
 .. seealso:: :ref:`node_time`
 

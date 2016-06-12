@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2015 Triumph LLC
+ * Copyright (C) 2014-2016 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -49,23 +49,25 @@ var LAST_FRAME_EPSILON = 0.000001;
 
 exports.LAST_FRAME_EPSILON = LAST_FRAME_EPSILON;
 
-var OBJ_ANIM_TYPE_NONE       =  0;
-var OBJ_ANIM_TYPE_ARMATURE   = 10;
-var OBJ_ANIM_TYPE_OBJECT     = 20;
-var OBJ_ANIM_TYPE_VERTEX     = 30;
-var OBJ_ANIM_TYPE_SOUND      = 40;
-var OBJ_ANIM_TYPE_PARTICLES  = 50;
-var OBJ_ANIM_TYPE_MATERIAL   = 60;
-var OBJ_ANIM_TYPE_LIGHT      = 70;
+var OBJ_ANIM_TYPE_NONE        =  0;
+var OBJ_ANIM_TYPE_ARMATURE    = 10;
+var OBJ_ANIM_TYPE_OBJECT      = 20;
+var OBJ_ANIM_TYPE_VERTEX      = 30;
+var OBJ_ANIM_TYPE_SOUND       = 40;
+var OBJ_ANIM_TYPE_PARTICLES   = 50;
+var OBJ_ANIM_TYPE_MATERIAL    = 60;
+var OBJ_ANIM_TYPE_LIGHT       = 70;
+var OBJ_ANIM_TYPE_ENVIRONMENT = 80;
 
-exports.OBJ_ANIM_TYPE_NONE      = OBJ_ANIM_TYPE_NONE;
-exports.OBJ_ANIM_TYPE_ARMATURE  = OBJ_ANIM_TYPE_ARMATURE;
-exports.OBJ_ANIM_TYPE_OBJECT    = OBJ_ANIM_TYPE_OBJECT;
-exports.OBJ_ANIM_TYPE_VERTEX    = OBJ_ANIM_TYPE_VERTEX;
-exports.OBJ_ANIM_TYPE_SOUND     = OBJ_ANIM_TYPE_SOUND;
-exports.OBJ_ANIM_TYPE_PARTICLES = OBJ_ANIM_TYPE_PARTICLES;
-exports.OBJ_ANIM_TYPE_MATERIAL  = OBJ_ANIM_TYPE_MATERIAL;
-exports.OBJ_ANIM_TYPE_LIGHT     = OBJ_ANIM_TYPE_LIGHT;
+exports.OBJ_ANIM_TYPE_NONE        = OBJ_ANIM_TYPE_NONE;
+exports.OBJ_ANIM_TYPE_ARMATURE    = OBJ_ANIM_TYPE_ARMATURE;
+exports.OBJ_ANIM_TYPE_OBJECT      = OBJ_ANIM_TYPE_OBJECT;
+exports.OBJ_ANIM_TYPE_VERTEX      = OBJ_ANIM_TYPE_VERTEX;
+exports.OBJ_ANIM_TYPE_SOUND       = OBJ_ANIM_TYPE_SOUND;
+exports.OBJ_ANIM_TYPE_PARTICLES   = OBJ_ANIM_TYPE_PARTICLES;
+exports.OBJ_ANIM_TYPE_MATERIAL    = OBJ_ANIM_TYPE_MATERIAL;
+exports.OBJ_ANIM_TYPE_LIGHT       = OBJ_ANIM_TYPE_LIGHT;
+exports.OBJ_ANIM_TYPE_ENVIRONMENT = OBJ_ANIM_TYPE_ENVIRONMENT;
 
 var SLOT_0   = 0;
 var SLOT_1   = 1;
@@ -110,6 +112,17 @@ var AT_SPEAKER = exports.AT_SPEAKER = 2;
 var AT_OBJECT = exports.AT_OBJECT = 3;
 var AT_MATERIAL = exports.AT_MATERIAL = 4;
 var AT_LIGHT = exports.AT_LIGHT = 5;
+var AT_ENVIRONMENT = exports.AT_ENVIRONMENT = 6;
+
+//action environment mask elements
+var AEM_ENERGY          = 0;
+var AEM_HORIZON_COLOR   = 1;
+var AEM_ZENITH_COLOR    = 2;
+var AEM_FOG_INTENSITY   = 3;
+var AEM_FOG_DEPTH       = 4;
+var AEM_FOG_START       = 5;
+var AEM_FOG_HEIGHT      = 6;
+var AEM_FOG_COLOR       = 7;
 
 var _frame_info_tmp = new Array(3);
 var _vec3_tmp = new Float32Array(3);
@@ -142,7 +155,7 @@ function create_action_render() {
         bones: null,
         bflags: null,
         
-        channels_mask: new Int8Array(3)
+        channels_mask: new Int8Array(8)
     }
     return render;
 }
@@ -222,7 +235,18 @@ function apply_vertex_anim(obj, va, slot_num) {
     anim_slot.va_frame_offset = va_frame_offset;
 }
 
-function apply_particles_anim(obj, psys_name, slot_num) {
+function apply_particles_anim(batch, anim_slot, pdata) {
+    anim_slot.type = OBJ_ANIM_TYPE_PARTICLES;
+    anim_slot.animation_name = pdata.name;
+
+    anim_slot.start  = pdata.frame_start;
+    anim_slot.length = pdata.frame_end - anim_slot.start;
+
+    if (!pdata.cyclic)
+        anim_slot.length += pdata.lifetime_frames;
+}
+
+function apply_obj_particles_anim(obj, psys_name, slot_num) {
     var scenes_data = obj.scenes_data;
     for (var i = 0; i < scenes_data.length; i++) {
         var batches = scenes_data[i].batches;
@@ -233,15 +257,7 @@ function apply_particles_anim(obj, psys_name, slot_num) {
                 continue;
 
             var anim_slot = obj.anim_slots[slot_num];
-
-            anim_slot.type = OBJ_ANIM_TYPE_PARTICLES;
-            anim_slot.animation_name = pdata.name;
-
-            anim_slot.start  = pdata.frame_start;
-            anim_slot.length = pdata.frame_end - anim_slot.start;
-
-            if (!pdata.cyclic)
-                anim_slot.length += pdata.lifetime_frames;
+            apply_particles_anim(batches[j], anim_slot, pdata);
         }
     }
 }
@@ -255,7 +271,7 @@ function init_anim(obj, slot_num) {
         action_frame_range: null,
         action_step: 0,
         action_bflags: null,
-        channels_mask: new Int8Array(3),
+        channels_mask: new Int8Array(8),
 
         quats: null,
         trans: null,
@@ -284,11 +300,21 @@ function init_anim(obj, slot_num) {
         color: null,
         energy: null,
 
+        zenith_color: null,
+        horizon_color: null,
+        fog_intensity: null,
+        fog_depth: null,
+        fog_start: null,
+        fog_height: null,
+        fog_color: null,
+
         nodemat_values: [],
         node_value_inds: [],
 
         nodemat_rgbs: [],
-        node_rgb_inds: []
+        node_rgb_inds: [],
+
+        node_batches: null
     };
 
     if (!obj.anim_slots.length)
@@ -356,13 +382,16 @@ exports.apply_def = function(obj) {
         var batches = scenes_data[i].batches;
         for (var j = 0; j < batches.length; j++) {
             var pdata = batches[j].particles_data;
-            if (pdata && pdata.p_type == "EMITTER") {
+            if (pdata && pdata.p_type == "EMITTER" && !batches[j].forked_batch) {
                 do_before_apply(obj, slot_num);
-                apply_particles_anim(obj, pdata.name, slot_num);
+                apply_particles_anim(batches[j], obj.anim_slots[slot_num], pdata);
                 do_after_apply(obj, slot_num);
-                obj.anim_slots[slot_num].behavior = obj.anim_behavior_def;
+
                 if (pdata.cyclic)
                     obj.anim_slots[slot_num].behavior = AB_CYCLIC;
+                else
+                    obj.anim_slots[slot_num].behavior = obj.anim_behavior_def;
+
                 slot_num++;
             }
         }
@@ -387,7 +416,6 @@ exports.apply_def = function(obj) {
         do_after_apply(obj, slot_num);
         obj.anim_slots[slot_num].behavior = obj.anim_behavior_def;
         slot_num++
-
     }
 }
 
@@ -420,6 +448,8 @@ function get_actions(obj) {
         else if (act_render.type == AT_ARMATURE && obj.type == "ARMATURE")
             act_list.push(action);
         else if (act_render.type == AT_SPEAKER && obj.type == "SPEAKER")
+            act_list.push(action);
+        else if (act_render.type == AT_ENVIRONMENT && obj.type == "WORLD")
             act_list.push(action);
     }
 
@@ -650,6 +680,7 @@ function update_object_animation(obj, elapsed, slot_num, force_update) {
  * <li>obj is a mesh with nodemat animation
  * <li>obj has particle system
  * <li>obj has vertex animation
+ * <li>obj is world
  * </ol>
  */
 exports.obj_is_animatable = function(obj) {
@@ -659,9 +690,12 @@ exports.obj_is_animatable = function(obj) {
     if (obj.armobj)
         return true;
 
+    if (obj.type == "WORLD")
+        return true;
+
     for (var i = 0; i < obj.actions.length; i++) {
         var act_type = obj.actions[i]._render.type;
-        if (act_type == AT_OBJECT || act_type == AT_ARMATURE 
+        if (act_type == AT_OBJECT || act_type == AT_ARMATURE
                 || act_type == AT_SPEAKER && obj.type == "SPEAKER"
                 || act_type == AT_LIGHT && obj.type == "LAMP"
                 || act_type == AT_MATERIAL && obj.type == "MESH")
@@ -684,6 +718,9 @@ exports.bpy_obj_is_animatable = function(bpy_obj, obj) {
 
     var armobj = get_bpy_armobj(bpy_obj);
     if (armobj)
+        return true;
+
+    if (obj.type == "WORLD")
         return true;
 
     for (var i = 0; i < obj.actions.length; i++) {
@@ -790,6 +827,8 @@ function apply_action(obj, action, slot_num) {
             anim_slot.nodemat_values = nodemat_anim_data.values;
             anim_slot.node_rgb_inds = nodemat_anim_data.rgb_inds;
             anim_slot.nodemat_rgbs = nodemat_anim_data.rgbs;
+
+            anim_slot.node_batches = nodemat_anim_data.node_batches;
         }
         break;
 
@@ -818,6 +857,20 @@ function apply_action(obj, action, slot_num) {
             m_print.warn("Incompatible action \"" + action["name"] + 
                     "\" has been applied to object \"" + obj.name + "\"");
             return false;
+        }
+        break;
+    case AT_ENVIRONMENT:
+        //check meta_object WORLD
+        if (m_obj_util.is_world(obj)) {
+            anim_slot.energy = act_render.params["light_settings.environment_energy"] || null;
+            anim_slot.horizon_color = act_render.params["horizon_color"] || null;
+            anim_slot.zenith_color = act_render.params["zenith_color"] || null;
+            anim_slot.fog_intensity = act_render.params["mist_settings.intensity"] || null;
+            anim_slot.fog_depth = act_render.params["mist_settings.depth"] || null;
+            anim_slot.fog_start = act_render.params["mist_settings.start"] || null;
+            anim_slot.fog_height = act_render.params["mist_settings.height"] || null;
+            anim_slot.fog_color = act_render.params["b4w_fog_color"] || null;
+            anim_slot.type = OBJ_ANIM_TYPE_ENVIRONMENT;
         }
         break;
     }
@@ -974,32 +1027,54 @@ function calc_nodemat_anim_data(obj, action) {
     var values = [];
     var rgb_inds = [];
     var rgbs = [];
+    var node_batches = [];
 
     var act_render = action._render;
-    var val_ind_pairs = obj.render.mats_anim_inds;
-    var rgb_ind_pairs = obj.render.mats_rgb_anim_inds;
+
+    var animated_mat_names = [];
 
     for (var node_name in act_render.params) {
         var act_node_name = action["name"] + "%join%" + node_name;
-        calc_node_act(node_name, act_node_name, act_render, values, val_inds,
-                      val_ind_pairs);
-        calc_node_act(node_name, act_node_name, act_render, rgbs, rgb_inds,
-                      rgb_ind_pairs);
+        for (var i = 0; i < obj.scenes_data.length; i++) {
+            var batches = obj.scenes_data[i].batches;
+
+            for (var j = 0; j < batches.length; j++) {
+                var batch = batches[j];
+                var val_ind_pairs = batch.node_anim_inds;
+                var rgb_ind_pairs = batch.node_rgb_anim_inds;
+                if (val_ind_pairs) {
+                    var found_values =
+                        calc_node_act(node_name, act_node_name, act_render,
+                                      values, val_inds, val_ind_pairs);
+                    var found_rgbs =
+                        calc_node_act(node_name, act_node_name, act_render,
+                                      rgbs, rgb_inds, rgb_ind_pairs);
+
+                    if (found_values || found_rgbs)
+                        node_batches.push(batch);
+                }
+            }
+        }
     }
+
     return {val_inds: val_inds, values: values,
-            rgb_inds: rgb_inds, rgbs: rgbs};
+            rgb_inds: rgb_inds, rgbs: rgbs,
+            node_batches: node_batches};
 }
 
 function calc_node_act(node_name, act_node_name, act_render, values, inds,
                        val_ind_pairs) {
+    var found_vals = false;
     for (var i = 0; i < val_ind_pairs.length; i+=2) {
         var name = val_ind_pairs[i];
         if (act_node_name == name) {
             var ind = val_ind_pairs[i+1];
             inds.push(ind);
             values.push(new Float32Array(act_render.params[node_name]));
+            found_vals = true;
         }
     }
+    return found_vals;
 }
 
 
@@ -1110,6 +1185,14 @@ function animate(obj, elapsed, slot_num, force_update) {
         var trans = get_anim_translation(anim_slot, 0, finfo, _vec3_tmp);
         var quat = get_anim_rotation(anim_slot, 0, finfo, _quat4_tmp);
         var scale = get_anim_scale(anim_slot, 0, finfo);
+        if (obj.parent && obj.pinverse_tsr) {
+            var tsr = _tsr_tmp;
+            m_tsr.set_sep(trans, scale, quat, tsr);
+            m_tsr.multiply(obj.pinverse_tsr, tsr, tsr);
+            m_tsr.get_trans_value(tsr, trans);
+            m_tsr.get_quat_value(tsr, quat);
+            scale = m_tsr.get_scale(tsr);
+        }
 
         if (anim_slot.trans_smooth_period) {
             var trans_old = _vec3_tmp2;
@@ -1163,7 +1246,10 @@ function animate(obj, elapsed, slot_num, force_update) {
         break;
 
     case OBJ_ANIM_TYPE_PARTICLES:
-        var time = cff / m_time.get_framerate();
+        if (anim_slot.behavior == AB_CYCLIC)
+            var time = (cff - start) / m_time.get_framerate();
+        else
+            var time = cff / m_time.get_framerate();
         m_particles.set_time(obj, anim_slot.animation_name, time);
         break;
 
@@ -1178,13 +1264,15 @@ function animate(obj, elapsed, slot_num, force_update) {
 
         var rgbs = anim_slot.nodemat_rgbs;
         var rgb_indices = anim_slot.node_rgb_inds;
+        var node_batches = anim_slot.node_batches;
 
         for (var i = 0; i < val_indices.length; i++) {
             var vals = values[i];
             var ind = val_indices[i];
 
             var nodemat_value = (1-ff) * vals[fc] + ff * vals[fn];
-            obj.render.mats_values[ind] = nodemat_value;
+            for (var j = 0; j < node_batches.length; j++)
+                node_batches[j].node_values[ind] = nodemat_value;
         }
         for (var i = 0; i < rgb_indices.length; i++) {
             var rgb = rgbs[i];
@@ -1193,9 +1281,11 @@ function animate(obj, elapsed, slot_num, force_update) {
             var prev = rgb.subarray(fc*3, fc*3 + 3);
             var next = rgb.subarray(fn*3, fn*3 + 3);
             var curr = m_vec3.lerp(prev, next, ff, _vec3_tmp);
-            obj.render.mats_rgbs[3 * ind] = curr[0];
-            obj.render.mats_rgbs[3 * ind + 1] = curr[1];
-            obj.render.mats_rgbs[3 * ind + 2] = curr[2];
+            for (var j = 0; j < node_batches.length; j++) {
+                node_batches[j].node_rgbs[3 * ind] = curr[0];
+                node_batches[j].node_rgbs[3 * ind + 1] = curr[1];
+                node_batches[j].node_rgbs[3 * ind + 2] = curr[2];
+            }
         }
         break;
 
@@ -1224,6 +1314,95 @@ function animate(obj, elapsed, slot_num, force_update) {
         var scenes_data = obj.scenes_data;
         for (var i = 0; i < scenes_data.length; i++)
             m_scs.update_lamp_scene_color_intensity(obj, scenes_data[i].scene);
+
+        break;
+
+    case OBJ_ANIM_TYPE_ENVIRONMENT:
+        var finfo = action_anim_finfo(anim_slot);
+        var fc = finfo[0];
+        var fn = finfo[1];
+        var ff = finfo[2];
+
+        var mask = anim_slot.channels_mask;
+
+        var scenes_data = obj.scenes_data;
+
+        var subs = m_scs.get_subs(scenes_data[0].scene, "MAIN_OPAQUE");
+
+        var energy = anim_slot.energy;
+        if (mask[AEM_ENERGY]) {
+            var energy_value = (1-ff) * energy[fc] + ff * energy[fn];
+        }
+        else {
+            var energy_value = subs.energy;
+        }
+
+        var horizon_color = anim_slot.horizon_color;
+        if (mask[AEM_HORIZON_COLOR]) {
+            _vec3_tmp[0] = (1-ff) * horizon_color[3 * fc]     + ff * horizon_color[3 * fn];
+            _vec3_tmp[1] = (1-ff) * horizon_color[3 * fc + 1] + ff * horizon_color[3 * fn + 1];
+            _vec3_tmp[2] = (1-ff) * horizon_color[3 * fc + 2] + ff * horizon_color[3 * fn + 2];
+            var horizon_color_value = _vec3_tmp;
+        }
+        else {
+            var horizon_color_value = subs.horizon_color;
+        }
+
+        var zenith_color = anim_slot.zenith_color;
+        if (mask[AEM_ZENITH_COLOR]) {
+            _vec3_tmp2[0] = (1-ff) * zenith_color[3 * fc]     + ff * zenith_color[3 * fn];
+            _vec3_tmp2[1] = (1-ff) * zenith_color[3 * fc + 1] + ff * zenith_color[3 * fn + 1];
+            _vec3_tmp2[2] = (1-ff) * zenith_color[3 * fc + 2] + ff * zenith_color[3 * fn + 2];
+            var zenith_color_value = _vec3_tmp2;
+        }
+        else{
+            var zenith_color_value = subs.zenith_color;
+        }
+
+        var fog_intensity = anim_slot.fog_intensity;
+        if (mask[AEM_FOG_INTENSITY]) {
+            var fog_intensity_value = (1-ff) * fog_intensity[fc] + ff * fog_intensity[fn];
+        }
+
+        var fog_depth = anim_slot.fog_depth;
+        if (mask[AEM_FOG_DEPTH]) {
+            var fog_depth_value = (1-ff) * fog_depth[fc] + ff * fog_depth[fn];
+        }
+
+        var fog_start = anim_slot.fog_start;
+        if (mask[AEM_FOG_START]) {
+            var fog_start_value = (1-ff) * fog_start[fc] + ff * fog_start[fn];
+        }
+
+        var fog_height = anim_slot.fog_height;
+        if (mask[AEM_FOG_HEIGHT]) {
+            var fog_height_value = (1-ff) * fog_height[fc] + ff * fog_height[fn];
+        }
+
+        var fog_color = anim_slot.fog_color;
+        if (mask[AEM_FOG_COLOR]) {
+            _quat4_tmp[0] = (1-ff) * fog_color[3 * fc]     + ff * fog_color[3 * fn];
+            _quat4_tmp[1] = (1-ff) * fog_color[3 * fc + 1] + ff * fog_color[3 * fn + 1];
+            _quat4_tmp[2] = (1-ff) * fog_color[3 * fc + 2] + ff * fog_color[3 * fn + 2];
+            var fog_color_value = _quat4_tmp;
+        }
+
+        for (var i = 0; i < scenes_data.length; i++) {
+            var scene = obj.scenes_data[i].scene;
+
+            if (mask[AEM_ENERGY] || mask[AEM_HORIZON_COLOR] || mask[AEM_ZENITH_COLOR])
+                m_scs.set_environment_colors(scene, energy_value, horizon_color_value, zenith_color_value);
+            if (mask[AEM_FOG_INTENSITY])
+                m_scs.set_fog_intensity(scene, fog_intensity_value);
+            if (mask[AEM_FOG_DEPTH])
+                m_scs.set_fog_depth(scene, fog_depth_value);
+            if (mask[AEM_FOG_START])
+                m_scs.set_fog_start(scene, fog_start_value);
+            if (mask[AEM_FOG_HEIGHT])
+                m_scs.set_fog_height(scene, fog_height_value);
+            if (mask[AEM_FOG_COLOR])
+                m_scs.set_fog_color_density(scene, fog_color_value);
+        }
 
         break;
 
@@ -1714,10 +1893,10 @@ exports.append_action = function(action) {
             m_quat.normalize(quat, quat);
         }
     }
-    
+
     var act_render = action._render = create_action_render();
     act_render.pierce_step = 1 / cfg_ani.frame_steps;
-    
+
     var fcurves = action["fcurves"];
     var params = {};
     var bones = {};
@@ -1761,14 +1940,25 @@ exports.append_action = function(action) {
     }
 
     act_render.num_pierced = num_pierced;
-    
+
     act_render.bflags = action._bflags;
-    
+
     if ("tsr" in params)
         set_tsr_act_channels_mask(fcurves, act_render.channels_mask);
 
     if ("color" in params || "energy" in params)
         set_lamp_act_channels_mask(fcurves, act_render.channels_mask);
+
+    if ("light_settings.environment_energy" in params
+            || "horizon_color"              in params
+            || "zenith_color"               in params
+            || "mist_settings.intensity"    in params
+            || "mist_settings.depth"        in params
+            || "mist_settings.start"        in params
+            || "mist_settings.height"       in params
+            || "b4w_fog_color"              in params
+        )
+        set_environment_act_channels_mask(fcurves, act_render.channels_mask);
 
     update_action_type(action);
 
@@ -1777,7 +1967,7 @@ exports.append_action = function(action) {
 
 /**
  * Update action type.
- * Zero fcurves means no params and no bones therefore action will have 
+ * Zero fcurves means no params and no bones therefore action will have
  * AT_NONE type.
  */
 function update_action_type(action) {
@@ -1792,8 +1982,12 @@ function update_action_type(action) {
             act_render.type = AT_MATERIAL;
         else if (is_light_action(action))
             act_render.type = AT_LIGHT;
-        else
+        else if (is_environment_action(action))
+            act_render.type = AT_ENVIRONMENT;
+        else if (is_object_action(action))
             act_render.type = AT_OBJECT;
+        else
+            act_render.type = AT_NONE;
     } else
         act_render.type = AT_NONE;
 }
@@ -1822,6 +2016,38 @@ function is_light_action(action) {
     return false;
 }
 
+function is_environment_action(action) {
+    var params = action._render.params;
+
+    if ("light_settings.environment_energy" in params
+            || "horizon_color"              in params
+            || "zenith_color"               in params
+            || "mist_settings.intensity"    in params
+            || "mist_settings.depth"        in params
+            || "mist_settings.start"        in params
+            || "mist_settings.height"       in params
+            || "b4w_fog_color"              in params
+        )
+        return true;
+
+    return false;
+}
+
+function is_object_action(action) {
+    var params = action._render.params;
+
+    if (params) {
+        var fcurves = action["fcurves"];
+        for (var param in fcurves)
+            if (param == "location"
+                    || param == "rotation_quaternion"
+                    || param == "scale"
+                )
+                return true;
+    }
+    return false;
+}
+
 function set_tsr_act_channels_mask(fcurves, mask) {
     mask[0] = mask[1] = mask[2] = 0;
     for (var data_path in fcurves) {
@@ -1843,6 +2069,31 @@ function set_lamp_act_channels_mask(fcurves, mask) {
             mask[0] = 1;
         else if (data_path == "color")
             mask[1] = 1;
+    }
+}
+
+function set_environment_act_channels_mask(fcurves, mask) {
+    mask[AEM_ENERGY] = mask[AEM_HORIZON_COLOR] = mask[AEM_ZENITH_COLOR] = 0;
+    mask[AEM_FOG_INTENSITY] = mask[AEM_FOG_DEPTH] = mask[AEM_FOG_START] = 0;
+    mask[AEM_FOG_HEIGHT] = mask[AEM_FOG_COLOR] = 0;
+    for (var data_path in fcurves) {
+        var channels = fcurves[data_path];
+        if (data_path == "light_settings.environment_energy")
+            mask[AEM_ENERGY] = 1;
+        else if (data_path == "horizon_color")
+            mask[AEM_HORIZON_COLOR] = 1;
+        else if (data_path == "zenith_color")
+            mask[AEM_ZENITH_COLOR] = 1;
+        else if (data_path == "mist_settings.intensity")
+            mask[AEM_FOG_INTENSITY] = 1;
+        else if (data_path == "mist_settings.depth")
+            mask[AEM_FOG_DEPTH] = 1;
+        else if (data_path == "mist_settings.start")
+            mask[AEM_FOG_START] = 1;
+        else if (data_path == "mist_settings.height")
+            mask[AEM_FOG_HEIGHT] = 1;
+        else if (data_path == "b4w_fog_color")
+            mask[AEM_FOG_COLOR] = 1;
     }
 }
 
@@ -1964,10 +2215,9 @@ exports.approximate_curve = function(fcurve, fcurve_bin_data, points, bflags,
                         out_cursor++;
                         break;
                     case KF_INTERP_LINEAR:
-                        var linear_params = calc_linear_params(v1, v4);
                         if (is_blended)
                             bflags[out_cursor] = 1;
-                        points[out_cursor] = linear(interp_val, linear_params);
+                        points[out_cursor] = linear(interp_val, v1, v4);
                         out_cursor++;
                         break;
                     case KF_INTERP_CONSTANT:
@@ -1991,16 +2241,12 @@ exports.approximate_curve = function(fcurve, fcurve_bin_data, points, bflags,
     }
 }
 
-function calc_linear_params(v1, v4) {
+function linear(x, v1, v4) {
     var x1 = v1[0], y1 = v1[1],
         x2 = v4[0], y2 = v4[1];
     var k = (y2 - y1) / (x2 - x1);
     var b = y1 - k * x1;
-    return {k: k, b: b};
-}
-
-function linear(x, linear_params) {
-    return linear_params.k * x + linear_params.b;
+    return k * x + b;
 }
 
 
@@ -2173,7 +2419,7 @@ function apply(obj, name, slot_num) {
         var pdata = get_particles_data_by_name(obj, name);
         if (pdata && pdata.p_type == "EMITTER") {
             do_before_apply(obj, slot_num);
-            apply_particles_anim(obj, pdata.name, slot_num);
+            apply_obj_particles_anim(obj, pdata.name, slot_num);
             do_after_apply(obj, slot_num);
             return true;
         }

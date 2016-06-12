@@ -1,96 +1,124 @@
 .. _working_process_stages:
 
-***************
-Рабочий процесс
-***************
+********
+Workflow
+********
 
-Создание любого продукта является творческим процессом, в котором могут
-участвовать множество людей, с различными навыками и опытом. Однако вне
-зависимости от его сложности и конечного результата, всегда можно выделить
-стадию производства, на которой создаётся основной объём ресурсов (ассетов) и
-исходного кода.
+.. contents:: Table of Contents
+    :depth: 3
+    :backlinks: entry
 
-При использовании Blend4Web, производственный процесс можно представить
-следующим образом:
+Developing any product is a creative process with many participants who have
+different skills and experience. However, no matter how complex it is and
+what is the target it's always possible to separate the production stage in
+which the bulk of assets and source code is authored.
 
-#. Подготовка трёхмерных сцен в программе Blender.
-#. Экспорт сцен.
-#. Запуск, настройка и отладка сцены в программе-просмотрщике.
-#. Создание целевого веб-приложения.
+
+When using Blend4Web the workflow is the following:
+
+#. Authoring 3D scenes in Blender.
+#. Exporting scenes.
+#. Running, tweaking and debugging scenes in the Viewer.
+#. Creating the target application.
 
 .. _authoring_scenes:
 
-Подготовка сцен
-===============
+Authoring Scenes
+================
 
-Помимо обычных операций по моделированию, текстурированию, анимации и т.д.
-должна быть осуществлена подготовка сцены для работы в движке.
+Besides the usual stages such as modeling, texturing, animation etc a scene
+should be prepared for working in the engine.
 
-Общие рекомендации:
+General recommendations:
 
-#. Настоятельно рекомендуется сохранять blend-файлы в директории ``blender/имя_проекта``. Там же должны находиться вспомогательные файлы, не предназначенные для загрузки в приложение (например, референсы).
-#. Изображения и медиа-файлы должны быть внешними и находиться в директории ``deploy/assets/имя_проекта``.
-#. Файл, из которого будет осуществляться экспорт, должен содержать только необходимые в разрабатываемом приложении ресурсы (объекты, материалы, текстуры, анимацию и т.д.) 
-#. Составные части сцен должны иметь отличающие названия. Они не должны называться "Cube.001", "Material", "Armature".
-#. Рекомендуется практиковать добавление по ссылке (linking) компонентов из других файлов (библиотек).
+#. We strongly recommend to save your blend files in the ``blender/project_name`` directory. Auxiliary files which are not intended for loading in your app (for example, references), should be located there as well.
+
+#. Images and media files should be external and located in the ``deploy/assets/project_name`` directory.
+
+#. Files from which you export should contain resources which are actually required in your application (objects, materials, textures, animation etc).
+
+#. Scene components should have distinct names. They should not be named \"Cube.001\", \"Material\" or \"Armature\".
+
+#. We recommend you to practice linking components from other files (libraries).
 
 
-.. index:: экспорт
+.. index:: export
 
 .. _export_scene:
 
-Экспорт сцен
-============
+Exporting Scenes
+================
 
-Для загрузки сцен, созданных с помощью пакета Blender, в движок, необходимо перевести их в формат, пригодный для чтения браузером. На данный момент используются текстовые файлы с расширением :file:`.json`, в которые сохраняются экспортируемые структуры данных в формате JSON (JavaScript Object Notation). Данный файл, в свою очередь, ссылается на один бинарный файл с расширением :file:`.bin`, содержащий массивы данных моделей, и на внешние ресурсы - текстуры и звуковые сэмплы.
+The export procedure converts the scene from the Blender format to one of
+the formats used by Blend4Web.
 
-Файлы ``.json`` и ``.bin`` создаются при экспорте, файлы текстур и медиа-файлы, как правило, должны быть размещены вручную. Внедренные в ``.blend``-файл ресурсы автоматически размещаются рядом с экспортированными файлами.
+.. image:: src_images/workflow/workflow_export_scheme.png
+   :align: center
+   :width: 100%
 
-Экспорт производится выбором в меню ``File > Export`` опции ``Blend4Web (.json)``. Быстрый доступ - поиск по ``b4w export`` (горячая клавиша ``ПРОБЕЛ``). 
+There are two formats: JSON and HTML.
 
-Экспортные файлы рекомендуется размещать в директории, предназначенной для развертывания приложения, например ``deploy/assets/имя_проекта``.
+The JSON format is used for complex projects that require programming, while
+HTML is used for more simple, stand-alone applications. Format differences
+and export options are described in the :ref:`Export Formats
+<export_formats>` chapter.
 
-Необходимо использовать относительные пути для внешних ресурсов (как правило, это происходит по умолчанию). В случаях, когда это не так, необходимо выполнить команду ``File > External Data > Make All Paths Relative`` (т.е. сделать все пути относительными). Использование абсолютных путей вместо относительных может приводить к ошибкам при попытках загрузки ``.blend`` и ``.json`` файлов на других компьютерах.
+To export the scene, select ``Blend4Web (.json)`` or ``Blend4Web (.html)``
+option from the ``File > Export`` menu, or type ``b4w export`` in the
+operator search menu (available by pressing ``Spacebar``).
 
-В момент экспорта происходит проверка сцены на предмет использования не поддерживаемых движком возможностей Blender'a. В таких случаях генерируется сообщение об ошибке. Перечень возможных ошибок экспорта перечислен в :ref:`соответствующем разделе <export_errors>`. 
+.. note::
+    If the scene uses Blender features not yet supported by the Blend4Web engine, errors may occur during export. Export errors are listed in :ref:`this table <export_errors>`.
 
-Опции экспорта подробно описаны в :ref:`соответствующем разделе <export_opts>`.
+Export options are described in detail in the :ref:`corresponding section <export_opts>`.
 
 
-.. index:: просмотрщик; добавление сцен
+.. index:: viewer; adding scenes
 
 .. _assets_json:
 
-Отображение сцен в просмотрщике
+Displaying Scenes in the Viewer
 ===============================
 
-При использовании :ref:`локального сервера разработки <local_development_server>` возможно сделать предварительный просмотр сцены используя кнопку ``Fast Preview``, расположенную на панели ``Scene->Development Server`` в Blender. В этом случае будет произведён автоматический экспорт сцены во временное хранилище с последующей загрузкой в просмотрщике.
+When using the :ref:`local development server <local_development_server>`
+it's possible to preview current scene using ``Fast Preview`` button,
+located on the ``Scene->Development Server`` panel in Blender. In this case
+the scene will be exported inside some temporary storage and loaded in the
+Viewer app.
 
-Другой способ это использовать опцию экспорта сцены :ref:`Run in Viewer <run_in_viewer>`. В этом случая сцена показывается в просмотрщике сразу после экспорта. 
+The other method is using :ref:`Run in Viewer <run_in_viewer>` export
+option. In this case the scene will be displayed in the Viewer app
+immediately after the export.
 
-При необходимости долгосрочного хранения сцены в списке сцен просмотрщика, нужно вручную добавить запись в текстовой файл ``apps_dev/viewer/assets.json``, который доступен при открытии Blender'a при использовании Blend4Web SDK. 
+For the long-term storage of the scene in the scene list of the viewer, it's
+required to manually add the entry to the ``apps_dev/viewer/assets.json``
+text file. This file is opened automatically in Blender if you are using
+Blend4Web SDK.
 
-Для редактирования файла откройте "Text Editor":
+Use the \"Text Editor\" to modify it:
 
 .. image:: src_images/workflow/text_editor.png
    :align: center
 
 |
 
-В появившемся окне вы сможете выбрать файл ``assets.json`` и отредактировать его:
+Then select the ``assets.json`` file in the window to edit it:
 
 .. image:: src_images/workflow/assets_json.png
    :align: center
 
 |
 
-Для добавления новой сцены нужно знать категорию, в которой она должна отображаться. Категория обычно соответствует названию проекта и имени директории, где хранятся соответствующие файлы. 
+To add a new scene you need to know the category in which it should be
+displayed. The category normally corresponds to the project name and to the
+name of the directory where the corresponding files are stored.
 
 
-Пример
-------
+Example
+-------
 
-Ниже приведена примерная часть файла ``assets.json``, в которой находятся два проекта "Capri" и "Fridge" с соответствующими сценами в каждом проекте::
+For example below you can see a part of ``assets.json``. In this file there
+are two projects - \"Capri\" and \"Fridge\" each with corresponding scenes::
 
     {
         name: "Capri",
@@ -119,15 +147,19 @@
         ]
     }
 
-Добавление можно осуществить копированием и вставкой описания похожей сцены в нужной категории и последующим редактированием ее названия и пути к экспортному файлу.
+To add a new scene you can copy and paste a similar scene's description to
+the required category and then edit its name and path to the exported file.
 
-В случае успешного добавления сцена должна появиться в списке сцен просмотрщика в нужной категории.
+A successfully added scene should appear in the scenes' list of the viewer
+in the required category
 
-.. image:: src_images/workflow/viewer_apple_scene.jpg
+.. image:: src_images/workflow/workflow_viewer_apple.png
    :align: center
    :width: 100%
 
-Разработка приложения
-=====================
+Application Development
+=======================
 
-На этой стадии создаётся приложение, в котором на языке JavaScript пишется логика по загрузке сцены и взаимодействию с ней пользователя. Документация для разработчиков приложений приведена в :ref:`соответствующем разделе <developers>`. 
+At this stage an application is created. Logic for scene loading and user
+interaction is written using JavaScript. The application developer notes are
+given in the :ref:`corresponding section <developers>`.

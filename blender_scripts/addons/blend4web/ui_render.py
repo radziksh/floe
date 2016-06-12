@@ -1,19 +1,3 @@
-# Copyright (C) 2014-2015 Triumph LLC
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 import bpy
 import imp
 import mathutils
@@ -64,7 +48,7 @@ class B4W_RenderMotionBlur(RenderButtonsPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        self.layout.prop(context.scene, "b4w_enable_motion_blur", text=_(""))
+        self.layout.prop(context.scene, "b4w_enable_motion_blur", text="")
 
     def draw(self, context):
         scene = context.scene
@@ -83,7 +67,7 @@ class B4W_RenderBloom(RenderButtonsPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        self.layout.prop(context.scene, "b4w_enable_bloom", text=_(""))
+        self.layout.prop(context.scene, "b4w_enable_bloom", text="")
 
     def draw(self, context):
         scene = context.scene
@@ -102,7 +86,7 @@ class B4W_RenderColorCorrection(RenderButtonsPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        self.layout.prop(context.scene, "b4w_enable_color_correction", text=_(""))
+        self.layout.prop(context.scene, "b4w_enable_color_correction", text="")
 
     def draw(self, context):
         scene = context.scene
@@ -171,7 +155,7 @@ class B4W_RenderOutlining(RenderButtonsPanel, bpy.types.Panel):
         row.active = getattr(scene, "b4w_enable_outlining") in {"ON", "AUTO"}
 
         split = row.split()
-        split.prop(scene, "b4w_outline_color", text=_(""))
+        split.prop(scene, "b4w_outline_color", text="")
         split = row.split()
         split.prop(scene, "b4w_outline_factor", text=_("Factor"))
 
@@ -181,7 +165,7 @@ class B4W_RenderSSAO(RenderButtonsPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        self.layout.prop(context.scene, "b4w_enable_ssao", text=_(""))
+        self.layout.prop(context.scene, "b4w_enable_ssao", text="")
 
     def draw(self, context):
         scene = context.scene
@@ -207,7 +191,7 @@ class B4W_RenderGodRays(RenderButtonsPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw_header(self, context):
-        self.layout.prop(context.scene, "b4w_enable_god_rays", text=_(""))
+        self.layout.prop(context.scene, "b4w_enable_god_rays", text="")
 
     def draw(self, context):
         scene = context.scene
@@ -219,6 +203,17 @@ class B4W_RenderGodRays(RenderButtonsPanel, bpy.types.Panel):
         layout.prop(god_rays, "intensity", text=_("Intensity"))
         layout.prop(god_rays, "max_ray_length", text=_("Maximum Ray Length"))
         layout.prop(god_rays, "steps_per_pass", text=_("Steps per Pass"))
+
+class B4W_RenderDynamicGrass(RenderButtonsPanel, bpy.types.Panel):
+    bl_label = _("Dynamic Grass")
+    bl_idname = "RENDER_PT_b4w_DynGrass"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        scene = context.scene
+
+        layout = self.layout
+        layout.prop(scene, "b4w_render_dynamic_grass", text=_("Enable"))
 
 class B4W_RenderAntialiasing(RenderButtonsPanel, bpy.types.Panel):
     bl_label = _("Anti-Aliasing")
@@ -239,7 +234,7 @@ class B4W_SceneAniso(RenderButtonsPanel, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        layout.prop(scene, "b4w_anisotropic_filtering", text=_(""))
+        layout.prop(scene, "b4w_anisotropic_filtering", text="")
 
 class B4W_RenderShadows(RenderButtonsPanel, bpy.types.Panel):
     bl_label = _("Shadows")
@@ -323,7 +318,7 @@ class B4W_RenderDevServer(RenderButtonsPanel, bpy.types.Panel):
                 layout.operator("b4w.open_proj_manager",
                         text=p_("Project Manager", "Operator"), icon="URL")
                 layout.operator("b4w.preview",
-                        text=p_("Fast Preview", "Operator"), icon="VIEWZOOM")
+                        text=p_("Fast Preview", "Operator"), icon="ZOOM_ALL")
 
         else:
             layout.label(text = _("Blend4Web SDK was not found."))
@@ -393,33 +388,4 @@ class B4W_RenderTimeline(RenderButtonsPanel, bpy.types.Panel):
 
         self.draw_framerate(sub, rd)
 
-def register():
-    bpy.utils.register_class(B4W_RenderDevServer)
-    bpy.utils.register_class(B4W_RenderTimeline)
-    bpy.utils.register_class(B4W_RenderShadows)
-    bpy.utils.register_class(B4W_RenderOutlining)
-    bpy.utils.register_class(B4W_RenderReflRefr)
-    bpy.utils.register_class(B4W_RenderGlow)
-    bpy.utils.register_class(B4W_RenderSSAO)
-    bpy.utils.register_class(B4W_RenderGodRays)
-    bpy.utils.register_class(B4W_RenderBloom)
-    bpy.utils.register_class(B4W_RenderMotionBlur)
-    bpy.utils.register_class(B4W_RenderColorCorrection)
-    bpy.utils.register_class(B4W_SceneAniso)
-    bpy.utils.register_class(B4W_RenderAntialiasing)
-
-def unregister():
-    bpy.utils.unregister_class(B4W_RenderDevServer)
-    bpy.utils.unregister_class(B4W_RenderTimeline)
-    bpy.utils.unregister_class(B4W_RenderShadows)
-    bpy.utils.unregister_class(B4W_RenderOutlining)
-    bpy.utils.unregister_class(B4W_RenderReflRefr)
-    bpy.utils.unregister_class(B4W_RenderGlow)
-    bpy.utils.unregister_class(B4W_RenderSSAO)
-    bpy.utils.unregister_class(B4W_RenderGodRays)
-    bpy.utils.unregister_class(B4W_RenderBloom)
-    bpy.utils.unregister_class(B4W_RenderMotionBlur)
-    bpy.utils.unregister_class(B4W_RenderColorCorrection)
-    bpy.utils.unregister_class(B4W_SceneAniso)
-    bpy.utils.unregister_class(B4W_RenderAntialiasing)
 

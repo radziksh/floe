@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Module: app</title>
+    <title>Module: app | Blend4Web API Reference</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -162,7 +162,7 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
 
         
             
-<li> <a href="#.enable_camera_controls">enable_camera_controls<span class="signature">(disable_default_pivot<span class="signature-attributes">opt</span>, disable_letter_controls<span class="signature-attributes">opt</span>, disable_zoom<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></a></li>
+<li> <a href="#.enable_camera_controls">enable_camera_controls<span class="signature">(disable_default_pivot<span class="signature-attributes">opt</span>, disable_letter_controls<span class="signature-attributes">opt</span>, disable_zoom<span class="signature-attributes">opt</span>, element<span class="signature-attributes">opt</span>, allow_element_exit<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></a></li>
 
         
             
@@ -174,7 +174,7 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
 
         
             
-<li> <a href="#.enable_object_controls">enable_object_controls<span class="signature">(obj)</span><span class="type-signature"></span></a></li>
+<li> <a href="#.enable_object_controls">enable_object_controls<span class="signature">(obj, element<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></a></li>
 
         
             
@@ -202,7 +202,7 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
 
         
             
-<li> <a href="#.request_fullscreen">request_fullscreen<span class="signature">(elem, enabled_cb, disabled_cb, vr_display)</span><span class="type-signature"></span></a></li>
+<li> <a href="#.request_fullscreen">request_fullscreen<span class="signature">(elem, enabled_cb, disabled_cb)</span><span class="type-signature"></span></a></li>
 
         
             
@@ -526,7 +526,7 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1489">line 1489</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1611">line 1611</a>
     </li></ul></dd>
     
 
@@ -634,7 +634,7 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1332">line 1332</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1454">line 1454</a>
     </li></ul></dd>
     
 
@@ -1002,7 +1002,7 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1440">line 1440</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1562">line 1562</a>
     </li></ul></dd>
     
 
@@ -1088,7 +1088,7 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1068">line 1068</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1211">line 1211</a>
     </li></ul></dd>
     
 
@@ -1162,6 +1162,8 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
     
 
     
+        <dt class="important tag-deprecated">Deprecated:</dt><dd><ul class="dummy"><li>Not need anymore.</li></ul></dd>
+    
 
     
 
@@ -1174,7 +1176,7 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1232">line 1232</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1366">line 1366</a>
     </li></ul></dd>
     
 
@@ -1309,7 +1311,7 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1200">line 1200</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1342">line 1342</a>
     </li></ul></dd>
     
 
@@ -1331,7 +1333,7 @@ Provides generic routines for the engine's initialization, UI and I/O.</div>
 
     
 
-    <h4 class="name" id=".enable_camera_controls">enable_camera_controls<span class="signature">(disable_default_pivot<span class="signature-attributes">opt</span>, disable_letter_controls<span class="signature-attributes">opt</span>, disable_zoom<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".enable_camera_controls">enable_camera_controls<span class="signature">(disable_default_pivot<span class="signature-attributes">opt</span>, disable_letter_controls<span class="signature-attributes">opt</span>, disable_zoom<span class="signature-attributes">opt</span>, element<span class="signature-attributes">opt</span>, allow_element_exit<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -1496,6 +1498,85 @@ camera-defined pivot point</td>
         </tr>
 
     
+
+        <tr>
+            
+                <td class="name"><code>element</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    Canvas container element
+                
+                </td>
+            
+
+            <td class="description last">HTML element to add event listeners to</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>allow_element_exit</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last">Continue receiving mouse events
+even when the mouse is leaving the HTML element</td>
+        </tr>
+
+    
     </tbody>
 </table>
 
@@ -1545,7 +1626,7 @@ camera-defined pivot point</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line520">line 520</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line545">line 545</a>
     </li></ul></dd>
     
 
@@ -1692,6 +1773,8 @@ even when the mouse is leaving the HTML element.</td>
     
 
     
+        <dt class="important tag-deprecated">Deprecated:</dt><dd><ul class="dummy"><li>Not need anymore.</li></ul></dd>
+    
 
     
 
@@ -1704,7 +1787,7 @@ even when the mouse is leaving the HTML element.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1215">line 1215</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1358">line 1358</a>
     </li></ul></dd>
     
 
@@ -1795,7 +1878,7 @@ even when the mouse is leaving the HTML element.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1252">line 1252</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1378">line 1378</a>
     </li></ul></dd>
     
 
@@ -1817,7 +1900,7 @@ even when the mouse is leaving the HTML element.</td>
 
     
 
-    <h4 class="name" id=".enable_object_controls">enable_object_controls<span class="signature">(obj)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".enable_object_controls">enable_object_controls<span class="signature">(obj, element<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -1849,7 +1932,11 @@ even when the mouse is leaving the HTML element.</td>
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -1874,10 +1961,61 @@ even when the mouse is leaving the HTML element.</td>
             </td>
 
             
+                <td class="attributes">
+                
 
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last">Object 3D</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>element</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    Canvas container element
+                
+                </td>
+            
+
+            <td class="description last">HTML element</td>
         </tr>
 
     
@@ -1930,7 +2068,7 @@ even when the mouse is leaving the HTML element.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1114">line 1114</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1256">line 1256</a>
     </li></ul></dd>
     
 
@@ -2016,7 +2154,7 @@ even when the mouse is leaving the HTML element.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1316">line 1316</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1438">line 1438</a>
     </li></ul></dd>
     
 
@@ -2124,7 +2262,7 @@ even when the mouse is leaving the HTML element.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1615">line 1615</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1737">line 1737</a>
     </li></ul></dd>
     
 
@@ -2304,7 +2442,7 @@ even when the mouse is leaving the HTML element.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1404">line 1404</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1526">line 1526</a>
     </li></ul></dd>
     
 
@@ -2336,7 +2474,7 @@ even when the mouse is leaving the HTML element.</td>
 <div class="description">
     Initialize the engine.
 The "options" object may be extended by adding properties from the engine's
-configuration.
+configuration (see <a href="module-config.html">confg</a> module).
 In that case they will be applied before engine initialization.
 </div>
 
@@ -2551,45 +2689,6 @@ In that case they will be applied before engine initialization.
 
             <td class="description last">Remove interface
 elements after error.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>gl_debug</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    false
-                
-                </td>
-            
-
-            <td class="description last">Enable WebGL debugging.</td>
         </tr>
 
     
@@ -3006,7 +3105,7 @@ canvas container height, based on its width and passed ratio value.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line139">line 139</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line145">line 145</a>
     </li></ul></dd>
     
 
@@ -3141,7 +3240,7 @@ canvas container height, based on its width and passed ratio value.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1557">line 1557</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1679">line 1679</a>
     </li></ul></dd>
     
 
@@ -3347,7 +3446,7 @@ elements are inserted.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1361">line 1361</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1483">line 1483</a>
     </li></ul></dd>
     
 
@@ -3369,7 +3468,7 @@ elements are inserted.</td>
 
     
 
-    <h4 class="name" id=".request_fullscreen">request_fullscreen<span class="signature">(elem, enabled_cb, disabled_cb, vr_display)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".request_fullscreen">request_fullscreen<span class="signature">(elem, enabled_cb, disabled_cb)</span><span class="type-signature"></span></h4>
 
     
 
@@ -3480,29 +3579,6 @@ Security issues: execute by user event.
         </tr>
 
     
-
-        <tr>
-            
-                <td class="name"><code>vr_display</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">HMDVRDevice</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Target device displaying fullscreen</td>
-        </tr>
-
-    
     </tbody>
 </table>
 
@@ -3552,7 +3628,7 @@ Security issues: execute by user event.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1264">line 1264</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1390">line 1390</a>
     </li></ul></dd>
     
 
@@ -3676,6 +3752,12 @@ Security issues: execute by user event.
     
 
     
+        <dt class="important tag-deprecated">Deprecated:</dt><dd><ul class="dummy"><li>use <a href="module-camera.html#.static_setup">camera.static_setup</a> or 
+<a href="module-camera.html#.eye_setup">camera.eye_setup</a> or 
+<a href="module-camera.html#.target_setup">camera.target_setup</a> or 
+<a href="module-camera.html#.hover_setup">camera.hover_setup</a> or 
+<a href="module-camera.html#.hover_setup_rel">camera.hover_setup_rel</a> instead.</li></ul></dd>
+    
 
     
 
@@ -3688,7 +3770,7 @@ Security issues: execute by user event.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1090">line 1090</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1231">line 1231</a>
     </li></ul></dd>
     
 
@@ -3823,7 +3905,7 @@ Security issues: execute by user event.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1606">line 1606</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1728">line 1728</a>
     </li></ul></dd>
     
 
@@ -3915,7 +3997,7 @@ Security issues: execute by user event.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1538">line 1538</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1660">line 1660</a>
     </li></ul></dd>
     
 
@@ -4073,7 +4155,7 @@ Security issues: execute by user event.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line96">line 96</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line103">line 103</a>
     </li></ul></dd>
     
 
@@ -4489,7 +4571,7 @@ Security issues: execute by user event.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1543">line 1543</a>
+        <a href="addons_app.js.html">addons/app.js</a>, <a href="addons_app.js.html#line1665">line 1665</a>
     </li></ul></dd>
     
 
@@ -4521,13 +4603,47 @@ Security issues: execute by user event.
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gp_conf.html">gp_conf</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hmd_conf.html">hmd_conf</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-input.html">input</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-logic_nodes.html">logic_nodes</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-math.html">math</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Dec 22 2015 20:09:38 GMT+0300 (MSK)
+    Blend4Web API Reference (generated by JSDoc 3.4.0 on Tue May 31 2016 15:33:56 GMT+0300 (MSK))
+    <a href="https://www.blend4web.com">www.blend4web.com</a>
+  <!-- Yandex.Metrika counter -->
+  <script type="text/javascript">
+  (function() {
+    if (window.document.domain != "www.blend4web.com")
+      return;
+
+    (function (d, w, c) {
+        (w[c] = w[c] || []).push(function() {
+            try {
+                w.yaCounter24512171 = new Ya.Metrika({
+                    id:24512171,
+                    clickmap:false,
+                    trackLinks:true,
+                    accurateTrackBounce:true
+                });
+            } catch(e) { }
+        });
+
+        var n = d.getElementsByTagName("script")[0],
+            s = d.createElement("script"),
+            f = function () { n.parentNode.insertBefore(s, n); };
+        s.type = "text/javascript";
+        s.async = true;
+        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+        if (w.opera == "[object Opera]") {
+            d.addEventListener("DOMContentLoaded", f, false);
+        } else { f(); }
+    })(document, window, "yandex_metrika_callbacks");
+  })();
+  </script>
+  <noscript><div><img src="https://mc.yandex.ru/watch/24512171" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <!-- /Yandex.Metrika counter -->
 </footer>
 
 <script> prettyPrint(); </script>
