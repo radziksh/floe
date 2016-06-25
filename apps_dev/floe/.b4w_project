@@ -1,0 +1,28 @@
+[info]
+author = kemerelia
+name = floe
+title = floe
+icon = 
+
+[paths]
+assets_dirs = deploy/assets/floe;
+blend_dirs = blender/floe;
+blender_exec = blender
+build_dir = deploy/apps/floe
+deploy_dir = 
+
+[compile]
+apps = 
+css_ignore = 
+engine_type = external
+js_ignore = 
+optimization = simple
+use_physics = 
+use_smaa_textures = 
+version = 
+
+[deploy]
+assets_path_dest = assets
+assets_path_prefix = assets
+override = 
+
