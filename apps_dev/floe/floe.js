@@ -14,13 +14,13 @@ b4w.register("floe", function (exports, require) {
     var m_scs = require("scenes");
     var m_trans = require("transform");
     var m_cfg = require("config");
-
+    var m_cont = require("container");
+    var m_mouse = require("mouse");
     var _character;
     var _character_rig;
 
     var ROT_SPEED = 1.5;
     var CAMERA_OFFSET = new Float32Array([0, 1, -3]);
-
     /**
      * export the method to initialize the app (called at the bottom of this file)
      */
@@ -46,7 +46,6 @@ b4w.register("floe", function (exports, require) {
             console.log("b4w init failure");
             return;
         }
-        m_app.enable_controls(canvas_elem);
         window.addEventListener("resize", on_resize);
 
         load();
@@ -68,13 +67,13 @@ b4w.register("floe", function (exports, require) {
      * callback executed when the scene is loaded
      */
     function load_cb(data_id) {
-        debugger;   
+        debugger;
         _character = m_scs.get_first_character();
         //_character_rig = m_scs.get_object_by_dupli_name("character",
         //"character_rig");
         setup_camera();
         setup_movement();
-        setup_rotation();
+
         setup_jumping();
 
         //m_anim.apply(_character_rig, "character_idle_01");
@@ -181,7 +180,11 @@ b4w.register("floe", function (exports, require) {
     function setup_camera() {
         debugger;
         var camera = m_scs.get_active_camera();
-        m_cons.append_semi_soft_cam(camera, _character, CAMERA_OFFSET);
+        m_cons.append_stiff_trans(camera, _character, CAMERA_OFFSET);
+        var canvas_elem = m_cont.get_canvas();
+        canvas_elem.addEventListener("mouseup", function (e) {
+            m_mouse.request_pointerlock(canvas_elem);
+        }, false);
     }
 });
 
