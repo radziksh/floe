@@ -56,8 +56,8 @@ WebGL的浏览器支持
 现在的WebGL在不同程度上被所有浏览器支持。
 
 
-全面支持
---------
+Desktop Browsers
+----------------
 
 * Chrome
 
@@ -68,10 +68,6 @@ WebGL的浏览器支持
 * Opera
 
 * Safari 8+
-
-
-实验支持
---------
 
 * Internet Explorer 11
 
@@ -85,15 +81,17 @@ WebGL的浏览器支持
 
 * BlackBerry
 
-* 或Firefox ...
+* Firefox OS
 
-* 8、 12、 16 位
+* iOS 8
 
 * Sailfish OS
 
 * Tizen
 
-* Debian/Ubuntu
+* Ubuntu Touch
+
+有关详细信息请参阅 相关章节 在问题和解决方案的篇章。
 
 
 WebGL的优势

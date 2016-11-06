@@ -89,10 +89,29 @@ class B4W_DATA_PT_camera_dof(CameraButtonsPanel, Panel):
         sub.active = cam.dof_object is None
         sub.prop(cam, "dof_distance", text=_("Distance"))
 
+        split = layout.split()
+        col = split.column()
+        col.active = cam.b4w_dof_bokeh
+        col.prop(cam, "b4w_dof_front_start", text=_("Front Start"))
+        col.prop(cam, "b4w_dof_rear_start", text=_("Rear Start"))
+        col = split.column()
+        sub = col.column()
+        sub.prop(cam, "b4w_dof_front_end", text=_("Front End"))
+        sub.prop(cam, "b4w_dof_rear_end", text=_("Rear End"))
+
         row = layout.row()
-        row.prop(cam, "b4w_dof_front", text=_("Front"))
-        row.prop(cam, "b4w_dof_rear", text=_("Rear"))
         row.prop(cam, "b4w_dof_power", text=_("Power"))
+
+        split = layout.split()
+        col = split.column()
+        col.prop(cam, "b4w_dof_bokeh", text=_("High Quality (Bokeh)"))
+        col = split.column()
+        sub = col.column()
+        sub.active = cam.b4w_dof_bokeh
+        sub.prop(cam, "b4w_dof_bokeh_intensity", text=_("Bokeh Intensity"))
+        row = layout.row()
+        row.active = cam.b4w_dof_bokeh
+        row.prop(cam, "b4w_dof_foreground_blur", text=_("Foreground Blur"))
 
 class B4W_DATA_PT_camera(CameraButtonsPanel, Panel):
     bl_label = _("Camera")
@@ -140,6 +159,8 @@ class B4W_DATA_PT_speaker(SpeakerPanel, Panel):
 
         row = layout.row()
         col = row.column()
+        # NOTE: temporary until <audio> pitch implementation
+        col.active = not bg_mus
         col.prop(spk, "pitch")
         col = row.column()
         col.active = not bg_mus
@@ -152,7 +173,10 @@ class B4W_DATA_PT_speaker(SpeakerPanel, Panel):
 
         row = layout.row()
         row.active = pos_snd
-        row.prop(spk, "b4w_disable_doppler", text=_("Disable Doppler"))
+        row.prop(spk, "b4w_enable_doppler", text=_("Enable Doppler"))
+
+        row = layout.row()
+        row.prop(spk, "b4w_auto_play", text=_("Auto-play"))
 
         row = layout.row()
         row.prop(spk, "b4w_cyclic_play", text=_("Cyclic Play"))
@@ -164,18 +188,10 @@ class B4W_DATA_PT_speaker(SpeakerPanel, Panel):
         row = layout.row()
         row.prop(spk, "b4w_loop", text=_("Loop"))
 
-        # NOTE: not implemented
-        #row = layout.row()
-        #row.active = getattr(spk, "b4w_loop")
-        #row.prop(spk, "b4w_loop_count", text=_("Loop Count"))
-
-        #row = layout.row()
-        #row.active = getattr(spk, "b4w_loop")
-        #row.prop(spk, "b4w_loop_count_random", text=_("Random Loop Count"))
-
-        #row = layout.row()
-        #row.active = False
-        #row.prop(spk, "b4w_playlist_id", text=_("Playlist ID"))
+        row = layout.row()
+        row.active = getattr(spk, "b4w_loop") and not bg_mus
+        row.prop(spk, "b4w_loop_start", text=_("Loop Start"))
+        row.prop(spk, "b4w_loop_end", text=_("Loop End"))
 
 class B4W_DATA_PT_distance(SpeakerPanel, Panel):
     bl_label = _("Distance")
@@ -356,6 +372,8 @@ class B4W_DATA_PT_lamp(LampPanel, Panel):
                 else:
                     sub.prop(lamp, "distance")
 
+                col.prop(lamp, "use_sphere")
+
             if lamp.type == 'AREA':
                 col.prop(lamp, "distance")
                 col.prop(lamp, "gamma")
@@ -368,6 +386,7 @@ class B4W_DATA_PT_lamp(LampPanel, Panel):
             row = layout.row()
             row.prop(lamp, "b4w_dynamic_intensity", text=_("Dynamic Intensity"))
 
+
 class B4W_DataLampShadows(LampPanel, Panel):
     bl_label = _("Shadow")
     bl_idname = "B4W_DATA_PT_b4w_lamp_shadows"
@@ -377,6 +396,11 @@ class B4W_DataLampShadows(LampPanel, Panel):
         layout = self.layout
         lmp = context.lamp
         layout.prop(lmp, "use_shadow", text=_("Shadow"))
+        if lmp.type == "SPOT" or lmp.type == "POINT":
+            row = layout.row()
+            row.active = lmp.use_shadow
+            row.prop(lmp, "shadow_buffer_clip_start", text=_("Clip Start"))
+            row.prop(lmp, "shadow_buffer_clip_end", text=_("Clip End"))
 
 class B4W_DATA_PT_spot(LampPanel, Panel):
     bl_label = _("Spot Shape")

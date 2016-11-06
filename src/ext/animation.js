@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -246,7 +245,44 @@ exports.apply = function(obj, name, slot_num) {
         return;
     }
 
-    m_anim.apply(obj, name, slot_num);
+    m_anim.apply(obj, null, name, slot_num);
+}
+
+/**
+ * Apply the animation to the object.
+ * @method module:animation.apply_ext
+ * @param {Object3D} obj Object 3D
+ * @param {?String[]} name_list Array of material and nested groups names and
+ * animation name.
+ * @param {AnimSlot} [slot_num = SLOT_0] Animation slot number.
+ */
+exports.apply_ext = function(obj, name_list, slot_num) {
+    if (slot_num > m_anim.SLOT_7) {
+        m_print.error("Can't apply animation to slot " + slot_num +
+                      " for object \"" + obj.name +
+                      "\". Object can have maximum of 8 animation slots");
+        return;
+    }
+    slot_num = slot_num || m_anim.SLOT_0;
+
+    var name = name_list[0];
+    if (m_anim.is_animated(obj)) {
+        var applied_slot = m_anim.get_slot_num_by_anim(obj, name);
+        if (applied_slot != -1 && applied_slot != slot_num) {
+            m_print.error("Animation \"" + name +
+                          "\" is already applied to object \"" + obj.name +
+                          "\" (slot \"" + applied_slot + "\").");
+            return;
+        }
+    }
+
+    if (!m_anim.validate_action_by_name(obj, name)) {
+        m_print.error("No fcurves in action \"" + name + "\"");
+        return;
+    }
+    var new_name_list = name_list.slice(1);
+
+    m_anim.apply(obj, new_name_list, name, slot_num);
 }
 
 /**
@@ -571,7 +607,7 @@ exports.get_first_armature_object = function(obj) {
  */
 exports.get_slot_num_by_anim = function(obj, anim_name) {
     if (!m_anim.is_animated(obj) || !anim_name)
-        return null;
+        return -1;
 
     return m_anim.get_slot_num_by_anim(obj, anim_name);
 }

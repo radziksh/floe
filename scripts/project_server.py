@@ -57,6 +57,10 @@ COLOR_REGEX = re.compile(r'\[(?P<arg_1>\d+)(;(?P<arg_2>\d+)(;(?P<arg_3>\d+))?)?m
 BOLD_TEMPLATE = '<span style="color: rgb{}; font-weight: bolder">'
 LIGHT_TEMPLATE = '<span style="color: rgb{}">'
 
+CGC_PATH = "cgc"
+
+MAX_SHOWN_FILE_GRP_ITEMS = 3
+
 _root = None
 _port = None
 _python_path = None
@@ -93,6 +97,7 @@ def create_server(root, port, allow_ext_requests, python_path, blender_path, B4W
         (r"/export/show_b4w/?$", ExportShowHandler),
         (r"/export/hide_b4w/?$", ExportHideHandler),
         (r"/run_blender/(.*)$", RunBlenderHandler),
+        (r"/analyze_shader/(.*)$", AnalyzeShaderHandler),
         (r"/tests/send_req/?$", TestSendReq),
         (r"/tests/time_of_day/?$", TestTimeOfDay),
         (r"/(.*)$", StaticFileHandlerNoCache,
@@ -225,6 +230,57 @@ class UploadIconFile(tornado.web.RequestHandler):
             img_file.write(proj_icon["body"])
 
         self.redirect("/project/")
+
+class AnalyzeShaderHandler(tornado.web.RequestHandler):
+    def post(self, tail):
+        kind = tail.strip("/? ")
+        data = self.request.body.decode("utf-8")
+
+        try:
+            resp = self.process_shader_nvidia(kind, data)
+        except BaseException as err:
+            self.set_status(500)
+            self.finish(str(err))
+        else:
+            self.write(resp)
+
+    def process_shader_nvidia(self, kind, data_in):
+        """Process by nvidia cg toolkit"""
+
+        if shutil.which(CGC_PATH) is None:
+            raise BaseException("NVIDIA Cg Toolkit isn't found.")
+
+        tmp_in = tempfile.NamedTemporaryFile(mode="w", suffix=".glsl", delete=False)
+        tmp_in.write(data_in)
+        tmp_in.close()
+
+        if kind == "vert":
+            profile = "gp4vp"   # NV_gpu_program4 and NV_vertex_program4
+            lang = "-oglsl"
+        elif kind == "frag":
+            profile = "gp4fp"   # NV_gpu_program4 and NV_fragment_program4
+            lang = "-oglsl"
+        elif kind == "vert_gles":
+            profile = "gp4vp"   # NV_gpu_program4 and NV_vertex_program4
+            lang = "-ogles"
+        elif kind == "frag_gles":
+            profile = "gp4fp"   # NV_gpu_program4 and NV_fragment_program4
+            lang = "-ogles"
+
+        tmp_out = tempfile.NamedTemporaryFile(mode="r", suffix=".txt", delete=False)
+
+        ret = subprocess.check_output([CGC_PATH, lang, "-profile", profile,
+                tmp_in.name, "-o", tmp_out.name])
+
+        tmp_out.seek(0)
+        data_out = tmp_out.read()
+        tmp_out.close()
+
+        os.remove(tmp_in.name)
+        os.remove(tmp_out.name)
+
+        return data_out
+
 
 class TestSendReq(tornado.web.RequestHandler):
     def post(self):
@@ -405,6 +461,7 @@ class ProjectRootHandler(tornado.web.RequestHandler, ProjectManagerCli):
             else:
                 elem_ins["icon"] = '/scripts/templates/project.png'
 
+            elem_ins["title"] = proj_util.proj_cfg_value(proj_cfg, "info", "title", "")
             elem_ins["name"] = name
 
             elem_ins["info_url"] = '/project/info/' + quote(path, safe="")
@@ -438,11 +495,11 @@ class ProjectRootHandler(tornado.web.RequestHandler, ProjectManagerCli):
 
                 if engine_type == "webplayer_html":
                     for assets_dir in assets_dirs:
-                        apps = [basename(str(p)) for p in pathlib.Path(join(root,
-                                assets_dir)).glob("*.html")]
+                        apps = [str(p) for p in pathlib.Path(join(root,
+                                assets_dir)).rglob("*.html")]
+
                         for app in apps:
-                            player_apps.append(proj_util.unix_path(join(assets_dir,
-                                    app)))
+                            player_apps.append(proj_util.unix_path(relpath(app, root)))
 
                 elif engine_type == "webplayer_json":
                     for assets_dir in assets_dirs:
@@ -452,9 +509,9 @@ class ProjectRootHandler(tornado.web.RequestHandler, ProjectManagerCli):
                             player_apps.append(proj_util.unix_path(join(assets_dir,
                                     app)))
                 else:
-
                     apps = [basename(str(p)) for p in pathlib.Path(join(root,
                             path)).glob("*.html")]
+
                     for app in apps:
                         dev_apps.append(proj_util.unix_path(join(path, app)))
 
@@ -531,10 +588,10 @@ class ProjectRootHandler(tornado.web.RequestHandler, ProjectManagerCli):
 
                 for file in blend_files:
                     link = proj_util.unix_path(relpath(str(file), root))
-                    content += self.blend_link(link);
+                    content += self.blend_link(link, blend_dir);
 
                 elem_ins["blend_files"] += self.file_group(elem_ins["blend_files"],
-                        root, blend_dir, content);
+                        root, blend_dir, content, len(blend_files));
 
             elem_ins["json_files"] = ""
 
@@ -546,36 +603,41 @@ class ProjectRootHandler(tornado.web.RequestHandler, ProjectManagerCli):
                 content = ""
                 for file in json_files:
                     link = proj_util.unix_path(relpath(str(file), root))
-                    content += self.json_link(link);
+                    content += self.json_link(link, assets_dir);
 
                 elem_ins["json_files"] += self.file_group(elem_ins["json_files"], root,
-                        assets_dir, content);
+                        assets_dir, content, len(json_files));
 
             elem_ins["ops"] = ""
 
             if (proj_util.proj_cfg_value(proj_cfg, "compile", "engine_type", None) in
-                    ["external", "copy", "compile", "update"]):
+                    ["external", "copy", "compile", "none"]):
                 elem_ins["ops"] += ('<a href=/project/-p/' +
                         quote(normpath(path), safe="") +
-                        '/compile/ title="Compile project app(s)">compile project</a><br>')
+                        '/build/ title="Compile project app(s)">build project</a>')
+
+                if proj_util.proj_cfg_value(proj_cfg, "compile", "engine_type", None) != 'none':
+                    elem_ins["ops"] += ('<a href=/project/-p/' +
+                            quote(normpath(path), safe="") +
+                            '/check_modules/ title="Check project modules">check modules</a>')
 
             elem_ins["ops"] += ('<a href=/project/-p/' +
                     quote(normpath(path), safe="") +
                     '/reexport/-b/' +
                     quote(_blender_path, safe="") +
-                    '/ title="Re-export all scene files">re-export scenes</a><br>')
+                    '/ title="Re-export all scene files">re-export scenes</a>')
 
             elem_ins["ops"] += ('<a href=/project/-p/' +
                     quote(normpath(path), safe="") +
                     '/convert_resources/ ' +
                     'title="Convert project resources to alternative formats">' +
-                    'convert resources</a><br>')
+                    'convert resources</a>')
 
             elem_ins["ops"] += ('<a href=/project/-p/' +
                     quote(normpath(path), safe="") +
                     '/deploy/' +
                     quote(join("tmp", "downloads", name + ".zip"), safe="") +
-                    ' title="Generate archive with deployed project">deploy project</a><br>')
+                    ' title="Generate archive with deployed project">deploy project</a>')
 
             elem_ins["ops"] += ('<a onclick="show_confirm_window(this);return false;" href=/project/-p/' +
                     quote(normpath(path), safe="") +
@@ -595,17 +657,19 @@ class ProjectRootHandler(tornado.web.RequestHandler, ProjectManagerCli):
         self.write(out_html_str)
 
     def app_link(self, name, link, prefix):
-        return ('<div><a class="spoiler_item" href="/' + link +
+        return ('<div><a target="_blank" class="spoiler_item" href="/' + link +
                 '" title="Run app">' + prefix + ": " + name + '</a></div>')
 
-    def blend_link(self, link):
-        return ('<div><a class="spoiler_item" href="/run_blender/' + link + '" ' +
-                'title="Open in Blender">' + self.shorten(link) + '</a></div>')
+    def blend_link(self, link, dir):
+        link_text = self.shorten(link.replace(dir, "")).lstrip("/")
+        return ('<div><a target="_blank" class="spoiler_item" href="/run_blender/' + link + '" ' +
+                'title="Open in Blender">' + link_text + '</a></div>')
 
-    def json_link(self, link):
-        return ('<div><a class="spoiler_item" ' +
+    def json_link(self, link, dir):
+        link_text = self.shorten(link.replace(dir, "")).lstrip("/")
+        return ('<div><a target="_blank" class="spoiler_item" ' +
                 'href="/apps_dev/viewer/viewer.html?load=../../' + link + '" ' +
-                'title="Open in Viewer">' + self.shorten(link) + '</a></div>')
+                'title="Open in Viewer">' + link_text + '</a></div>')
 
     def shorten(self, s, maxlen=60):
         if len(s) > maxlen:
@@ -613,8 +677,8 @@ class ProjectRootHandler(tornado.web.RequestHandler, ProjectManagerCli):
         else:
             return s
 
-    def file_group(self, s, root, dir, content):
-        if not len(content):
+    def file_group(self, s, root, dir, content, num_items):
+        if not num_items:
             return ""
 
         tpl_html_file = open(join(root, "index_assets", "templates", "spoiler.tmpl"), "r")
@@ -625,7 +689,12 @@ class ProjectRootHandler(tornado.web.RequestHandler, ProjectManagerCli):
 
         header = self.shorten(dir.strip("/ ") + "/", 50)
 
-        html_insertions = dict(id=id, header=header, content=content)
+        if num_items <= MAX_SHOWN_FILE_GRP_ITEMS:
+            html_insertions = dict(id=id, header=header, content=content,
+                    display_show_content="none", display_hide_content="inline")
+        else:
+            html_insertions = dict(id=id, header=header, content=content,
+                    display_show_content="inline", display_hide_content="none")
 
         return string.Template(tpl_html_str).substitute(html_insertions)
 
@@ -681,10 +750,13 @@ class ProjectRequestHandler(tornado.web.RequestHandler, ProjectManagerCli):
                     "--no-colorama"]
 
             show_download_link = False
+            show_update_link = False
 
             for part in req.split("/"):
                 if part == "export" or part == "deploy":
                     show_download_link = True
+                elif part == "check_modules":
+                    show_update_link = True
 
                 cmd.append(unquote(part))
 
@@ -696,6 +768,9 @@ class ProjectRequestHandler(tornado.web.RequestHandler, ProjectManagerCli):
 
                 ConsoleHandler.download_link = "/" + proj_util.unix_path(cmd[-1])
 
+            if show_update_link:
+                ConsoleHandler.update_link = "/project/" + re.sub("check_modules$", "update_modules", req)
+
             ConsoleHandler.console_proc = self.exec_proc_async_pipe(cmd, root)
 
             html_file = open(join(root, "index_assets", "templates", "request.tmpl"), "r")
@@ -705,7 +780,8 @@ class ProjectRequestHandler(tornado.web.RequestHandler, ProjectManagerCli):
         html_str = html_file.read()
         html_file.close()
 
-        html_insertions = dict(download_link=ConsoleHandler.download_link)
+        html_insertions = dict(download_link=ConsoleHandler.download_link,
+                               update_link=ConsoleHandler.update_link)
 
         out_html_str = string.Template(html_str).substitute(html_insertions)
 
@@ -753,7 +829,10 @@ class ProjectInfoHandler(tornado.web.RequestHandler):
         optimization = proj_util.proj_cfg_value(proj_cfg, "compile", "optimization", "")
         js_ignore = proj_util.proj_cfg_value(proj_cfg, "compile", "js_ignore", "")
         css_ignore = proj_util.proj_cfg_value(proj_cfg, "compile", "css_ignore", "")
+        compilation_ignore = proj_util.proj_cfg_value(proj_cfg, "compile", "ignore", "")
+        assets_path_dest = proj_util.proj_cfg_value(proj_cfg, "deploy", "assets_path_dest", "")
         assets_path_prefix = proj_util.proj_cfg_value(proj_cfg, "deploy", "assets_path_prefix", "")
+        deployment_ignore = proj_util.proj_cfg_value(proj_cfg, "deploy", "ignore", "")
 
         # size of all project directories
         dirs = [path]
@@ -778,7 +857,7 @@ class ProjectInfoHandler(tornado.web.RequestHandler):
         engine_type_replacer = {
             "webplayer_html": "WebPlayer HTML",
             "webplayer_json": "WebPlayer JSON",
-            "update": "Update",
+            "none": "none",
             "copy": "Copy",
             "compile": "Compile",
             "external": "External"
@@ -801,7 +880,10 @@ class ProjectInfoHandler(tornado.web.RequestHandler):
             "optimization": optimization,
             "js_ignore": "<br>".join(js_ignore),
             "css_ignore": "<br>".join(css_ignore),
-            "assets_path_prefix": assets_path_prefix
+            "compilation_ignore": compilation_ignore,
+            "assets_path_dest": assets_path_dest,
+            "assets_path_prefix": assets_path_prefix,
+            "deployment_ignore": deployment_ignore
         }
 
         html_str = string.Template(tpl_html_str).substitute(html_insertions)
@@ -888,6 +970,7 @@ class ConsoleHandler(tornado.websocket.WebSocketHandler):
     console_proc = None
     console_queue = None
     download_link = ""
+    update_link = ""
 
     def open(self, *args):
         self.__class__.websocket_conn = self
@@ -916,6 +999,7 @@ class ConsoleHandler(tornado.websocket.WebSocketHandler):
             cls.console_proc = None
             cls.websocket_conn.close()
             cls.download_link = ""
+            cls.update_link = ""
             cls.websocket_conn = None
 
     @classmethod

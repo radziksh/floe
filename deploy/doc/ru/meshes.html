@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Меши &mdash; Руководство пользователя Blend4Web 16.05</title>
+  <title>Меши &mdash; Руководство пользователя Blend4Web 16.10</title>
   
 
   
@@ -32,7 +32,7 @@
   
         <link rel="author" title="Об этих документах"
               href="about.html"/>
-    <link rel="top" title="Руководство пользователя Blend4Web 16.05" href="index.html"/>
+    <link rel="top" title="Руководство пользователя Blend4Web 16.10" href="index.html"/>
         <link rel="next" title="Редактор нормалей" href="normal_editor.html"/>
         <link rel="prev" title="Объекты" href="objects.html"/> 
 
@@ -61,7 +61,7 @@
           
           
             <div class="version">
-              v16.05
+              v16.10
             </div>
           
         
@@ -105,8 +105,9 @@
 <li class="toctree-l1"><a class="reference internal" href="normal_editor.html">Редактор нормалей</a></li>
 <li class="toctree-l1"><a class="reference internal" href="camera.html">Камера</a></li>
 <li class="toctree-l1"><a class="reference internal" href="materials.html">Материалы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="material_library.html">Библиотека материалов</a></li>
 <li class="toctree-l1"><a class="reference internal" href="node_materials.html">Нодовые материалы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Логические ноды</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Редактор логики</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lighting.html">Освещение, тени и фон</a></li>
 <li class="toctree-l1"><a class="reference internal" href="postprocessing_effects.html">Спецэффекты</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stereo_rendering.html">Стереоизображение</a></li>
@@ -188,7 +189,7 @@
 <p>Все объекты типа <code class="docutils literal"><span class="pre">MESH</span></code> можно разделить на статические и динамические.</p>
 <p><strong>Статические меши</strong> - меши, которые могут быть объединены друг с другом, если они имеют одинаковый материал.</p>
 <p><strong>Динамические меши</strong> - меши, которые не могут быть скомбинированы друг с другом.</p>
-<p>Объединение статических мешей - т.н. батчинг (batching) - осуществляется автоматически при загрузке сцены в целях оптимизации количества вызовов отрисовки. Конвертация происходит, даже если на сцене присутствует всего один объект. Центр получившегося в результате конвертации меша находится в начале координат.</p>
+<p id="batching">Объединение статических мешей - т.н. батчинг (batching) - осуществляется автоматически при загрузке сцены в целях оптимизации количества вызовов отрисовки. Конвертация происходит, даже если на сцене присутствует всего один объект. Центр получившегося в результате конвертации меша находится в начале координат.</p>
 <p>Меши, имеющие анимацию, физику или родителя, являющегося динамическим объектом, рассматриваются как динамические.</p>
 </div>
 <div class="section" id="settings">
@@ -218,7 +219,7 @@
 </div></blockquote>
 <dl class="docutils">
 <dt><em>MinX и  MaxX</em></dt>
-<dd><p class="first last">Размеры ограничивающего объёма по оси Z. По умолчанию <em>MinZ</em> = -1, <em>MaxZ</em> = 1.</p>
+<dd><p class="first last">Размеры ограничивающего объёма по оси Z. По умолчанию <em>MinX</em> = -1, <em>MaxX</em> = 1.</p>
 </dd>
 <dt><em>MinY и  MaxY</em></dt>
 <dd><p class="first last">Размеры ограничивающего объёма по оси Y. По умолчанию <em>MinY</em> = -1, <em>MaxY</em> = 1.</p>
@@ -242,7 +243,7 @@
 <p class="first admonition-title">Примечание</p>
 <p class="last">На объекте должно стоять свойство <em>Export Shape Keys</em>.</p>
 </div>
-<div class="highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">get_object_by_name</span><span class="p">(</span><span class="s2">&quot;Object&quot;</span><span class="p">);</span>
 <span class="nx">m_geometry</span><span class="p">.</span><span class="nx">apply_shape_key</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="s2">&quot;Key 1&quot;</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">);</span>
 <span class="c1">// ...</span>
@@ -271,7 +272,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2014-2016, Триумф.
-      Обновлено: 2016-05-31.
+      Обновлено: 2016-10-27.
 
     </p>
   </div>
@@ -327,7 +328,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'v16.05',
+            VERSION:'v16.10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -70,5 +69,13 @@ exports.is_anchor = m_anchors.is_anchor;
  * valid anchor.
  */
 exports.get_element_id = m_anchors.get_element_id;
+
+/**
+ * Force update positions of anchors.
+ * @method module:anchors.update
+ */
+exports.update = function() {
+    m_anchors.update(true);
+}
 
 }

@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -97,6 +96,8 @@ var AXIS_THRESHOLD = 0.1;
 var TRANS_GMPD_KOEF = 0.002;
 var ZOOM_GMPD_KOEF = 0.05;
 
+var LOW_BANDWIDTH_LIMIT = 1.5;
+
 // Cached HTML elements
 var _fps_logger_elem = null;
 
@@ -127,7 +128,7 @@ var _limits_tmp = {};
 /**
  * Initialize the engine.
  * The "options" object may be extended by adding properties from the engine's
- * configuration (see {@link module:config|confg} module).
+ * configuration (see {@link module:config|config} module).
  * In that case they will be applied before engine initialization.
  * @param {Object}   [options={}] Initialization options.
  * @param {String}   [options.canvas_container_id=null] Canvas container ID.
@@ -149,14 +150,15 @@ var _limits_tmp = {};
  * match the size of container element.
  * @param {Number}  [options.force_container_ratio=0] Automatically resize
  * canvas container height, based on its width and passed ratio value.
+ * @param {Boolean} [options.min_capabilities=false] Set min capability mode
  * @cc_externs canvas_container_id callback show_hud_debug_info
  * @cc_externs sfx_mix_mode show_fps fps_elem_id error_purge_elements
  * @cc_externs report_init_failure pause_invisible key_pause_enabled
- * @cc_externs alpha alpha_sort_threshold assets_dds_available
+ * @cc_externs alpha alpha_sort_threshold assets_dds_available assets_pvr_available
  * @cc_externs assets_min50_available quality fps_wrapper_id
  * @cc_externs console_verbose physics_enabled autoresize track_container_position
  * @cc_externs force_container_ratio from to elem prop cb duration opt_prefix
- * @cc_externs opt_suffix
+ * @cc_externs opt_suffix min_capabilities srgb_type
  */
 
 exports.init = function(options) {
@@ -170,12 +172,15 @@ exports.init = function(options) {
     var force_container_ratio = 0;
     var fps_wrapper_id = null;
     var key_pause_enabled = true;
+    var min_capabilities = false;
     var pause_invisible = true;
     var report_init_failure = true;
     var sfx_mix_mode = false;
     var show_fps = false;
     var show_hud_debug_info = false;
     var track_container_position = false;
+    var quality = m_cfg.get("quality");
+
     for (var opt in options) {
         switch (opt) {
         case "canvas_container_id":
@@ -186,9 +191,6 @@ exports.init = function(options) {
             break;
         case "autoresize":
             autoresize = options.autoresize;
-            break;
-        case "do_not_use_onload":
-            // ignore deprecated option
             break;
         case "show_hud_debug_info":
             show_hud_debug_info = options.show_hud_debug_info;
@@ -222,6 +224,12 @@ exports.init = function(options) {
             break;
         case "force_container_ratio":
             force_container_ratio = options.force_container_ratio;
+            break;
+        case "min_capabilities":
+            min_capabilities = options.min_capabilities;
+            break;
+        case "quality":
+            quality = options.quality;
             break;
         default:
             m_cfg.set(opt, options[opt]);
@@ -260,7 +268,7 @@ exports.init = function(options) {
 
         var canvas_container_elem = m_cont.get_container();
 
-        resize_to_container();
+        m_cont.resize_to_container();
 
         if (show_fps) {
             create_fps_logger_elem(fps_elem_id, fps_wrapper_id);
@@ -279,16 +287,10 @@ exports.init = function(options) {
             });
         }
 
-        if (autoresize) {
+        if (autoresize)
             m_main.append_loop_cb(function() {
-                var ccw = canvas_container_elem.clientWidth;
-                var cch = canvas_container_elem.clientHeight;
-
-                if (ccw != canvas_elem.clientWidth ||
-                        cch != canvas_elem.clientHeight)
-                    m_cont.resize(ccw, cch, true);
+                m_cont.resize_to_container();
             });
-        }
 
         if (track_container_position) {
             m_main.append_loop_cb(function() {
@@ -296,7 +298,26 @@ exports.init = function(options) {
             });
         }
 
-        callback(canvas_elem, true);
+        if (min_capabilities)
+            m_cfg.reset_limits();
+
+        if (quality == m_cfg.P_AUTO) {
+            m_dbg.test_performance(function(time, bw) {
+                if (time == 0) {
+                    m_print.log("QUALITY TEST RESULT: UNSUPPORTED, using HIGH");
+                    m_cfg.apply_quality(m_cfg.P_HIGH);
+                } else if (bw < LOW_BANDWIDTH_LIMIT) {
+                    m_print.log("QUALITY TEST RESULT: LOW (" + bw.toFixed(1) + " GB/s)");
+                    m_cfg.apply_quality(m_cfg.P_LOW);
+                } else {
+                    m_print.log("QUALITY TEST RESULT: HIGH (" + bw.toFixed(1) + " GB/s)");
+                    m_cfg.apply_quality(m_cfg.P_HIGH);
+                }
+
+                callback(canvas_elem, true);
+            });
+        } else
+            callback(canvas_elem, true);
     };
 
     var onunload_cb = function() {
@@ -356,6 +377,13 @@ function setup_canvas(canvas_container_id, init_hud_canvas,
     var canvas_elem = document.createElement("canvas");
     var append_to = document.getElementById(canvas_container_id);
 
+    if (!append_to) {
+
+        m_print.error("Warning: canvas container \"" + canvas_container_id +
+            "\" not found, appending to body");
+        append_to = document.body;
+    }
+
     canvas_elem.style.position = "absolute";
     canvas_elem.style.left = 0;
     canvas_elem.style.top = 0;
@@ -373,13 +401,6 @@ function setup_canvas(canvas_container_id, init_hud_canvas,
         canvas_elem_hud.style.pointerEvents = "none";
     } else
         var canvas_elem_hud = null;
-
-    if (!append_to) {
-
-        m_print.error("Warning: canvas container \"" + canvas_container_id +
-            "\" not found, appending to body");
-        append_to = document.body;
-    }
 
     append_to.appendChild(canvas_elem);
 
@@ -409,7 +430,8 @@ function create_fps_logger_elem(fps_elem_id, fps_wrapper_id) {
             "position:absolute;" +
             "top: 23px;" +
             "right: 20px;" +
-            "font-size: 45px;" +
+            "text-shadow: 0px 0px 6px #fff;" +
+            "font-size: 40px;" +
             "line-height: 50px;" +
             "font-weight: bold;" +
             "color: #000;";
@@ -438,17 +460,14 @@ function elem_cloned(elem_id) {
     return new_element;
 }
 
-exports.resize_to_container = resize_to_container;
 /**
  * Fit canvas elements to match the size of container element.
+ * @method module:app.resize_to_container
+ * @deprecated use {@link module:container.resize_to_container} instead.
  */
-function resize_to_container() {
-    var canvas_container_elem = m_cont.get_container();
-
-    var w = canvas_container_elem.clientWidth;
-    var h = canvas_container_elem.clientHeight;
-
-    m_cont.resize(w, h, true);
+exports.resize_to_container = function() {
+    m_print.error_deprecated("app.resize_to_container", "container.resize_to_container");
+    m_cont.resize_to_container();
 }
 
 exports.set_onclick = function(elem_id, callback) {
@@ -479,7 +498,7 @@ function trans_hover_cam_horiz_local(camobj, dir, fact) {
 
     var obj_quat = m_trans.get_rotation(camobj, _quat4_tmp);
     var abs_dir = m_util.quat_to_dir(obj_quat, dir, _vec3_tmp);
-    abs_dir[1] = 0;
+    abs_dir[2] = 0;
     m_vec3.normalize(abs_dir, abs_dir);
     m_vec3.scale(abs_dir, dist * fact, abs_dir);
 
@@ -524,7 +543,7 @@ function trans_targ_cam_local(camobj, fact_view, elapsed) {
     else
         fact_view = dist * calc_fact_from(fact);
 
-    m_trans.move_local(camobj, 0, fact_view, 0);
+    m_trans.move_local(camobj, 0, 0, fact_view);
 }
 
 function get_dest_mouse_touch(obj, value, fact, dist, dest_value) {
@@ -632,9 +651,9 @@ function enable_camera_controls(disable_default_pivot, disable_letter_controls,
         var quat  = m_trans.get_rotation(obj);
         var char_quat = m_util.cam_quat_to_mesh_quat(quat);
 
-        trans[1] -= CHAR_HEAD_POSITION;
+        trans[2] -= CHAR_HEAD_POSITION;
         m_phy.set_transform(character, trans, char_quat);
-        m_cons.append_stiff_trans(obj, character, [0, 0.5, 0]);
+        m_cons.append_stiff_trans(obj, character, [0, 0, 0.5]);
 
         var char_dir = new Float32Array(2);
 
@@ -663,40 +682,40 @@ function enable_camera_controls(disable_default_pivot, disable_letter_controls,
                     char_dir[0] = 1;
                 else if (use_hover) {
                     var hover_angle = m_cam.get_camera_angles(obj, _vec2_tmp2)[1];
-                    var axis = (Math.abs(hover_angle) >= Math.PI / 4) ? m_util.AXIS_MZ : m_util.AXIS_MY;
+                    var axis = (Math.abs(hover_angle) >= Math.PI / 4) ? m_util.AXIS_Y : m_util.AXIS_MZ;
                     trans_hover_cam_horiz_local(obj, axis,
                             velocity.trans * HOVER_KEY_TRANS_FACTOR * elapsed);
                 } else if (use_pivot)
                     trans_targ_cam_local(obj, -velocity.zoom, elapsed);
                 else
-                    trans_eye_cam_local(obj, 0, -velocity.trans * elapsed, 0);
+                    trans_eye_cam_local(obj, 0, 0, -velocity.trans * elapsed);
                 break;
             case "BACKWARD":
                 if (character)
                     char_dir[0] = -1;
                 else if (use_hover) {
                     var hover_angle = m_cam.get_camera_angles(obj, _vec2_tmp2)[1];
-                    var axis = (Math.abs(hover_angle) >= Math.PI / 4) ? m_util.AXIS_Z : m_util.AXIS_Y;
+                    var axis = (Math.abs(hover_angle) >= Math.PI / 4) ? m_util.AXIS_MY : m_util.AXIS_Z;
                     trans_hover_cam_horiz_local(obj, axis,
                             velocity.trans * HOVER_KEY_TRANS_FACTOR * elapsed);
                 } else if (use_pivot)
                     trans_targ_cam_local(obj, velocity.zoom, elapsed);
                 else
-                    trans_eye_cam_local(obj, 0, velocity.trans * elapsed, 0);
+                    trans_eye_cam_local(obj, 0, 0, velocity.trans * elapsed);
                 break;
             case "UP":
                 if (use_hover)
                     zoom_hover_cam(obj, - velocity.zoom * HOVER_KEY_ZOOM_FACTOR 
                             * elapsed);
                 else if (!character)
-                    trans_eye_cam_local(obj, 0, 0, -velocity.trans * elapsed);
+                    trans_eye_cam_local(obj, 0, velocity.trans * elapsed, 0);
                 break;
             case "DOWN":
                 if (use_hover)
                     zoom_hover_cam(obj, velocity.zoom * HOVER_KEY_ZOOM_FACTOR 
                             * elapsed);
                 else if (!character)
-                    trans_eye_cam_local(obj, 0, 0, velocity.trans * elapsed);
+                    trans_eye_cam_local(obj, 0, -velocity.trans * elapsed, 0);
                 break;
             case "LEFT":
                 if (character)
@@ -976,11 +995,11 @@ function enable_camera_controls(disable_default_pivot, disable_letter_controls,
                 var right_mult = HOVER_MOUSE_ROT_MULT_PX * velocity.rot;
             }
 
-            if (m_ctl.get_sensor_payload(obj, id, 0) === 1) {
+            if (m_ctl.get_sensor_payload(obj, id, 0).which === 1) {
                 dest_x_mouse += (param == "X") ? -value * left_mult : 0;
                 dest_y_mouse += (param == "Y") ? -value * left_mult : 0;
-            } else if (m_ctl.get_sensor_payload(obj, id, 0) === 2
-                    || m_ctl.get_sensor_payload(obj, id, 0) === 3) {
+            } else if (m_ctl.get_sensor_payload(obj, id, 0).which === 2
+                    || m_ctl.get_sensor_payload(obj, id, 0).which === 3) {
                 dest_pan_x_mouse += (param == "X") ? -value * right_mult : 0;
                 dest_pan_y_mouse += (param == "Y") ? -value * right_mult : 0;
             }
@@ -1049,9 +1068,9 @@ function enable_camera_controls(disable_default_pivot, disable_letter_controls,
         var mouse_move_x = m_ctl.create_mouse_move_sensor("X", element);
         var mouse_move_y = m_ctl.create_mouse_move_sensor("Y", element);
         var mouse_down = m_ctl.create_mouse_click_sensor(element);
-        m_ctl.create_sensor_manifold(obj, "MOUSE_X", m_ctl.CT_LEVEL,
+        m_ctl.create_sensor_manifold(obj, "MOUSE_X", m_ctl.CT_POSITIVE,
                 [mouse_down, mouse_move_x], null, mouse_cb, "X");
-        m_ctl.create_sensor_manifold(obj, "MOUSE_Y", m_ctl.CT_LEVEL,
+        m_ctl.create_sensor_manifold(obj, "MOUSE_Y", m_ctl.CT_POSITIVE,
                 [mouse_down, mouse_move_y], null, mouse_cb, "Y");
     }
 
@@ -1074,11 +1093,11 @@ function enable_camera_controls(disable_default_pivot, disable_letter_controls,
             else
                 var r_mult = TARGET_EYE_TOUCH_ROT_MULT_PX * velocity.rot;
             var value = m_ctl.get_sensor_value(obj, id, 0);
-            if (m_ctl.get_sensor_payload(obj, id, 0)
+            if (m_ctl.get_sensor_payload(obj, id, 0).gesture
                     === m_ctl.PL_SINGLE_TOUCH_MOVE) {
                 dest_x_touch += (param == "X") ? -value * r_mult : 0;
                 dest_y_touch += (param == "Y") ? -value * r_mult : 0;
-            } else if (m_ctl.get_sensor_payload(obj, id, 0)
+            } else if (m_ctl.get_sensor_payload(obj, id, 0).gesture
                     ===  m_ctl.PL_MULTITOUCH_MOVE_PAN) {
                 if (!use_hover) {
                     var pan_mult = TARGET_EYE_TOUCH_PAN_MULT_PX * velocity.trans;
@@ -1091,9 +1110,9 @@ function enable_camera_controls(disable_default_pivot, disable_letter_controls,
         }
     }
 
-    m_ctl.create_sensor_manifold(obj, "TOUCH_X", m_ctl.CT_LEVEL,
+    m_ctl.create_sensor_manifold(obj, "TOUCH_X", m_ctl.CT_POSITIVE,
             [touch_move_x], null, touch_cb, "X");
-    m_ctl.create_sensor_manifold(obj, "TOUCH_Y", m_ctl.CT_LEVEL,
+    m_ctl.create_sensor_manifold(obj, "TOUCH_Y", m_ctl.CT_POSITIVE,
             [touch_move_y], null, touch_cb, "Y");
 
     // camera rotation and translation smoothing
@@ -1168,7 +1187,7 @@ function enable_camera_controls(disable_default_pivot, disable_letter_controls,
 
                 if (y_mouse + y_touch) {
                     var hover_angle = m_cam.get_camera_angles(obj, _vec2_tmp2)[1];
-                    var axis = (Math.abs(hover_angle) > Math.PI / 4) ? m_util.AXIS_Z : m_util.AXIS_Y;
+                    var axis = (Math.abs(hover_angle) > Math.PI / 4) ? m_util.AXIS_MY : m_util.AXIS_Z;
                     trans_hover_cam_horiz_local(obj, axis, (y_mouse + y_touch)
                             * HOVER_MOUSE_TOUCH_TRANS_FACTOR);
                 }
@@ -1233,16 +1252,18 @@ exports.disable_camera_controls = disable_camera_controls;
 function disable_camera_controls() {
     var cam = m_scs.get_active_camera();
 
+    if (m_ctl.check_sensor_manifold(cam, "TOGGLE_CHAR_MOVE_TYPE")
+            && m_scs.get_first_character())
+        m_cons.remove(cam);
+
     var cam_std_manifolds = ["FORWARD", "BACKWARD", "ROT_UP", "ROT_DOWN",
             "ROT_LEFT", "ROT_RIGHT", "UP", "DOWN", "LEFT", "RIGHT",
             "MOUSE_WHEEL", "TOUCH_ZOOM", "ZOOM_INTERPOL", "MOUSE_X", "MOUSE_Y",
-            "TOUCH_X", "TOUCH_Y", "ROT_TRANS_INTERPOL", "CHANGE_MOVE_STYLE"];
+            "TOUCH_X", "TOUCH_Y", "ROT_TRANS_INTERPOL", "CHANGE_MOVE_STYLE", 
+            "TOGGLE_CHAR_MOVE_TYPE"];
 
     for (var i = 0; i < cam_std_manifolds.length; i++)
         m_ctl.remove_sensor_manifold(cam, cam_std_manifolds[i]);
-
-    if (m_cam.get_move_style(cam) == m_cam.MS_EYE_CONTROLS && m_scs.get_first_character())
-        m_cons.remove(cam);
 }
 
 /**
@@ -1285,13 +1306,13 @@ exports.enable_object_controls = function(obj, element) {
                 if (is_vehicle)
                     m_phy.vehicle_throttle(obj, 1);
                 else
-                    m_trans.move_local(obj, 0, 0, trans_speed * elapsed);
+                    m_trans.move_local(obj, 0, -trans_speed * elapsed, 0);
                 break;
             case "BACKWARD":
                 if (is_vehicle)
                     m_phy.vehicle_throttle(obj, -1);
                 else
-                    m_trans.move_local(obj, 0, 0, -trans_speed * elapsed);
+                    m_trans.move_local(obj, 0, trans_speed * elapsed, 0);
                 break;
             case "LEFT":
                 if (is_vehicle)
@@ -1447,8 +1468,10 @@ function request_fullscreen(elem, enabled_cb, disabled_cb) {
     elem.requestFullScreen = elem.requestFullScreen ||
             elem.webkitRequestFullScreen || elem.mozRequestFullScreen
             || elem.msRequestFullscreen;
-
-    elem.requestFullScreen();
+    if (elem.requestFullScreen)
+        elem.requestFullScreen();
+    else
+        m_print.error("B4W App: request fullscreen method is not supported");
 }
 
 exports.exit_fullscreen = exit_fullscreen;
@@ -1462,7 +1485,7 @@ function exit_fullscreen() {
             document.mozCancelFullScreen || document.msExitFullscreen;
 
     if (typeof exit_fs != "function")
-        throw "B4W App: exit fullscreen method is not supported";
+        m_print.error("B4W App: exit fullscreen method is not supported");
 
     exit_fs.apply(document);
 }
@@ -1484,16 +1507,6 @@ function check_fullscreen() {
         return true;
 
     return false;
-}
-
-function toggle_camera_collisions_usage() {
-    var camobj = m_scs.get_active_camera();
-
-    if (m_anim.is_detect_collisions_used(camobj)) {
-        m_anim.detect_collisions(camobj, false);
-    } else {
-        m_anim.detect_collisions(camobj, true);
-    }
 }
 
 exports.report_app_error = report_app_error;

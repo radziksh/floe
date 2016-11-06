@@ -30,7 +30,7 @@ A current stable version of Blender should be used. It can be downloaded from th
 Unpacking the Archive
 ---------------------
 
-Stable versions of the distribution are available as an archive (``blend4web_sdk_free_YY_MM.zip`` -- free SDK, ``blend4web_sdk_pro_YY_MM.zip`` -- commercial SDK). Simply unpack this archive somewhere.
+Stable versions of the distribution are available as an archive (``blend4web_ce_YY_MM.zip`` -- free SDK, ``blend4web_pro_YY_MM.zip`` -- commercial SDK). Simply unpack this archive somewhere.
 
 Installing Blend4Web SDK
 ------------------------
@@ -73,7 +73,7 @@ In the :file:`File > Export` menu, the :file:`Blend4Web (.json)` and :file:`Blen
 
     The addon can only export scenes to :ref:`HTML format <export_scene>` and has limited functionality (for example, it doesn't have the :ref:`project manager <project_management>`, example scenes, user manual and so on), but still it has everything you might need to create a simple application.
 
-    It can be installed the same way as any other `Blender addon <https://www.blender.org/manual/advanced/scripting/python/add_ons.html?highlight=addon#installation-of-a-3rd-party-add-on>`_.
+    It can be installed the same way as any other `Blender addon <https://www.blender.org/manual/advanced/scripting/python/addons.html?highlight=install%20addon#installation-of-a-3rd-party-add-on>`_.
 
 
 |
@@ -97,26 +97,76 @@ Updating the SDK
 
 Before updating, we recommend to backup all projects in development using the :ref:`project export <export_projects>` tools.
 
-There are two methods to update the SDK.
+To update the SDK, follow these steps:
 
-Firstly, you can completely delete the SDK folder and, after that, extract the new version folder and set the path to it in the Blender settings, as if you were installing the SDK for the first time.
+#. Download the new version of the SDK.
 
-Secondly, you can simply overwrite the outdated SDK files with the new ones. This method is considered less "pure", but in most cases it should not cause any problems.
+#. Run Blender.
+
+#. Open the ``User Preferences`` window.
+
+#. Open the ``Add-ons`` panel.
+
+#. Disable ``Blend4Web`` Add-on.
+
+    .. note::
+        We recommend not to use the ``Remove`` button to disable the Add-on for updating the SDK, as doing so will completely delete the add-on, including its files in the SDK.
+
+#. Unpack the new version of the SDK from the archive.
+
+    .. note::
+        There are two methods to do this.
+
+        Firstly, you can completely delete the SDK folder and, after that, extract the new version folder, as if you were installing the SDK for the first time.
+
+        Secondly, you can simply overwrite the outdated SDK files with the new ones. This method is considered less "pure", but in most cases it should not cause any problems.
+
+#. Open the ``File`` panel in the ``User Preferences`` window.
+
+#. Set the path to the SDK folder in the ``Scripts`` field.
+
+#. Press the ``Save User Settings`` button.
+
+#. Restart Blender.
+
+#. Open the ``User Preferences`` window once again.
+
+#. Open the ``Add-ons`` panel.
+
+#. Enable ``Blend4Web`` add-on.
+
+#. Press the ``Save User Settings`` button once again.
+
+#. Check if everything works correctly.
 
 After updating is complete, you can import all saved projects using the :ref:`project import <import_projects>` tools.
 
-.. index:: export
+Updating the Addon
+-------------------
 
-.. _getting_started_export_viewer:
+If you are only using the Blend4Web add-on, follow this instruction instead.
 
-Exporting and Viewing Scenes
-----------------------------
+Before installing a new version of the add-on, you may firstly remove the existing one. To do this, unfold the information tab of the Blend4Web addon and press the ``Remove`` button. Removing the old version is not required before installing a new one, but doing so makes sure there won't be any coflicts.
 
-The created scenes can be exported in HTML format. To do this use the :file:`File > Export > Blend4Web (.html)` or :file:`File > Export > Blend4Web (.json)` menu option and choose the export filepath. Scene export is described thoroughly in :ref:`its own chapter <addon>`. The resulting HTML file can be opened with any browser with WebGL support.
+.. image:: src_images/setup/user_preferences_remove_addon.png
+   :align: center
+   :width: 100%
 
-.. seealso:: :ref:`browser_webgl_support`
+#. Download the archive that contains the new version of the add-on, and save it to any place on your hard drive.
 
+#. Run Blender.
 
+#. Open the ``User Preferences`` window.
+
+#. Switch to the ``Add-ons`` panel.
+
+#. Install the new version of the add-on from the archive you downloaded.
+
+#. Press the ``Save User Settings button``.
+
+#. Restart Blender.
+
+Everything should be working now.
 
 |
 

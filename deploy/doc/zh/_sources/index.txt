@@ -26,7 +26,7 @@
 
   * 显卡和驱动程序
 
-* Engine Features
+* 引擎功能
 
 * 安装和更新
 
@@ -44,17 +44,11 @@
 
   * 应用程序开发
 
-* 项目管理器
+* 项目管理
 
   * 项目管理器
 
-  * 项目创建向导
-
-  * 项目信息
-
-  * 项目导入
-
-  * 项目导出
+  * 高级项目管理
 
 * 场景预览器
 
@@ -80,13 +74,25 @@
 
 * 插件
 
-  * Local Development Server
+  * 本地开发服务器
 
-  * Running Viewer and Demos
+  * 运行浏览器和演示
 
-  * JSON
+  * 输出格式
 
-  * HTML
+  * 导出选项
+
+  * 初始化错误
+
+  * 兼容性错误
+
+  * 关键导出错误
+
+  * 非致命导出的错误
+
+  * 其他消息
+
+  * 插件翻译
 
 * 场景设置
 
@@ -104,63 +110,63 @@
 
   * 设置
 
-  * 设置
+  * 锚设置
 
   * 物体变换API
 
-  * Get Object API
+  * 获取物体API
 
-  * Object Selection
+  * 物体选择
 
-  * Copying Objects (Instancing)
+  * 复制物体（实例化）
 
   * 四元数
-
-  * Blender和Blend4Web的坐标系之间的差异
 
   * 通过TSR矢量移动
 
 * 网格
 
-  * Static and Dynamic Meshes
+  * 静态和动态网格
 
   * 设置
 
   * 变形
 
-* Normal Editor
+* 法线编辑器
 
-  * Main Features of the Normal Editor
+  * 法线编辑器主要功能
 
-  * Interface of the Vertex Normal Editor
+  * 界面
 
-  * Activate
+  * 启用
 
-  * Show Normals
+  * 显示法线
 
-  * Rotation
+  * 旋转
 
-  * Split Normals
+  * 绝对和偏移模式
 
-  * Average Split
+  * 分割法线
 
-  * Restore
+  * 平均
 
-  * Tree, Foliage and Face
+  * 恢复
 
-  * Copy/Paste
+  * Tree（树），Foliage（树叶） 和 Face（面）
 
-  * Copy From Mesh
+  * Copy（复制）/Paste（粘贴）
 
-* Camera
+  * 从网格复制
 
-  * Move Styles and General Settings
+* 相机
 
-  * Limiting the Camera Movement
+  * 移动方式和一般设置
 
-  * Viewport Alignment
+  * 限制摄像机的运动
 
-  * Camera Controls API
+  * 视口对齐
+
+  * 相机控制API
 
 * 材质
 
@@ -178,47 +184,55 @@
 
   * 光晕材质
 
+* 材质库
+
+  * 库结构
+
+  * 材质结构
+
+  * 添加材质到一个场景
+
 * 节点材质
 
   * 标准节点
 
   * 游戏引擎特定节点
 
-* Logic Nodes
+* 逻辑编辑器
 
-  * Basics
+  * 基础
 
-  * Control Flow
+  * 控制流
 
-  * Animation
+  * 动画
 
-  * Camera
+  * 相机（Camera）
 
-  * Object
+  * 物体
 
-  * Operations
+  * 操作
 
-  * Sound
+  * 声音
 
-  * Network
+  * 网络
 
-  * Debug
+  * 调试
 
-  * Deprecated
+  * 已过时
 
-  * Layout
+  * 布局
 
-  * Debugging
+  * 调试中
 
-* Lighting, Shadows and Background
+* 照明、 阴影和背景
 
-  * Shading Types
+  * 着色类型
 
-  * Lighting with Light Sources
+  * 用光源照明
 
-  * Environment Lighting (Ambient)
+  * 环境照明（环境）
 
-  * Shadows
+  * 阴影
 
   * Background
 
@@ -246,6 +260,8 @@
 
   * 附加设置
 
+  * HMD设置
+
 * 纹理
 
   * 纹理类型
@@ -272,21 +288,21 @@
 
   * 特殊的纹理类型
 
-* Particle System. Fluids
+* 粒子系统,流体
 
-  * Usage
+  * 用法
 
-  * Setup
+  * 设置
 
-  * Textures in Particle Systems
+  * 粒子系统中的纹理
 
-* Particle System. Instancing
+* 粒子系统.实例化
 
-  * Particle System Setup
+  * 粒子系统设置
 
-  * Grass
+  * 草地
 
-  * Tree Leaves
+  * 树叶
 
 * 动画
 
@@ -306,13 +322,15 @@
 
   * 值和 RGB 节点的动画
 
-* Outdoor Effects
+* 室外效果
 
-  * Water
+  * 水
 
-  * Atmosphere
+  * 大气
 
-  * Wind
+  * 镜头光晕
+
+  * 风
 
 * 色彩管理
 
@@ -332,65 +350,67 @@
 
   * 音源设置
 
+  * 调音台
+
   * 处理和解码
 
-* Physics
+* 物理
 
-  * Preparing for Use
+  * 使用准备
 
-  * Static Physics Type
+  * 静态物理类型
 
-  * Dynamic Physics Type
+  * 动态物理类型
 
-  * Constraints
+  * 约束
 
-  * Wheeled Vehicles
+  * 轮式的车辆
 
-  * Floating Objects
+  * 浮动物体
 
-  * Floating Vehicles aka Watercrafts
+  * 浮动交通工具或叫船舶
 
-  * Use in Applications
+  * 角色
 
-* For Application Developers
+  * 在应用程序中的使用
 
-  * Project Management
+* 对应用程序开发人员
 
-  * Advanced Project Management
+  * 应用程序编程
 
-  * Application Programming
+  * 背景透明
 
-  * Resource Conversion
+  * 资源转换
 
-  * Code Examples
+  * 示例代码
 
-  * Event-Driven Model
+  * 事件驱动模型
 
-  * SDK File Structure
+  * SDK文件结构
 
-  * Loading Local Resources
+  * 加载本地资源
 
-  * Quality Profiles
+  * 品质配置
 
-  * Non-FullScreen Web Apps
+  * 非全屏Web应用程序
 
-* For Engine Developers
+* 对于引擎开发者
 
-  * Coding Style
+  * 代码样式
 
-  * Building the Engine
+  * 构建引擎
 
-  * Building the Addon
+  * 构建插件
 
-  * Dependencies
+  * 依赖
 
-  * Naming Functions and Variables
+  * 命名函数和变量
 
-  * Debugging
+  * 调试中
 
-  * Shader Compilation
+  * 着色器编译
 
-  * Updating Add-on Translations
+  * 更新插件翻译
 
 * 团队工作。使用 Git
 
@@ -418,17 +438,27 @@
 
 * 存在的问题及解决方案
 
-  * WebGL Support
+  * WebGL的支持
 
   * 启动时的问题
 
   * WebGL的无法初始化
 
-  * More In-Depth Troubleshooting
+  * 更深入的故障排除
 
   * 已知问题
 
-* Release Notes
+* 发布说明
+
+  * v16.10
+
+  * v16.09
+
+  * v16.08
+
+  * v16.07
+
+  * v16.06
 
   * v16.05
 

@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -29,11 +28,12 @@ b4w.module["__debug"] = function(exports, require) {
 var m_compat = require("__compat");
 var m_cfg    = require("__config");
 var m_ext    = require("__extensions");
+var m_graph  = require("__graph");
 var m_print  = require("__print");
+var m_subs   = require("__subscene");
 var m_tex    = require("__textures");
 var m_time   = require("__time");
 var m_util   = require("__util");
-var m_graph  = require("__graph");
 
 var cfg_def = m_cfg.defaults;
 
@@ -53,16 +53,21 @@ var _telemetry_messages = [];
 var _depth_only_issue = -1;
 var _multisample_issue = -1;
 
+var _debug_view_subs = null;
+
 var _assert_struct_last_obj = null;
 var _assert_struct_init = false;
+
+var _vbo_garbage_info = {};
 
 exports.DV_NONE = 0;
 exports.DV_OPAQUE_WIREFRAME = 1;
 exports.DV_TRANSPARENT_WIREFRAME = 2;
 exports.DV_FRONT_BACK_VIEW = 3;
-exports.DV_DEBUG_SPHERES = 4;
+exports.DV_BOUNDINGS = 4;
 exports.DV_CLUSTERS_VIEW = 5;
 exports.DV_BATCHES_VIEW = 6;
+exports.DV_RENDER_TIME = 7;
 
 /**
  * Setup WebGL context
@@ -88,6 +93,62 @@ exports.setup_context = function(gl) {
     _gl = gl;
 }
 
+exports.set_debug_view_subs = set_debug_view_subs;
+function set_debug_view_subs(subs) {
+    _debug_view_subs = subs;
+}
+
+exports.get_debug_view_subs = get_debug_view_subs;
+function get_debug_view_subs() {
+    return _debug_view_subs;
+}
+
+exports.fill_vbo_garbage_info = function(vbo_id, sh_pair_str, attr_name, 
+        byte_size, is_in_usage) {
+    if (!_vbo_garbage_info[vbo_id])
+        _vbo_garbage_info[vbo_id] = { shaders: sh_pair_str, attrs: {} };
+
+    if (!(attr_name in _vbo_garbage_info[vbo_id].attrs))
+        _vbo_garbage_info[vbo_id].attrs[attr_name] = byte_size;
+
+    if (is_in_usage)
+        _vbo_garbage_info[vbo_id].attrs[attr_name] = 0;
+}
+
+exports.calc_vbo_garbage_byte_size = function() {
+    var size = 0;
+    for (var vbo_id in _vbo_garbage_info)
+        for (var name in _vbo_garbage_info[vbo_id].attrs)
+            size += _vbo_garbage_info[vbo_id].attrs[name];
+    return size;
+}
+
+exports.show_vbo_garbage_info = function() {
+    var info_obj = {}
+    for (var vbo_id in _vbo_garbage_info)
+        for (var name in _vbo_garbage_info[vbo_id].attrs) {
+            var byte_size = _vbo_garbage_info[vbo_id].attrs[name];
+            if (byte_size) {
+                var sh_str = _vbo_garbage_info[vbo_id].shaders;
+                if (!(sh_str in info_obj))
+                    info_obj[sh_str] = { total_size: 0, attrs: {} };
+
+                if (!(name in info_obj[sh_str].attrs))
+                    info_obj[sh_str].attrs[name] = 0;
+                info_obj[sh_str].attrs[name] += byte_size;
+                info_obj[sh_str].total_size += byte_size;
+            }
+        }
+
+    for (var sh_str in info_obj) {
+        m_print.groupCollapsed(sh_str, info_obj[sh_str].total_size);
+        for (var name in info_obj[sh_str].attrs)
+            m_print.log_raw(name, info_obj[sh_str].attrs[name]);
+
+        m_print.groupEnd();
+    }
+}
+
 /**
  * Get GL error, throw exception if any.
  */
@@ -111,7 +172,7 @@ exports.check_gl = function(msg) {
  */
 exports.check_bound_fb = function() {
 
-    if (!cfg_def.gl_debug)
+    if (!cfg_def.gl_debug && !cfg_def.check_framebuffer_hack)
         return true;
 
     switch (_gl.checkFramebufferStatus(_gl.FRAMEBUFFER)) {
@@ -128,6 +189,9 @@ exports.check_bound_fb = function() {
         return false;
     case _gl.FRAMEBUFFER_UNSUPPORTED:
         m_print.error("Incomplete framebuffer: FRAMEBUFFER_UNSUPPORTED");
+        return false;
+    case _gl.FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+        m_print.error("Incomplete framebuffer: FRAMEBUFFER_INCOMPLETE_MULTISAMPLE");
         return false;
     default:
         m_print.error("FRAMEBUFFER CHECK FAILED");
@@ -173,6 +237,10 @@ exports.check_depth_only_issue = function() {
  * Found on Firefox 46.
  */
 exports.check_multisample_issue = function() {
+    // msaa is disabled
+    if (cfg_def.msaa_samples == 1)
+        return false;
+
     // use cached result
     if (_multisample_issue != -1)
         return _multisample_issue;
@@ -215,30 +283,20 @@ exports.check_ff_cubemap_out_of_memory = function() {
 }
 
 /**
- * Get shader compile status, throw exception if compilation failed.
  * Prints shader text numbered lines and error.
  * @param {WebGLShader} shader Shader object
  * @param {String} shader_id Shader id
  * @param {String} shader_text Shader text
  */
-exports.check_shader_compiling = function(shader, shader_id, shader_text) {
+exports.report_shader_compiling_error = function(shader, shader_id, shader_text) {
 
     if (!cfg_def.gl_debug)
         return;
 
-    if (!_gl.getShaderParameter(shader, _gl.COMPILE_STATUS)) {
+    shader_text = supply_line_numbers(shader_text);
 
-        var ext_ds = cfg_def.allow_shaders_debug_ext && m_ext.get_debug_shaders();
-        if (ext_ds)
-            var shader_text = ext_ds.getTranslatedShaderSource(shader);
-
-        shader_text = supply_line_numbers(shader_text);
-       
-        m_print.error("shader compilation failed:\n" + shader_text + "\n" + 
-            _gl.getShaderInfoLog(shader) + " (" + shader_id + ")");
-
-        throw "Engine failed: see above for error messages";
-    }
+    m_print.error("shader compilation failed:\n" + shader_text + "\n" +
+        _gl.getShaderInfoLog(shader) + " (" + shader_id + ")");
 }
 
 function supply_line_numbers(text) {
@@ -252,110 +310,128 @@ function supply_line_numbers(text) {
 }  
 
 /**
- * Get shader program link status, throw exception if linking failed.
+ * Prints shader text numbered lines and error.
  * @param {WebGLProgram} program Shader program object
  * @param {String} shader_id Shader id
+ * @param {String} vshader_text Vertex shader text
+ * @param {String} fshader_text Fragment shader text
  */
-exports.check_shader_linking = function(program, shader_id, vshader, fshader, 
-    vshader_text, fshader_text) {
+exports.report_shader_linking_error = function(program, shader_id,
+        vshader_text, fshader_text) {
 
     if (!cfg_def.gl_debug)
         return;
 
-    if (!_gl.getProgramParameter(program, _gl.LINK_STATUS)) {
-    
-        var ext_ds = cfg_def.allow_shaders_debug_ext && m_ext.get_debug_shaders();
-        if (ext_ds) {
-            var vshader_text = ext_ds.getTranslatedShaderSource(vshader);
-            var fshader_text = ext_ds.getTranslatedShaderSource(fshader);
-        }
+    vshader_text = supply_line_numbers(vshader_text);
+    fshader_text = supply_line_numbers(fshader_text);
 
-        vshader_text = supply_line_numbers(vshader_text);
-        fshader_text = supply_line_numbers(fshader_text);
-
-        m_print.error("shader linking failed:\n" + vshader_text + "\n\n\n" + 
-            fshader_text + "\n" + 
-            _gl.getProgramInfoLog(program) + " (" + shader_id + ")");
-
-        throw "Engine failed: see above for error messages";
-    }
+    m_print.error("shader linking failed:\n" + vshader_text + "\n\n\n" +
+        fshader_text + "\n" +
+        _gl.getProgramInfoLog(program) + " (" + shader_id + ")");
 }
 
-/**
- * Start calculation of rendering time.
- * use HUD to display subscene rendering time
- */
-exports.render_time_start = function(subs) {
-    if (!(cfg_def.show_hud_debug_info || subs.type == "PERFORMANCE"))
+exports.render_time_start_subs = function(subs) {
+    if (!(cfg_def.show_hud_debug_info || subs.type == m_subs.PERFORMANCE))
         return;
 
+    if (subs.do_not_debug)
+        return;
+
+    subs.debug_render_time_queries.push(create_render_time_query());
+}
+
+exports.render_time_start_batch = function(batch) {
+    if (!(batch.type == "MAIN" && is_debug_view_render_time_mode()))
+        return;
+
+    batch.debug_render_time_queries.push(create_render_time_query());   
+}
+
+function create_render_time_query() {
     var ext = m_ext.get_disjoint_timer_query();
 
     if (ext) {
         var query = ext.createQueryEXT();
-        subs.debug_render_time_queries.push(query);
         ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, query);
     } else
-        subs.debug_render_time_queries.push(performance.now());
+        var query = performance.now();
+
+    return query;
 }
 
-/**
- * Stop calculation of rendering time.
- * use HUD to display subscene rendering time
- */
-exports.render_time_stop = function(subs) {
-    if (!(cfg_def.show_hud_debug_info || subs.type == "PERFORMANCE"))
+exports.render_time_stop_subs = function(subs) {
+    if (!(cfg_def.show_hud_debug_info || subs.type == m_subs.PERFORMANCE))
         return;
 
-    var ext = m_ext.get_disjoint_timer_query();
+    if (subs.do_not_debug)
+        return;
 
-    if (ext) {
-        ext.endQueryEXT(ext.TIME_ELAPSED_EXT);
-        process_timer_queries(subs);
-    } else {
-        var queries = subs.debug_render_time_queries;
-        var render_time = performance.now() - queries.pop();
-        // init value
-        if (!subs.debug_render_time)
-            subs.debug_render_time = render_time;
-        else
-            subs.debug_render_time = m_util.smooth(render_time,
-                    subs.debug_render_time, 1, RENDER_TIME_SMOOTH_INTERVALS);
-    }
+    var render_time = calc_render_time(subs.debug_render_time_queries, 
+            subs.debug_render_time, true);
+    if (render_time)
+        subs.debug_render_time = render_time;
+}
+
+exports.render_time_stop_batch = function(batch) {
+    if (!(batch.type == "MAIN" && is_debug_view_render_time_mode()))
+        return;
+
+    var render_time = calc_render_time(batch.debug_render_time_queries, 
+            batch.debug_render_time, true);
+    if (render_time)
+        batch.debug_render_time = render_time;
+}
+
+exports.is_debug_view_render_time_mode = is_debug_view_render_time_mode;
+function is_debug_view_render_time_mode() {
+    var subs_debug_view = get_debug_view_subs();
+    return subs_debug_view && subs_debug_view.debug_view_mode == exports.DV_RENDER_TIME;
 }
 
 /**
- * External method is for debugging purposes
+ * External method for debugging purposes
  */
-exports.process_timer_queries = process_timer_queries;
-function process_timer_queries(subs) {
-    var ext = m_ext.get_disjoint_timer_query();
-    var queries = subs.debug_render_time_queries;
-
-    for (var i = 0; i < queries.length; i++) {
-        var query = queries[i];
-
-        var available = ext.getQueryObjectEXT(query,
-                ext.QUERY_RESULT_AVAILABLE_EXT);
-        var disjoint = _gl.getParameter(ext.GPU_DISJOINT_EXT);
-
-        if (available && !disjoint) {
-            var elapsed = ext.getQueryObjectEXT(query, ext.QUERY_RESULT_EXT);
-            var render_time = elapsed / 1000000;
-
-            // init value
-            if (!subs.debug_render_time)
-                subs.debug_render_time = render_time;
-            else
-                subs.debug_render_time = m_util.smooth(render_time,
-                        subs.debug_render_time, 1, RENDER_TIME_SMOOTH_INTERVALS);
-
-            queries.splice(i, 1);
-            i--;
-        }
-    }
+exports.process_timer_queries = function(subs) {
+    var render_time = calc_render_time(subs.debug_render_time_queries, 
+            subs.debug_render_time, false);
+    if (render_time)
+        subs.debug_render_time = render_time;
 }
 
+function calc_render_time(queries, prev_render_time, end_query) {
+    var ext = m_ext.get_disjoint_timer_query();
+    var render_time = 0;
+
+    if (ext) {
+        if (end_query)
+            ext.endQueryEXT(ext.TIME_ELAPSED_EXT);
+        for (var i = 0; i < queries.length; i++) {
+            var query = queries[i];
+
+            var available = ext.getQueryObjectEXT(query,
+                    ext.QUERY_RESULT_AVAILABLE_EXT);
+            var disjoint = _gl.getParameter(ext.GPU_DISJOINT_EXT);
+
+            if (available && !disjoint) {
+                var elapsed = ext.getQueryObjectEXT(query, ext.QUERY_RESULT_EXT);
+                render_time = elapsed / 1000000;
+                if (prev_render_time)
+                    render_time = m_util.smooth(render_time,
+                            prev_render_time, 1, RENDER_TIME_SMOOTH_INTERVALS);
+
+                queries.splice(i, 1);
+                i--;
+            }
+        }
+    } else {
+        render_time = performance.now() - queries.pop();
+        if (prev_render_time)
+            render_time = m_util.smooth(render_time,
+                    prev_render_time, 1, RENDER_TIME_SMOOTH_INTERVALS);
+    }
+
+    return render_time;
+}
 
 /**
  * Print number of executions per frame.
@@ -552,29 +628,76 @@ exports.assert_cons = function(value, constructor) {
 }
 
 /**
- * Check whether the two objects have the same structure.
+ * Check whether the two objects have the same structure with proper values.
  */
 exports.assert_structure = assert_structure;
 function assert_structure(obj1, obj2) {
 
-    if (typeof obj1 != typeof obj2)
+    if (!is_valid(obj1))
+        m_util.panic("Structure assertion failed: invalid first object value");
+
+    if (!is_valid(obj2))
+        m_util.panic("Structure assertion failed: invalid second object value");
+
+    if (!cmp_type(obj1, obj2))
         m_util.panic("Structure assertion failed: incompatible types");
 
-    // ignore simple types or null's
-    if (!(obj1 !== null && obj2 !== null && typeof obj1 == "object"))
+    // continue with objects
+    if (!(obj1 != null && obj2 != null && typeof obj1 == "object" &&
+                !m_util.is_arr_buf_view(obj1) && !(obj1 instanceof Array)))
         return;
 
     for (var i in obj1) {
+        if (!is_valid(obj1[i]))
+            m_util.panic("Structure assertion failed: invalid value for key " +
+                    "in the first object: " + i);
         if (!(i in obj2))
             m_util.panic("Structure assertion failed: missing key in the first object: " + i);
     }
 
     for (var i in obj2) {
+        if (!is_valid(obj2[i]))
+            m_util.panic("Structure assertion failed: invalid value for key " +
+                    "in the second object: " + i);
         if (!(i in obj1))
             m_util.panic("Structure assertion failed: missing key in the second object: " + i);
-        if (typeof obj1[i] != typeof obj2[i])
+        if (!cmp_type(obj1[i], obj2[i]))
             m_util.panic("Structure assertion failed: incompatible types for key " + i);
     }
+}
+
+function is_valid(obj) {
+    if (typeof obj == "undefined")
+        return false;
+    else if (typeof obj == "number" && isNaN(obj))
+        return false;
+    else
+        return true;
+}
+
+function cmp_type(obj1, obj2) {
+    var type1 = typeof obj1;
+    var type2 = typeof obj2;
+
+    if (type1 != type2)
+        return false;
+
+    // additional checks for js arrays or array buffers
+    if (obj1 != null && obj2 != null && typeof obj1 == "object") {
+        var is_arr1 = obj1 instanceof Array;
+        var is_arr2 = obj2 instanceof Array;
+
+        if ((is_arr1 && !is_arr2) || (!is_arr1 && is_arr2))
+            return false;
+
+        var is_abv1 = m_util.is_arr_buf_view(obj1);
+        var is_abv2 = m_util.is_arr_buf_view(obj2);
+
+        if ((is_abv1 && !is_abv2) || (!is_abv1 && is_abv2))
+            return false;
+    }
+
+    return true;
 }
 
 /**
@@ -586,7 +709,7 @@ exports.assert_structure_seq = function(obj) {
     else
         assert_structure(obj, _assert_struct_last_obj);
 
-    _assert_struct_last_obj = obj;
+    _assert_struct_last_obj = m_util.clone_object_nr(obj);
 }
 
 exports.fake_load = function(stageload_cb, interval, start, end, loaded_cb) {
@@ -702,6 +825,22 @@ exports.nodegraph_to_dot = function(graph, detailed_print) {
     }
 
     return m_graph.debug_dot(graph, nodes_label_cb, edges_label_cb);
+}
+
+/**
+ * NOTE: need to find better place for this internal method
+ */
+exports.get_gl = function() {
+    return _gl;
+}
+
+exports.cleanup = function() {
+    _debug_view_subs = null;
+    _vbo_garbage_info = {};
+}
+
+exports.reset = function() {
+    _gl = null;
 }
 
 }

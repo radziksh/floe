@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -61,7 +60,7 @@ function create_camera_rotation_sensors(obj) {
         if (pulse > 0) {
             if (m_cam.is_eye_camera(obj)) {
                 var hmd_quat = m_ctl.get_sensor_payload(obj, id, 1);
-                var up_axis = m_vec3.transformQuat(m_util.AXIS_Z, hmd_quat, _vec3_tmp);
+                var up_axis = m_vec3.transformQuat(m_util.AXIS_MY, hmd_quat, _vec3_tmp);
                 m_cam.set_vertical_axis(obj, up_axis);
                 m_trans.set_rotation_v(obj, hmd_quat);
             } else {

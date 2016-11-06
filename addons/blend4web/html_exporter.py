@@ -87,7 +87,7 @@ class B4W_HTMLExportProcessor(bpy.types.Operator):
         return False
 
     def invoke(self, context, event):
-        self.filepath = get_default_path()
+        self.filepath = exporter.get_default_path(True)
         wm = context.window_manager
         wm.fileselect_add(self)
         return {"RUNNING_MODAL"}
@@ -157,12 +157,12 @@ class B4W_HTMLExportProcessor(bpy.types.Operator):
             try:
                 scripts = ""
                 if os.path.isfile(b4w_minjs_path):
-                    with open(b4w_minjs_path, "r") as f:
+                    with open(b4w_minjs_path, "r", encoding="utf-8") as f:
                         scripts = f.read()
                         f.close()
                 styles = ""
                 if os.path.isfile(b4w_css_path):
-                    with open(b4w_css_path, "r") as f:
+                    with open(b4w_css_path, "r", encoding="utf-8") as f:
                         styles = f.read()
                         f.close()
                 data = json.dumps(extract_data(json_path, json_name, self.export_converted_media))
@@ -173,7 +173,7 @@ class B4W_HTMLExportProcessor(bpy.types.Operator):
                                             + get_filepath_blend(self.filepath) +"'/>"))
                 app_str = get_html_template(html_tpl_path).substitute(insertions)
 
-                f  = open(export_filepath, "w")
+                f  = open(export_filepath, "w", encoding="utf-8")
             except IOError as exp:
                 exporter._file_error = exp
                 raise exporter.FileError("Permission denied")
@@ -181,7 +181,7 @@ class B4W_HTMLExportProcessor(bpy.types.Operator):
                 f.write(app_str)
                 f.close()
                 if self.save_export_path:
-                    set_default_path(export_filepath)
+                    exporter.set_default_path(export_filepath, True)
                 print("HTML file saved to " + export_filepath)
                 print("HTML EXPORT OK")
         else:
@@ -198,30 +198,14 @@ class B4W_ExportHTMLPathGetter(bpy.types.Operator):
     bl_options = {'INTERNAL'}
 
     def execute(self, context):
-        print("B4W Export HTML Path = " + get_default_path())
+        print("B4W Export HTML Path = " + exporter.get_default_path(True))
 
         return {"FINISHED"}
 
-def get_default_path():
-    scene = bpy.data.scenes[0]
-    if scene.b4w_export_path_html is not "":
-        return bpy.path.abspath(scene.b4w_export_path_html)
-
-    blend_path = os.path.splitext(bpy.data.filepath)[0]
-    if len(blend_path) > 0:
-        return blend_path + ".html"
-    else:
-        return "untitled.html"
-
-def set_default_path(path):
-    if bpy.data.filepath != "":
-        path = bpy.path.relpath(path)
-    for i in range(len(bpy.data.scenes)):
-        bpy.data.scenes[i].b4w_export_path_html = exporter.guard_slashes(path)
-
 def get_html_template(path):
-    tpl_file = open(path, "r")
+    tpl_file = open(path, "r", encoding="utf-8")
     tpl_str = tpl_file.read()
+    tpl_str.encode("utf-8")
     tpl_file.close()
     return Template(tpl_str)
 
@@ -361,7 +345,7 @@ def autosave():
 
 def b4w_html_export_menu_func(self, context):
     self.layout.operator(B4W_HTMLExportProcessor.bl_idname, \
-        text=_("Blend4Web (.html)")).filepath = get_default_path()
+        text=_("Blend4Web (.html)")).filepath = exporter.get_default_path(True)
 
 def register():
     bpy.types.INFO_MT_file_export.append(b4w_html_export_menu_func)

@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -233,7 +232,7 @@ function assign_parent_descendant(obj_parent, obj) {
     if (obj_parent.cons_descends.indexOf(obj) == -1)
         obj_parent.cons_descends.push(obj);
     else
-        throw "Descendant object override is forbidden";
+        m_util.panic("Descendant object override is forbidden");
 }
 
 exports.remove_parent_descendant = remove_parent_descendant;
@@ -242,7 +241,7 @@ function remove_parent_descendant(obj_parent, obj) {
     if (ind != -1)
         obj_parent.cons_descends.splice(ind, 1);
     else
-        throw "No descendant object";
+        m_util.panic("No descendant object");
 }
 
 /**
@@ -660,19 +659,19 @@ function update_cons(obj, cons, elapsed) {
         else
             var vert_stride = right - left;
 
-        // in the camera's local space (not view space)
+        // in the camera's view space
         if (cons.top_edge)
-            trans[2] = -(top - vert_stride * cons.top_bottom_dist);
+            trans[1] = top - vert_stride * cons.top_bottom_dist;
         else
-            trans[2] = -(bottom + vert_stride * cons.top_bottom_dist);
+            trans[1] = bottom + vert_stride * cons.top_bottom_dist;
 
         // NOTE: ortho cameras have scaling problems
         if (m_cam.is_ortho(cam)) {
-            trans[1] = -cons.distance;
+            trans[2] = -cons.distance;
         } else {
-            trans[1] = -1;
+            trans[2] = -1;
             m_vec3.normalize(trans, trans);
-            var scale = cons.distance/Math.abs(trans[1]);
+            var scale = cons.distance/Math.abs(trans[2]);
             m_vec3.scale(trans, scale, trans);
         }
 
@@ -695,7 +694,7 @@ function update_cons(obj, cons, elapsed) {
     }
 
     if (obj.render.type == "CAMERA") {
-        var corr_axis = m_util.AXIS_Y;
+        var corr_axis = obj.render.vertical_axis;
         if (cons.type == CONS_TYPE_SEMI_STIFF_CAM_OBJ) {
             var p_quat = m_tsr.get_quat_view(cons.obj_parent.render.world_tsr);
             corr_axis = m_vec3.transformQuat(corr_axis, p_quat, _parent_y_axis);
@@ -796,7 +795,7 @@ function clamp_orientation(obj, cons) {
 exports.rotate_to = rotate_to;
 function rotate_to(trans, quat, target) {
     var dir_from = _vec3_tmp;
-    m_util.quat_to_dir(quat, m_util.AXIS_MY, dir_from);
+    m_util.quat_to_dir(quat, m_util.AXIS_MZ, dir_from);
     m_vec3.normalize(dir_from, dir_from);
 
     var dir_to = _vec3_tmp_2;
@@ -821,22 +820,22 @@ function cam_rotate_to(quat, dir, dest) {
     var y_cam_world = mat_dst.subarray(3, 6);
     var z_cam_world = mat_dst.subarray(6, 9);
 
-    m_vec3.copy(dir, y_cam_world);
-    m_vec3.negate(y_cam_world, y_cam_world);
-    m_vec3.normalize(y_cam_world, y_cam_world);
+    m_vec3.copy(dir, z_cam_world);
+    m_vec3.negate(z_cam_world, z_cam_world);
+    m_vec3.normalize(z_cam_world, z_cam_world);
 
-    var up_down = Boolean(Math.abs(m_vec3.dot(dir, m_util.AXIS_Y)) > 0.999999);
+    var up_down = Boolean(Math.abs(m_vec3.dot(dir, m_util.AXIS_Z)) > 0.999999);
 
     if (up_down) {
         var mat_src = m_mat3.fromQuat(m_quat.normalize(quat, dest), _mat3_tmp2);
         m_vec3.copy(mat_src.subarray(0, 3), x_cam_world);
     } else
-        m_vec3.cross(m_util.AXIS_Y, y_cam_world, x_cam_world);
+        m_vec3.cross(m_util.AXIS_Z, z_cam_world, x_cam_world);
 
     m_vec3.normalize(x_cam_world, x_cam_world);
 
-    m_vec3.cross(x_cam_world, y_cam_world, z_cam_world);
-    m_vec3.normalize(z_cam_world, z_cam_world);
+    m_vec3.cross(z_cam_world, x_cam_world, y_cam_world);
+    m_vec3.normalize(y_cam_world, y_cam_world);
 
     m_quat.fromMat3(mat_dst, dest);
     m_quat.normalize(dest, dest);
@@ -851,15 +850,15 @@ function correct_up(camobj, up_axis, strict) {
     var render = camobj.render;
     var quat = m_tsr.get_quat_view(render.world_tsr);
 
-    // local camera Y in world space
-    var y_cam_world = m_util.quat_to_dir(quat, m_util.AXIS_Y, _vec3_tmp)
-    m_vec3.normalize(y_cam_world, y_cam_world);
+    // local camera Z in world space
+    var z_cam_world = m_util.quat_to_dir(quat, m_util.AXIS_Z, _vec3_tmp)
+    m_vec3.normalize(z_cam_world, z_cam_world);
     // handle extreme case (camera looks UP or DOWN)
-    if (Math.abs(m_vec3.dot(up_axis, y_cam_world)) > 0.999999)
+    if (Math.abs(m_vec3.dot(up_axis, z_cam_world)) > 0.999999)
         var rotation = m_quat.identity(_quat4_tmp);
     else {
 
-        var x_cam_world_new = m_vec3.cross(up_axis, y_cam_world, _vec3_tmp_2);
+        var x_cam_world_new = m_vec3.cross(up_axis, z_cam_world, _vec3_tmp_2);
 
         m_vec3.normalize(x_cam_world_new, x_cam_world_new);
 
@@ -868,8 +867,8 @@ function correct_up(camobj, up_axis, strict) {
                 m_vec3.negate(x_cam_world_new, x_cam_world_new);
         } else {
             // Y coord of local camera Z axis in parent(!) space
-            var z_cam_world = m_util.quat_to_dir(quat, m_util.AXIS_Z, _vec3_tmp_3);
-            if (m_vec3.dot(z_cam_world, up_axis) > 0)
+            var my_cam_world = m_util.quat_to_dir(quat, m_util.AXIS_MY, _vec3_tmp_3);
+            if (m_vec3.dot(my_cam_world, up_axis) > 0)
                 m_vec3.negate(x_cam_world_new, x_cam_world_new);
         }
 
@@ -880,7 +879,7 @@ function correct_up(camobj, up_axis, strict) {
 
         if (cosine <= -0.999999) {
             var angle = Math.acos(cosine);
-            var rotation = m_quat.setAxisAngle(y_cam_world, angle, _quat4_tmp);
+            var rotation = m_quat.setAxisAngle(z_cam_world, angle, _quat4_tmp);
         } else
             var rotation = m_quat.rotationTo(x_cam_world, x_cam_world_new, _quat4_tmp);
 
@@ -891,9 +890,9 @@ function correct_up(camobj, up_axis, strict) {
 
     // strictly align camera with the given UP vector direction
     if (strict) {
-        var mz_cam_world = m_util.quat_to_dir(quat, m_util.AXIS_MZ, _vec3_tmp);
-        if (m_vec3.dot(up_axis, mz_cam_world) < 0)
-            m_quat.rotateY(quat, Math.PI, quat)
+        var y_cam_world = m_util.quat_to_dir(quat, m_util.AXIS_Y, _vec3_tmp);
+        if (m_vec3.dot(up_axis, y_cam_world) < 0)
+            m_quat.rotateZ(quat, Math.PI, quat)
     }
 
     m_cam.update_camera_upside_down(camobj);

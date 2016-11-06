@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -25,6 +24,7 @@
  * @local ColorCorrectionParams
  * @local SceneMetaTags
  * @local HMDParams
+ * @local BloomParams
  */
 b4w.module["scenes"] = function(exports, require) {
 
@@ -34,9 +34,9 @@ var m_data     = require("__data");
 var m_graph    = require("__graph");
 var m_obj      = require("__objects");
 var m_obj_util = require("__obj_util");
-var m_phy      = require("__physics");
 var m_print    = require("__print");
 var m_scenes   = require("__scenes");
+var m_subs     = require("__subscene");
 var m_util     = require("__util");
 
 /**
@@ -64,6 +64,14 @@ var m_util     = require("__util");
  * @property {Array} chromatic_aberration_coefs Chromatic aberration coefficient list
  * @property {Number} base_line_factor Tray to lens-center distance divided by screen height
  * @property {Number} inter_lens_factor Inter-lens distance divided by screen width
+ */
+
+/**
+ * Bloom params.
+ * @typedef {Object} BloomParams
+ * @property {Boolean} key Strength of bloom effect
+ * @property {Boolean} edge_lum Bloom edge relative luminance. Bloom is visible above this value.
+ * @property {Boolean} blur The amount of blur applied to bloom effect.
  */
 
 /**
@@ -193,7 +201,7 @@ exports.get_world_by_name = function(name, data_id) {
  * @returns {Number} data_id Data ID property
  */
 exports.get_object_data_id = function(obj) {
-    return m_scenes.get_object_data_id(obj);
+    return m_obj_util.get_object_data_id(obj);
 }
 
 /**
@@ -297,7 +305,7 @@ exports.set_outline_color = m_scenes.set_outline_color;
  */
 exports.get_outline_color = function(dest) {
     var scene = m_scenes.get_active();
-    var subs = m_scenes.get_subs(scene, "OUTLINE");
+    var subs = m_scenes.get_subs(scene, m_subs.OUTLINE);
     if (subs) {
         dest = dest || new Float32Array(3);
         dest.set(subs.outline_color);
@@ -356,14 +364,14 @@ exports.get_shadow_params = function() {
     }
 
     var active_scene = m_scenes.get_active();
-    var shadow_cast  = m_scenes.get_subs(active_scene, "SHADOW_CAST");
+    var shadow_cast  = m_scenes.get_subs(active_scene, m_subs.SHADOW_CAST);
 
     if (!shadow_cast)
         return null;
 
     var shs = active_scene._render.shadow_params;
-    var subs_main = m_scenes.get_subs(active_scene, "MAIN_OPAQUE");
-    var subs_shadow_receive = m_scenes.get_subs(active_scene, "SHADOW_RECEIVE");
+    var subs_main = m_scenes.get_subs(active_scene, m_subs.MAIN_OPAQUE);
+    var subs_shadow_receive = m_scenes.get_subs(active_scene, m_subs.SHADOW_RECEIVE);
 
     var shadow_params = {};
     shadow_params.csm_resolution = shs.csm_resolution;
@@ -412,11 +420,11 @@ exports.set_shadow_params = function(shadow_params) {
 
     if (typeof shadow_params.self_shadow_polygon_offset == "number")
         m_graph.traverse(active_scene._render.graph, function(node, attr) {
-            if (attr.type === "SHADOW_CAST")
+            if (attr.type == m_subs.SHADOW_CAST)
                 attr.self_shadow_polygon_offset = shadow_params.self_shadow_polygon_offset;
         });
 
-    var subs_shadow_receive = m_scenes.get_subs(active_scene, "SHADOW_RECEIVE");
+    var subs_shadow_receive = m_scenes.get_subs(active_scene, m_subs.SHADOW_RECEIVE);
     if (subs_shadow_receive) {
         if (typeof shadow_params.self_shadow_normal_offset == "number")
             subs_shadow_receive.self_shadow_normal_offset = shadow_params.self_shadow_normal_offset;
@@ -424,7 +432,7 @@ exports.set_shadow_params = function(shadow_params) {
             subs_shadow_receive.pcf_blur_radius = shadow_params.pcf_blur_radius;
     }
 
-    var subs_main_blend = m_scenes.get_subs(active_scene, "MAIN_BLEND");
+    var subs_main_blend = m_scenes.get_subs(active_scene, m_subs.MAIN_BLEND);
     if (subs_main_blend) {
         if (typeof shadow_params.self_shadow_normal_offset == "number")
             subs_main_blend.self_shadow_normal_offset = shadow_params.self_shadow_normal_offset;
@@ -446,19 +454,22 @@ exports.set_shadow_params = function(shadow_params) {
 
     // update directives; only depth subs supported
     if (subs_shadow_receive) {
-        var bundles = subs_shadow_receive.bundles;
+        var draw_data = subs_shadow_receive.draw_data;
+        for (var i = 0; i < draw_data.length; i++) {
+            var bundles = draw_data[i].bundles;
+            for (var j = 0; j < bundles.length; j++) {
 
-        for (var i = 0; i < bundles.length; i++) {
+                var bundle = bundles[j];
 
-            var bundle = bundles[i];
+                if (!bundle.obj_render.shadow_receive)
+                    continue;
 
-            if (!bundle.obj_render.shadow_receive)
-                continue;
+                var batch = bundle.batch;
+                m_batch.assign_shadow_receive_dirs(batch, shs);
 
-            var batch = bundle.batch;
-            m_batch.assign_shadow_receive_dirs(batch, shs);
-
-            m_batch.update_shader(batch);
+                m_batch.update_shader(batch);
+                m_subs.append_draw_data(subs_shadow_receive, bundle)
+            }
         }
         subs_shadow_receive.need_perm_uniforms_update = true;
     }
@@ -499,7 +510,7 @@ exports.set_environment_colors = function(opt_environment_energy,
         return;
     }
     var active_scene = m_scenes.get_active();
-    var subs = m_scenes.get_subs(active_scene, "MAIN_OPAQUE");
+    var subs = m_scenes.get_subs(active_scene, m_subs.MAIN_OPAQUE);
 
     var energy = opt_environment_energy || opt_environment_energy == 0 ?
                             parseFloat(opt_environment_energy):
@@ -542,6 +553,54 @@ exports.set_fog_color_density = function(val) {
     }
     var active_scene = m_scenes.get_active();
     m_scenes.set_fog_color_density(active_scene, val);
+}
+
+/**
+ * Get fog params
+ * @method module:scenes.get_fog_params
+ * @returns {FogParams} Fog params
+ * @cc_externs fog_inensity fog_inensity fog inensity
+ * @cc_externs fog_depth fog_depth fog_depth
+ * @cc_externs fog_start fog_start fog start
+ * @cc_externs fog_height fog_height fog height
+ * @returns {Vec4} Destnation vector
+ */
+exports.get_fog_params = function() {
+    if (!m_scenes.check_active()) {
+        m_print.error("No active scene");
+        return false;
+    }
+    var active_scene = m_scenes.get_active();
+
+    var fog_params = {};
+    fog_params.fog_intensity = m_scenes.get_fog_intensity(active_scene);
+    fog_params.fog_depth     = m_scenes.get_fog_depth(active_scene);
+    fog_params.fog_start     = m_scenes.get_fog_start(active_scene);
+    fog_params.fog_height    = m_scenes.get_fog_height(active_scene);
+
+    return fog_params;
+}
+
+/**
+ * Set fog params
+ * @method module:scenes.set_fog_params
+ * @param {FogParams} fog_params Fog params
+ */
+exports.set_fog_params = function(fog_params) {
+    if (!m_scenes.check_active()) {
+        m_print.error("No active scene");
+        return;
+    }
+    var active_scene = m_scenes.get_active();
+
+    if (typeof fog_params.fog_intensity == "number")
+        m_scenes.set_fog_intensity(active_scene, fog_params.fog_intensity);
+    if (typeof fog_params.fog_depth == "number")
+        m_scenes.set_fog_depth(active_scene, fog_params.fog_depth);
+    if (typeof fog_params.fog_start == "number")
+        m_scenes.set_fog_start(active_scene, fog_params.fog_start);
+    if (typeof fog_params.fog_height == "number")
+        m_scenes.set_fog_height(active_scene, fog_params.fog_height);
 }
 
 /**
@@ -588,7 +647,7 @@ exports.get_color_correction_params = function() {
     }
 
     var active_scene = m_scenes.get_active();
-    var subs = m_scenes.get_subs(active_scene, "COMPOSITING");
+    var subs = m_scenes.get_subs(active_scene, m_subs.COMPOSITING);
     if (!subs)
         return null;
 
@@ -614,7 +673,7 @@ exports.set_color_correction_params = function(color_corr_params) {
     }
 
     var active_scene = m_scenes.get_active();
-    var subs = m_scenes.get_subs(active_scene, "COMPOSITING");
+    var subs = m_scenes.get_subs(active_scene, m_subs.COMPOSITING);
     if (!subs)
         return;
 
@@ -677,7 +736,7 @@ exports.get_dof_params = function() {
         return false;
     }
     var active_scene = m_scenes.get_active();
-    var subs = m_scenes.get_subs(active_scene,"DOF");
+    var subs = m_scenes.get_subs(active_scene, m_subs.DOF);
     if (subs)
         return m_scenes.get_dof_params(active_scene);
     else
@@ -688,7 +747,8 @@ exports.get_dof_params = function() {
  * Set depth-of-field (DOF) params
  * @method module:scenes.set_dof_params
  * @param {DOFParams} dof_params DOF parameters
- * @cc_externs dof_on dof_distance dof_front dof_rear dof_power
+ * @cc_externs dof_on dof_distance dof_front_start dof_front_end
+ * @cc_externs dof_rear_start dof_rear_end dof_power
  */
 exports.set_dof_params = function(dof_params) {
     if (!m_scenes.check_active()) {
@@ -710,7 +770,7 @@ exports.get_god_rays_params = function() {
         return false;
     }
     var active_scene = m_scenes.get_active();
-    var subs = m_scenes.get_subs(active_scene,"GOD_RAYS");
+    var subs = m_scenes.get_subs(active_scene, m_subs.GOD_RAYS);
     if (subs)
         return m_scenes.get_god_rays_params(active_scene);
     else
@@ -743,7 +803,7 @@ exports.get_bloom_params = function() {
         return false;
     }
     var active_scene = m_scenes.get_active();
-    var subs = m_scenes.get_subs(active_scene,"BLOOM");
+    var subs = m_scenes.get_subs(active_scene, m_subs.BLOOM);
     if (subs)
         return m_scenes.get_bloom_params(active_scene);
     else
@@ -754,7 +814,7 @@ exports.get_bloom_params = function() {
  * Set bloom parameters
  * @method module:scenes.set_bloom_params
  * @param {BloomParams} bloom_params Bloom parameters
- * @cc_externs bloom_key bloom_edge_lum bloom_blur
+ * @cc_externs key edge_lum blur
  */
 exports.set_bloom_params = function(bloom_params) {
     if (!m_scenes.check_active()) {
@@ -777,7 +837,7 @@ exports.get_glow_material_params = function() {
     }
 
     var active_scene = m_scenes.get_active();
-    var subs = m_scenes.get_subs(active_scene,"GLOW_COMBINE");
+    var subs = m_scenes.get_subs(active_scene, m_subs.GLOW_COMBINE);
     if (subs)
         return m_scenes.get_glow_material_params(active_scene);
     else
@@ -1120,15 +1180,7 @@ exports.get_object_children = function(obj) {
  * @returns {Object3D} Character object.
  */
 exports.get_first_character = function() {
-    var sobjs = m_obj.get_scene_objs(m_scenes.get_active(), "MESH",
-                                     m_obj.DATA_ID_ALL);
-    for (var i = 0; i < sobjs.length; i++) {
-        var obj = sobjs[i];
-        if (m_phy.is_character(obj)) {
-            return obj;
-        }
-    }
-    return null;
+    return m_obj.get_first_character(m_scenes.get_active());
 }
 
 /**
@@ -1223,11 +1275,11 @@ exports.remove_object = function(obj) {
                 "dynamic and type of MESH or EMPTY.");
         return;
     }
-    var scenes_data = obj.scenes_data;
-    for (var j = 0; j < scenes_data.length; j++) {
-        var scene = scenes_data[j].scene;
-        m_data.prepare_object_unloading(scene, obj, false);
-    }
+
+    // cleanup only vbo/ibo/vao buffers for deep copied objects
+    m_obj.obj_switch_cleanup_flags(obj, false, obj.render.is_copied_deep, false, false);
+    m_data.prepare_object_unloading(obj);
+    m_obj.obj_switch_cleanup_flags(obj, true, true, true, true);
     m_obj.remove_object(obj);
 }
 /**
@@ -1253,7 +1305,7 @@ exports.marker_frame = function(name) {
  */
 exports.get_mb_params = function() {
     var scene = m_scenes.get_active();
-    var mb_subs = m_scenes.get_subs(scene, "MOTION_BLUR");
+    var mb_subs = m_scenes.get_subs(scene, m_subs.MOTION_BLUR);
     if (mb_subs) {
         var mb_params = {mb_factor : mb_subs.mb_factor,
                 mb_decay_threshold : mb_subs.mb_decay_threshold};
@@ -1269,7 +1321,7 @@ exports.get_mb_params = function() {
  */
 exports.set_mb_params = function(mb_params) {
     var scene = m_scenes.get_active();
-    var mb_subs = m_scenes.get_subs(scene, "MOTION_BLUR");
+    var mb_subs = m_scenes.get_subs(scene, m_subs.MOTION_BLUR);
     if (mb_subs) {
         if (typeof mb_params.mb_decay_threshold == "number")
             mb_subs.mb_decay_threshold = mb_params.mb_decay_threshold;
@@ -1286,7 +1338,7 @@ exports.set_mb_params = function(mb_params) {
  */
 exports.can_select_objects = function() {
     var scene = m_scenes.get_active();
-    return Boolean(m_scenes.get_subs(scene, "COLOR_PICKING"));
+    return Boolean(m_scenes.get_subs(scene, m_subs.COLOR_PICKING));
 }
 
 }

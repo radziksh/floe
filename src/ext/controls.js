@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -507,10 +506,34 @@ exports.KEY_NUM9 = 105;
 
 /**
  * Keyboard sensor parameter. Corresponds to keyCode property of KeyboardEvent.
+ * @const module:controls.KEY_NUM9
+ */
+exports.KEY_MULT = 106;
+
+/**
+ * Keyboard sensor parameter. Corresponds to keyCode property of KeyboardEvent.
+ * @const module:controls.KEY_NUM9
+ */
+exports.KEY_ADD = 107;
+
+/**
+ * Keyboard sensor parameter. Corresponds to keyCode property of KeyboardEvent.
+ * @const module:controls.KEY_NUM9
+ */
+exports.KEY_SUB = 109;
+
+/**
+ * Keyboard sensor parameter. Corresponds to keyCode property of KeyboardEvent.
  * Can only be used when NUM LOCK is turned on.
  * @const module:controls.KEY_DEC_POINT
  */
 exports.KEY_DEC_POINT = 110;
+
+/**
+ * Keyboard sensor parameter. Corresponds to keyCode property of KeyboardEvent.
+ * @const module:controls.KEY_NUM9
+ */
+exports.KEY_DIV = 111;
 
 /**
  * Keyboard sensor parameter. Corresponds to keyCode property of KeyboardEvent.
@@ -605,6 +628,19 @@ exports.PL_MULTITOUCH_MOVE_PAN  = m_ctl.PL_MULTITOUCH_MOVE_PAN;
  * @const module:controls.PL_MULTITOUCH_MOVE_ROTATE
  */
 exports.PL_MULTITOUCH_MOVE_ROTATE  = m_ctl.PL_MULTITOUCH_MOVE_ROTATE;
+
+/**
+ * Default logic AND function for sensor manifold
+ * @const module:controls.default_AND_logic_fun
+ */
+exports.default_AND_logic_fun = m_ctl.default_AND_logic_fun;
+
+/**
+ * Default logic OR function for sensor manifold
+ * @const module:controls.default_AND_logic_fun
+ */
+exports.default_OR_logic_fun = m_ctl.default_OR_logic_fun;
+
 /**
  * Create a gamepad button sensor.
  * @method module:controls.create_gamepad_btn_sensor
@@ -715,9 +751,12 @@ exports.create_ray_sensor = function(obj_src, from, to, collision_id,
 
 /**
  * Create a mouse click sensor.
+ * The sensor's payload is an object
+ * with useful properties like coordinates, and index of button
  * @method module:controls.create_mouse_click_sensor
  * @param {HTMLElement} [element=Canvas container element] HTML element
  * @returns {Sensor} Sensor object
+ * @cc_externs coords which
  */
 exports.create_mouse_click_sensor = m_ctl.create_mouse_click_sensor;
 
@@ -732,22 +771,25 @@ exports.create_mouse_wheel_sensor = m_ctl.create_mouse_wheel_sensor;
 
 /**
  * Create a mouse movement sensor.
- * The sensor's value is a number of pixels, the sensor's payload is (are)
- * coordinate(s).
+ * The sensor's value is a number of pixels, the sensor's payload is an object
+ * with useful properties like coordinates
  * @method module:controls.create_mouse_move_sensor
  * @param {String} [axis="XY"] Coordinate(s) to track: "X", "Y", "XY"
  * @param {HTMLElement} [element=Canvas container element] HTML element
  * @returns {Sensor} Sensor object
+ * @cc_externs coords
  */
 exports.create_mouse_move_sensor = m_ctl.create_mouse_move_sensor;
 
 /**
  * Create a touch movement sensor.
- * The sensor's value is a number of pixels.
+ * The sensor's value is a number of pixels, the sensor's payload is an object
+ * with useful properties like coordinates
  * @method module:controls.create_touch_move_sensor
  * @param {String} [axis="XY"] Coordinate(s) to track: "X", "Y" or "XY"
  * @param {HTMLElement} [element=Canvas container element] HTML element
  * @returns {Sensor} Sensor object
+ * @cc_externs coords gesture
  */
 exports.create_touch_move_sensor = m_ctl.create_touch_move_sensor;
 
@@ -771,10 +813,12 @@ exports.create_touch_rotate_sensor = m_ctl.create_touch_rotate_sensor;
 
 /**
  * Create a touch click sensor.
- * The sensor's value is 1 for a touched fouchscreen.
+ * The sensor's value is 1 for a touched fouchscreen.the sensor's payload is an object
+ * with useful properties like coordinates
  * @method module:controls.create_touch_click_sensor
  * @param {HTMLElement} [element=Canvas container element] HTML element
  * @returns {Sensor} Sensor object
+ * @cc_externs coords
  */
 exports.create_touch_click_sensor = m_ctl.create_touch_click_sensor;
 
@@ -891,14 +935,14 @@ exports.create_timeline_sensor = m_ctl.create_timeline_sensor;
  * Create a selection sensor for the object.
  * The sensor's value becomes 1 when the object is selected by the user.
  * @param {Object3D} obj Object 3D
- * @param {Boolean} [auto_release=false] If true, reset the sensor (set it to 0)
- * when the mouse button/touch is released. If false, reset the sensor only when
- * another object is selected.
+ * @param {Boolean} [enable_toggle_switch=false] If true, reset the sensor
+ * (set it to 0) only when another object is selected. If false, reset the
+ * sensor when the mouse button/touch is released.
  * @method module:controls.create_selection_sensor
  * @returns {Sensor} Sensor object
  */
-exports.create_selection_sensor = function(obj, auto_release) {
-    return m_ctl.create_selection_sensor(obj, auto_release || false);
+exports.create_selection_sensor = function(obj, enable_toggle_switch) {
+    return m_ctl.create_selection_sensor(obj, enable_toggle_switch || false);
 }
 
 /**

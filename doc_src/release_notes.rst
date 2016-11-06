@@ -6,6 +6,550 @@ Release Notes
 
 .. index:: release notes
 
+v16.10
+======
+
+New Features
+------------
+
+* Added support for navigation meshes.
+
+    Two methods were added to ``physics`` module: ``navmesh_get_island`` for getting closest navmesh segment and ``navmesh_find_path`` for path finding.
+
+    Two types of paths are available: one path based on centers of triangles, and a more optimal - ``pulled string``. 
+  
+    See example in the ``Code Snippets`` apps.
+
+* New logic node ``Set Camera Move Style``.
+
+    This node allows changing move styles and velocities of the camera. Target parameters for ``Target`` and ``Hover`` camera types can be set as separate coordinates or as a target object.
+
+* Tangent shading support for edited normals.
+
+    Tangent shading is now supported for edited normals.
+
+* Improved Project Manager usability.
+
+    Now applications, blend files and project assets open in new browser tabs. Having your Project Manager remain in the same window makes work more efficient.
+
+    ``compile project`` command was renamed as ``build project``. This new name is more suited to the nature of this command.
+
+* New environment texture blend types.
+
+    Now all texture blend types are supported for environment lighting.
+
+* ``Sphere`` flag is now supported for ``Point`` and ``Spot`` lights.
+
+    This flag allows specifying a distance at which the light's intensity drops to zero.
+
+* Rotated boundings.
+
+    Now rotated bounding boxes are used for frustum culling calculations. Also,
+    rotated bounding ellipsoid is now supported for dynamic objects.
+
+* ``JS Callback`` logic node can now be called synchronously.
+  
+    Return ``true`` from your callback for freezing nodetree execution in this node and ``false`` when the node has finished its execution.
+
+* New API methods :b4wref:`scenes.get_fog_params` and :b4wref:`scenes.set_fog_params`.
+
+    These methods allow controlling mist in a scene. Fog params contain `fog_intensity`, `fog_depth`, `fog_start` and `fog_height` properties.
+
+* New API method :b4wref:`anchors.update`.
+
+    This method allows to update anchors positions.
+
+* Added support for VBO buffers of different types.
+    
+    Some attributes were changed to be of the type ``UNSIGNED BYTE`` and ``SHORT`` instead of ``FLOAT`` without loss in quality that reduced  total GPU memory cost. This also affects performance and can increase frame rate in some demos. Along with that the size of exported ``.bin`` files was slightly decreased by changing the export type of vertex colors from ``SHORT`` to ``UNSIGNED BYTE``.
+
+* In ``ULTRA`` mode the correct SRGB-conversion function is now used instead of a simplified one.
+
+    The effect is mostly notable in dark areas where the simplified function doesn't yield precise colors.
+
+* Added special buttons for enabling/disabling the ``World Background`` option in 3D VIEW panels.
+
+    These buttons are disposed in the ``World`` tab and should be used if the ``Render Sky`` option is set. Enabling the ``World Background`` shows world colors in the viewport (the same as in the engine).
+
+Changes
+-------
+
+* Refactored projects inside the SDKs.
+
+    Now all projects (including tutorials) inside the SDKs follow the standard Project Manager directory hierarchy.
+
+* Removed scenes list from the Viewer app.
+
+    The same functionality (browsing and viewing project assets) can be carried out using the Project Manager.
+
+* API documentation of the :b4wmod:`input` module has been expanded, examples of using functions have been added.
+
+* The number of :ref:`batches <batching>` was decreased which optimizes scene rendering.
+
+    This optimization mostly affects shadows and hair particles. It enhances frame rate in scenes that use this functionality.
+
+* Now keyboard device is attached to document object by default.
+
+* Added ``None`` as a new Engine Binding Type.
+
+    This means the Project Manager will not change your projects during the build phase.
+
+* Removed the ``Update`` Engine Binding Type.
+
+    Use the ``Copy`` Engine Binding Type and the Project Manager's deployment feature to reproduce the same behavior.
+
+* Added light versions of the SDK builds.
+
+    Now Blend4Web PRO and Blend4Web CE SDKs have lighter versions available, which do not include demo applications and tutorials. These versions are recommended for users with a slow internet connection.
+
+* Depth textures was enabled for the Intel HD Graphics 3000 which allows the use of such effects as shadows, god rays, depth of field and others on this device.
+
+* Now NLA animation takes frame start/end values from *vertex* animation itself.
+
+    This allows having multiple vertex animations controlled by NLA for one object.
+
+* Some mobile devices (including IOS) now do not force low quality nodes in materials.
+
+* API documetation for :b4wref:`scenes.BloomParams` has been added. Some parameters have been renamed.
+
+* Changed payload of mouse_click, mouse_move, touch_click and touch_move sensors. Now it's a dictionary, containing absolute coordinates (``coords``) for all mentioned above; ``which`` for mouse click; ``gesture`` for touch_move.
+
+* ``default_AND_logic_fun`` and ``default_AND_logic_fun`` logic functions are now available in ``controls`` module.
+
+* Removed deprecated scripts for binary module cross-compilation.
+
+* API methods :b4wref:`objects.set_nodemat_value`, :b4wref:`objects.get_nodemat_value`, :b4wref:`objects.set_nodemat_rgb` and :b4wref:`objects.get_nodemat_rgb` are now deprecated and moved to the :b4wmod:`material` module.
+
+Fixes
+-----
+
+* Fixed the :b4wref:`util.quat_to_euler` function.
+
+* Fixed incorrect behaviour of the ``Normal Map`` node with non-unit strength parameter.
+
+* Fixed some runtime checks for objects in logic nodes.
+
+* Fixed the inability to change a texture on one object (the :b4wref:`textures.change_image` function) when it is shared between multiple materials.
+
+* ``CookTorr`` specular model now looks similar to the one in Blender.
+
+* ``Alpha Sort`` materials now behave correctly for non-deep copies of objects.
+
+* Fixed the :b4wref:`math.create_pline_from_point_vec` and :b4wref:`math.set_pline_initial_point` methods.
+
+* Walking characters with a behavior based on the :b4wmod:`npc_ai` module now do not fall underground.
+
+* Fixed bug when two or more anchors of type ``Custom Element`` can reference the same element id.
+
+* Fixed reflections for spherical billboards.
+
+* Fixed audio resuming after pausing for the ``Background Sound`` and the ``Positional Sound`` speakers in Firefox.
+
+v16.09
+======
+
+New Features
+------------
+
+* Web Player improvements.
+
+    An option to set up social network buttons located in the bottom-right corner of a loaded scene. To do this, you need to specify the ``socials`` :ref:`attribute <webplayer_attributes>` before the application starts.
+
+* Coordinate System change.
+
+    Now Blender's coordinate space is used instead of OpenGL's. This new behavior can introduce various incompatibilities in application logic. Developers are advised to review their apps and make changes according to the new coordinate space (Z vector up).
+
+* Optimized geometry rendering.
+
+    Geometry rendering has been optimized by implementing a new algorithm for storing data in GPU memory. Now normal and tangent data has been stored in TBN quaternions.
+
+* Project Manager improvements.
+
+    Added the new ``update_modules`` command to the *project.py* utility. This command allows users to update engine's modules inside developed applications. This feature significantly simplifies updating project files to newer Blend4Web versions.
+
+* Automatic quality detection.
+
+    By specifying the AUTO (:b4wref:`config.P_AUTO`) quality profile in the :b4wmod:`app` module you can load your app in LOW or HIGH quality depending on your hardware specs. Also, a low-level performance benchmark can be executed using the :b4wref:`debug.test_performance` method.
+
+* PVRTC conversion support.
+
+    PVRTC conversion is now supported. This allows developers to use compressed textures on iOS and PowerVR-based Android devices.
+
+* Shadow quality settings added.
+
+    Now it is possible to set different quality profiles for soft shadows: 16x, 8x, 4x.
+
+* ``Shading`` pannel was added to the ``Render`` tab. It contains ``World Space Shading`` option and ``Set Recommended Options`` button to auto configure Blender for better Blend4Web experience.
+
+* Added support for Blender 2.78.
+
+    ``World Space Shading`` option paired with the support for environment lighting for the GLSL mode in viewport makes rendered b4w scene maximally match it's viewport preview.
+
+    New shader node ``Normal Map`` is fully supported.
+
+Changes
+-------
+
+* The system for assigning shader directives was refactored. This feature reduces engine loading time and simplify debugging.
+
+* Rendering the anchors was speeded up on some devices by using the "translate3d" CSS property.
+
+* Shader validation has been improved, which decreases amount of false negative errors. More error descriptions have been added.
+
+* Major part of shader computations was moved from matrices to TSR to increase performance.
+
+* The ``Render`` tab panels' order was rearranged.
+
+Fixes
+-----
+
+* Fixed the bug in the Samsung Internet browser when it hung if there were many anchors in a scene.
+
+* Fixed Web Player "alpha" attribute, which didn't work.
+
+* Fixed compilation/linking shader error message.
+
+* Fixed rotation at angle defined by variable value in the ``Transform Object`` logic node.
+
+* Fixed behaviour of the ``Play Animation`` logic node in case of baked and non-baked versions of the action co-exist.
+
+* Fixed quality settings for plane reflections.
+
+* Fixed :b4wref:`transform.get_translation_rel` and :b4wref:`transform.get_rotation_rel` methods.
+
+* Fixed dof_distance setting with :b4wref:`scenes.set_dof_params` method.
+
+* Fixed the bug when an object with both ``Do Not Render`` and ``Enable Outlining`` options enabled led to the engine crash after it was selected.
+
+* Fixed physics for particle system.
+
+v16.08
+======
+
+New Features
+------------
+
+* Materials ``Tangent Shading`` option is now supported.
+
+    This option can be used to imitate anisotropic material surfaces, such as polished metals, hair, etc.
+
+* Shader node ``Normal Map`` is now supported.
+
+    This node allows converting color data from texture to a normal map. The input data can be in tangent, object or world coordinate space. The ``Strength`` parameter controls the mixing values extracted from the texture with an object's default normals.
+
+    The color space of a texture image should be set to ``Non-Color`` to make Blender's viewport preview match the final Blend4Web scene.
+
+* Engine CPU optimizations.
+
+    Several CPU and GC (Garbage Collector) optimizations have been made in the engine's core systems. ``OES_vertex_array_object`` extension was supported on appropriate hardware. Uniform and shader usage was also optimized reducing the total amount of WebGL calls. This should improve scene load time and rendering responsiveness, especially for slow CPUs.
+
+* Interface improvements in the Viewer app.
+
+    The ``Tools & Debug`` panel has been moved and is now located directly under the ``Scenes`` panel.
+
+    The ``Min capabilities mode`` button has been added to the ``Tools & Debug`` panel. This parameter makes the Viewer app run the loaded scene as if it was running on a low-end system (such as iOS devices). This allows an artist to find out which materials in the scene may not work as intended on a low-end configuration.
+
+* Normal editor improvements.
+
+    Added ``Offset`` mode for normal editing.
+
+    Added ``Average`` operation support for non-split normals.
+
+    Added the possibility to type the angle of normal rotation just like inputting an object's rotation.
+
+* New API method in the :b4wmod:`textures` module.
+
+    The :b4wref:`textures.get_texture_names` method has been added. It allows us to get all object texture names.
+
+* New API methods in the :b4wmod:`lights` module.
+
+    The :b4wref:`lights.get_light_color`, :b4wref:`lights.set_light_color`, :b4wref:`lights.get_light_energy` and :b4wref:`lights.set_light_energy` methods have been added. These are used to work with the color and energy values of a lamp.
+
+* Support for ``Hidden`` object property.
+ 
+    This flag hides objects upon scene loading.
+
+* Support for GLSL ES 3.0 shaders.
+
+    From now the engine automatically chooses which version of the OpenGL Shading Language should be used to compile/link shaders. It depends on the WebGL context: GLSL ES 1.0 version is used for WebGL 1, and GLSL ES 3.0 - for WebGL 2. The engine's shader system and macro preprocessor was also changed to be compatible with both of these variants.
+
+    This feature lifts restrictions on implementing new functionality related to WebGL 2 without compatibility issues.
+
+* Improvements in Shader Analyzer.
+
+    Shader Analyzer (method :b4wref:`debug.analyze_shaders`) now prints low-level assembly code which helps in reviewing and optimizing shaders.
+
+Changes
+-------
+
+* Depth-of-field (DOF) bokeh effect algorithm improvements.
+
+    Intensity leakage (or pixel bleeding) artifact, when foregound objects in focus appear to 'leak' onto blurry backgrounds, has been reduced.
+
+    The ``Foreground Blur`` property has been added. When enabled, it reduces the appearance of sharp silhouettes on unfocused foreground objects against focused backgrounds.
+
+    ``Front Start``, ``Front End`` properties for foreground and ``Rear Start``, ``Rear End`` for background allows us to specify distances at which a blur starts and reaches the maximum value.
+
+* World is now reflected by default.
+
+* Shader validation algorithm has been improved.
+
+    If material cannot be rendered on low-end devices, it is replaced by error (pink) material in debug and it is removed in production.
+
+Fixes
+-----
+
+* Inversion vertex group length fix.
+
+    The inversion operator of *HAIR* particle system for vertex group length has been fixed.
+
+* Fixed normal rotation for transformed object in `Normal Editor`.
+
+* Fixed rare engine crash occured during scene loading if logic nodes were used in a scene.
+
+* Fixed material panel in the Viewer app. It was disabled for some materials, which are allowed to edit.
+
+* Fixed engine crash on mobile devices.
+
+* Fixed flickering on mobile browsers.
+
+* Dynamic water object loading crash has been fixed.
+
+* Fixed normalmap influence on reflections for stack materials.
+
+* Disabled gray highlighting when tapping in WebPlayer on iPad.
+
+v16.07
+======
+
+New Features
+------------
+
+* Optimized Particle system rendering.
+
+    Now WebGL instancing capabilities are used (provided by the ANGLE_instanced_arrays extention or WebGL 2.0) to render ``Object``-type particles. This type of rendering is more memory efficient and, in some cases, also improves rendering performance.
+
+* Reduced input latency on mobile devices.
+
+    Now the engine ignores mouse events that represent actions that already have been handled by internal Blend4Web touch-event handlers on mobile versions of Chrome, Firefox, Safari. It reduces delays in user actions.
+
+* Audio system improvements.
+
+    Automatic audio context creation. The ``Audio`` checkbox has been removed from the addon. If necessary, scene audio context is created automatically.
+
+    Doppler effect implementation. In recent versions of WebAudio spec Doppler effect was removed. It's now supposed that application developers should implement this effect themselves. From this release you can use in-engine implementation. A new option called ``Enable Doppler`` has been added, replacing the deprecated ``Disable Doppler``.
+
+    Reworked audio interface. New settings have been designed to be as close as possible to the native Blender settings. This includes support for such settings as ``Speed``, ``Doppler`` and ``Distance Model``.
+
+    New ``Auto-play`` speaker option. This option enables speaker playback by default.
+
+    Preliminary support for complex audio loops. Using new ``Loop Start`` and ``Loop End`` options as well as :b4wref:`sfx.loop_stop` API method you can create complex audio loops, which include start, loop and stop sections in one audio buffer. For example, you can create basic ADSR (attack, decay, sustain, release) envelopes using this new API.
+
+* Support for multi-touch selection in selection sensor.
+
+   Now selection sensors are able to use multi-touch selection in `Event-Driven Model <https://www.blend4web.com/doc/en/developers.html?highlight=sensor#event-driven-model>`_.
+
+* Node materials animation improvements.
+
+    Now any node animation can be applied to any node material or its nested node groups. Also, there is a new :b4wref:`animation.apply_ext()` method that allows specifing material or a node group that is to be animated.
+
+* A new method has been added into the :b4wmod:`preloader` module: :b4wref:`preloader.create_preloader`.
+
+* Configuration parameters ``max_fps``, ``max_fps_physics``, ``use_min50``, ``anisotropic_filtering``, ``shadows``, ``reflections``, ``refractions``, ``ssao``, ``dof``, ``god_rays``, ``bloom`` and ``motion_blur`` have been added to the :b4wmod:`config` API module.
+
+
+Changes
+-------
+
+* Color picking optimization.
+
+    Now color picking uses very narrow frustum and a small framebuffer size (``1 x 1`` pix).
+    Also, amount of :b4wref:`scenes.pick_object` calls has been reduced. This improves
+    performance of selection sensor.
+
+* Depth-of-field (DOF) effect improvements.
+
+    DOF effect performance has been increased.
+
+    An experimental DoF effect algorithm has been added. It varies the amount of blur depending on depth and produces bokeh effect on blurred objects. New algorithm can be enabled via ``Bokeh`` property from the camera properties panel in Blender.
+
+* API changes.
+
+    The :b4wref:`preloader.create_simple_preloader` method of the :b4wmod:`preloader` module has been declared deprecated and will be removed in future releases.
+
+
+Fixes
+-----
+
+* Fixed the broken Canvas Resolution Factor slider in the Scene Viewer.
+
+* Fixed ``get_matrix``, ``set_matrix``, ``get_matrix_rel``, ``set_matrix_rel`` methods of the ``transform`` module.
+
+* Fixed definition of the ``resize_to_container`` method of the ``container`` module.
+
+* Fixed performance regression caused by resizing the canvas.
+
+* Fixed cameras linked from other scenes or dupli-groups not present in the scene.
+
+* Fixed incorrect canvas alpha with Bloom post effect.
+
+* Fixed Viewer ``Stop All`` animation button.
+
+* Fixed object picking for stack material.
+
+* Fixed glow effect on Safari.
+
+v16.06
+======
+
+New Features
+------------
+
+* Fast Preview improvements.
+
+    If necessary, the development server copies all external resources into the tmp directory. This allows previewing scenes which are placed outside the SDK (another directory, flash drive, etc).
+
+* Project Manager improvements.
+
+    Support for material library. A new project option has been added allowing users to copy the material library sources into the project directory.
+
+    Added the new ``--ignore`` command property to the *project.py* utility. This option allows users to ignore files during compilation or deployment.
+
+    Added the new ``check_modules`` command to the *project.py* utility. This command allows users to check missing or no longer required modules.
+
+* :ref:`Experimental support of the GearVR<stereo>` virtual reality headset.
+
+    Support for new WebVR API 1.0 has been added to the engine allowing the use of GearVR devices.
+
+* Support for GIF and BMP textures.
+
+    Non-animated GIF and BMP images can now be used as textures.
+
+* Resource Converter improvements.
+
+    Now many more media extensions are supported. For detailed information see :ref:`the documentation <converter_data_format>`.
+
+* Automatic export path determination in Blender addon.
+
+    When projects, created using Project Manager, are exported for the first time, a path to the assets directory is automatically resolved.
+
+* Support for parallel animations in the Logic Editor.
+  
+    It is now possible to apply several parallel animations with the Logic Editor. Previously, only one animation per object was allowed in the Logic Editor. Now, an object can have one animation of each type. The maximum number of possible animations is 8.
+
+* Improved Viewer profiling capabilities.
+  
+    Added a special mode for profiling objects' rendering time in the Viewer application.
+
+* ``Lens Flare`` material property.
+
+    A new material property has been appended to the material render panel.
+    Note, that this works only when there is a ``Sun`` light source in a scene.
+
+* Clip Start and Clip End options for light sources.
+
+    The Clip Start and Clip End properties have been supported for the shadow settings of ``Point`` and ``Spot`` lamps.
+
+* HTML meta elements in Web Player app.
+
+    New HTML meta elements have been added into the WebPlayer HTML templates for compatibility with different social networks.
+
+Changes
+-------
+
+* Several material nodes are now using Blender's viewport world space.
+
+    * ``Geometry``
+
+        The ``Normal`` output provides data in Blender's world coordinate space.
+
+        The ``View`` output provides data in Blender's view coordinate space.
+
+    * ``Texture``
+
+        The ``Vector`` input  for environment textures receives data in Blender's world coordinate space.
+
+        The ``Normal`` output provides data in Blender's world coordinate space.
+
+    * ``Material``
+
+        The ``Normal`` input receives data in Blender's world coordinate space.
+
+        The ``Normal`` output provides data in Blender's world coordinate space.
+
+    * ``Lamp Data``
+
+        The ``Light Vector`` output provides data in Blender's world coordinate space.
+
+    * ``B4W Vector View``
+    
+        The node's input receives data in Blender's world coordinate space.
+
+    * ``B4W Reflect``
+    
+        The first node's input (used for view vectors) receives data in Blender’s view coordinate space.
+
+        The second node's input (used for normals) takes data in Blender’s world coordinate space. 
+
+        The node's output provides data in Blender's world coordinate space.
+
+* Now color picking and anchors are disabled in stereo-mode.
+
+* Now keyboard sensors do not active when using browser shortcuts.
+
+* API changes.
+
+    The :b4wref:`app.resize_to_container` method of the :b4wmod:`app` module
+    has been declared deprecated and will be removed in future releases.
+    :b4wmod:`container` module's :b4wref:`container.resize_to_container()`
+    method should be used in its stead.
+
+* The Bloom ``Key`` option has been renamed ``Intensity``.
+
+* Deprecated functionality.
+
+    The following methods: ``textures.get_canvas_texture_context()``,
+    ``textures.update_canvas_texture_context()`` have been removed.
+
+    The following logic nodes: ``Select``, ``Select & Play Timeline``, ``Select & Play Animation`` have been removed.
+
+* Export errors and warnings now include links to the documentation.
+
+* Proper reporting of incorrect addon directory.
+
+    An incorrect addon directory name now generates a corresponding warning message.
+
+* Dealing with cases when water is used without wind.
+
+    If the water shader is used without wind, a warning message appears.
+
+* Debug console error messages for unsupported image, video and audio formats have been added.
+
+Fixes
+-----
+
+* Fixed decreased performance in stereo-mode.
+
+* Fixed ``window.screen.orientation.angle`` obfuscation.
+
+* Fixed rendering issue in Firefox browsers with enabled WebGL 2.0 context.
+
+* Fixed right-eye rendering in stereo-mode.
+
+* Fixed rendering for glow materials with the ``Terrain Dynamic Grass`` option enabled.
+
+* Removed redundant angular velocity of particles if the ``Rotation`` option is disabled.
+
+* Fixed rendering particles with non-node, non-Opaque materials.
+
+* Fixed several GPU memory leaks.
+
+* Fixed engine crash when using wrong callback id in the ``JS Callback`` logic node.
+
+* Fixed engine crash in the rare case, when a node material has several ``Texture`` nodes with the same texture.
+
+* Fixed the bug which caused the ``Diffuse Intensity`` input of the ``Material`` and ``Extended Material`` nodes to ignore the incoming link.
+
 v16.05
 ======
 
@@ -642,7 +1186,7 @@ Known Issues
 
 * Some devices with Mail GPU require manual WebGL activation in browser settings.
 
-* For the local development server to work on Apple OS X and Blender 2.76, you may need to install `Python 3.4 <https://www.python.org/downloads/release/python-343/>`_. This is due to a bug in Blender https://developer.blender.org/T46623. This bug has been fixed in Blender 2.76b, so updating it is advised.
+* For the local development server to work on Apple macOS and Blender 2.76, you may need to install `Python 3.4 <https://www.python.org/downloads/release/python-343/>`_. This is due to a bug in Blender https://developer.blender.org/T46623. This bug has been fixed in Blender 2.76b, so updating it is advised.
 
 * Skeletal animation can work incorrectly while using Nouveau drivers.
 
@@ -755,7 +1299,7 @@ Known Issues
 
 * Some devices with Mail GPU require manual WebGL activation in browser settings.
 
-* For the local development server to work on Apple OS X and Blender 2.76, you may need to install `Python 3.4 <https://www.python.org/downloads/release/python-343/>`_. This is due to a bug in Blender https://developer.blender.org/T46623. This bug has been fixed in Blender 2.76b, so updating it is advised.
+* For the local development server to work on Apple macOS and Blender 2.76, you may need to install `Python 3.4 <https://www.python.org/downloads/release/python-343/>`_. This is due to a bug in Blender https://developer.blender.org/T46623. This bug has been fixed in Blender 2.76b, so updating it is advised.
 
 
 v15.11
@@ -898,7 +1442,7 @@ Known Issues
 
 * Some devices with Mail GPU require manual WebGL activation in browser settings.
 
-* You may require to install `Python 3.4 <https://www.python.org/downloads/release/python-343/>`_ on the systems with Apple OS X and Blender 2.76. This issue is connected with Blender bug https://developer.blender.org/T46623.
+* You may require to install `Python 3.4 <https://www.python.org/downloads/release/python-343/>`_ on the systems with Apple macOS and Blender 2.76. This issue is connected with Blender bug https://developer.blender.org/T46623.
 
 
 v15.10
@@ -1034,7 +1578,7 @@ Known Issues
 
 * Some devices with Mail GPU require manual WebGL activation in browser settings.
 
-* You may require to install `Python 3.4 <https://www.python.org/downloads/release/python-343/>`_ on the systems with Apple OS X and Blender 2.76. This issue is connected with Blender bug https://developer.blender.org/T46623.
+* You may require to install `Python 3.4 <https://www.python.org/downloads/release/python-343/>`_ on the systems with Apple macOS and Blender 2.76. This issue is connected with Blender bug https://developer.blender.org/T46623.
 
 v15.09
 ======
@@ -1384,7 +1928,7 @@ New Features
 
     New user manual design optimized for devices of all kind.
   
-    The differences between :ref:`coordinate systems <b4w_blender_coordinates>` used in Blender and Blend4Web are now specified in documentation.
+    The differences between coordinate systems used in Blender and Blend4Web are now specified in documentation.
 
 *  Support for addon i18n.
   
@@ -2163,9 +2707,9 @@ New Features
 
     Several engine instances can now work simultaneously, by specifying the namespace on engine's initialization stage.
 
-* *Possibility to use SDK on Apple OS X.*
+* *Possibility to use SDK on Apple macOS.*
 
-    On OS X all SDK functionality including engine and applications building, resource conversation and documentation generation is now available.
+    On macOS all SDK functionality including engine and applications building, resource conversation and documentation generation is now available.
 
 * *The new set_trans_pivot() method is added to the camera module.*
 

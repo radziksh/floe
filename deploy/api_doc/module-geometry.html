@@ -150,7 +150,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
 
         
             
-<li> <a href="#.extract_vertex_array">extract_vertex_array<span class="signature">(obj, mat_name, attrib_name)</span><span class="type-signature"> &rarr; {Float32Array}</span></a></li>
+<li> <a href="#.extract_vertex_array">extract_vertex_array<span class="signature">(obj, mat_name, attrib_name)</span><span class="type-signature"> &rarr; {Float32Array|Int16Array|Uint8Array}</span></a></li>
 
         
             
@@ -323,7 +323,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line245">line 245</a>
+        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line257">line 257</a>
     </li></ul></dd>
     
 
@@ -505,7 +505,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line291">line 291</a>
+        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line303">line 303</a>
     </li></ul></dd>
     
 
@@ -688,7 +688,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line46">line 46</a>
+        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line47">line 47</a>
     </li></ul></dd>
     
 
@@ -710,7 +710,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
 
     
 
-    <h4 class="name" id=".extract_vertex_array">extract_vertex_array<span class="signature">(obj, mat_name, attrib_name)</span><span class="type-signature"> &rarr; {Float32Array}</span></h4>
+    <h4 class="name" id=".extract_vertex_array">extract_vertex_array<span class="signature">(obj, mat_name, attrib_name)</span><span class="type-signature"> &rarr; {Float32Array|Int16Array|Uint8Array}</span></h4>
 
     
 
@@ -816,7 +816,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
 
             
 
-            <td class="description last">Attribute name (a_position, a_normal, a_tangent)</td>
+            <td class="description last">Attribute name (a_position, a_tbn_quat)</td>
         </tr>
 
     
@@ -852,6 +852,12 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
     <dd>
         
 <span class="param-type">Float32Array</span>
+|
+
+<span class="param-type">Int16Array</span>
+|
+
+<span class="param-type">Uint8Array</span>
 
 
     </dd>
@@ -891,7 +897,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line15">line 15</a>
+        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -1071,7 +1077,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line269">line 269</a>
+        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line281">line 281</a>
     </li></ul></dd>
     
 
@@ -1228,7 +1234,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line254">line 254</a>
+        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line266">line 266</a>
     </li></ul></dd>
     
 
@@ -1458,7 +1464,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line107">line 107</a>
+        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line116">line 116</a>
     </li></ul></dd>
     
 
@@ -1639,7 +1645,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line223">line 223</a>
+        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line235">line 235</a>
     </li></ul></dd>
     
 
@@ -1767,7 +1773,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
 
             
 
-            <td class="description last">Attribute name (a_position, a_normal, a_tangent)</td>
+            <td class="description last">Attribute name (a_position, a_tbn_quat)</td>
         </tr>
 
     
@@ -1781,6 +1787,12 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
             
                 
 <span class="param-type">Float32Array</span>
+|
+
+<span class="param-type">Int16Array</span>
+|
+
+<span class="param-type">Uint8Array</span>
 
 
             
@@ -1843,7 +1855,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line76">line 76</a>
+        <a href="ext_geometry.js.html">ext/geometry.js</a>, <a href="ext_geometry.js.html#line77">line 77</a>
     </li></ul></dd>
     
 
@@ -1880,7 +1892,7 @@ Enable the "Dynamic geometry" checkbox for the objects to allow geometry modific
 <br class="clear">
 
 <footer>
-    Blend4Web API Reference (generated by JSDoc 3.4.0 on Tue May 31 2016 15:33:56 GMT+0300 (MSK))
+    Blend4Web API Reference (generated by JSDoc 3.4.0 on Thu Oct 27 2016 16:42:34 GMT+0300 (MSK))
     <a href="https://www.blend4web.com">www.blend4web.com</a>
   <!-- Yandex.Metrika counter -->
   <script type="text/javascript">

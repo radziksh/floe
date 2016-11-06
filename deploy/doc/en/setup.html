@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installing and Updating &mdash; Blend4Web 16.05 User Manual</title>
+  <title>Installing and Updating &mdash; Blend4Web 16.10 User Manual</title>
   
 
   
@@ -32,7 +32,7 @@
   
         <link rel="author" title="About these documents"
               href="about.html"/>
-    <link rel="top" title="Blend4Web 16.05 User Manual" href="index.html"/>
+    <link rel="top" title="Blend4Web 16.10 User Manual" href="index.html"/>
         <link rel="next" title="Workflow" href="workflow.html"/>
         <link rel="prev" title="Engine Features" href="engine_features.html"/> 
 
@@ -61,7 +61,7 @@
           
           
             <div class="version">
-              v16.05
+              v16.10
             </div>
           
         
@@ -95,24 +95,25 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#updating">Updating</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#updating-the-sdk">Updating the SDK</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#exporting-and-viewing-scenes">Exporting and Viewing Scenes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#updating-the-addon">Updating the Addon</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow</a></li>
-<li class="toctree-l1"><a class="reference internal" href="project_manager.html">Project Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project_manager.html">Project Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="viewer.html">Scene Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="web_player.html">Web Player</a></li>
-<li class="toctree-l1"><a class="reference internal" href="addon.html">Addon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="addon.html">Add-on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scene_settings.html">Scene Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="objects.html">Objects</a></li>
 <li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="normal_editor.html">Normal Editor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="camera.html">Camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="materials.html">Materials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="material_library.html">Material Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="node_materials.html">Node Materials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Logic Nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Logic Editor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lighting.html">Lighting, Shadows and Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="postprocessing_effects.html">Postprocessing Effects</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stereo_rendering.html">Stereo Rendering</a></li>
@@ -185,7 +186,7 @@
 </li>
 <li><a class="reference internal" href="#updating" id="id7">Updating</a><ul>
 <li><a class="reference internal" href="#updating-the-sdk" id="id8">Updating the SDK</a></li>
-<li><a class="reference internal" href="#exporting-and-viewing-scenes" id="id9">Exporting and Viewing Scenes</a></li>
+<li><a class="reference internal" href="#updating-the-addon" id="id9">Updating the Addon</a></li>
 </ul>
 </li>
 </ul>
@@ -203,7 +204,7 @@
 </div>
 <div class="section" id="unpacking-the-archive">
 <h3><a class="toc-backref" href="#id4">Unpacking the Archive</a><a class="headerlink" href="#unpacking-the-archive" title="Permalink to this headline">¶</a></h3>
-<p>Stable versions of the distribution are available as an archive (<code class="docutils literal"><span class="pre">blend4web_sdk_free_YY_MM.zip</span></code> &#8211; free SDK, <code class="docutils literal"><span class="pre">blend4web_sdk_pro_YY_MM.zip</span></code> &#8211; commercial SDK). Simply unpack this archive somewhere.</p>
+<p>Stable versions of the distribution are available as an archive (<code class="docutils literal"><span class="pre">blend4web_ce_YY_MM.zip</span></code> &#8211; free SDK, <code class="docutils literal"><span class="pre">blend4web_pro_YY_MM.zip</span></code> &#8211; commercial SDK). Simply unpack this archive somewhere.</p>
 </div>
 <div class="section" id="installing-blend4web-sdk">
 <h3><a class="toc-backref" href="#id5">Installing Blend4Web SDK</a><a class="headerlink" href="#installing-blend4web-sdk" title="Permalink to this headline">¶</a></h3>
@@ -241,7 +242,7 @@
 <p class="first admonition-title">Note</p>
 <p>If you are planning to use only the normal editor, you might consider installing the <a class="reference internal" href="addon.html#addon"><span>Blend4Web addon</span></a> instead of the SDK.</p>
 <p>The addon can only export scenes to <a class="reference internal" href="workflow.html#export-scene"><span>HTML format</span></a> and has limited functionality (for example, it doesn&#8217;t have the <a class="reference internal" href="project_manager.html#project-management"><span>project manager</span></a>, example scenes, user manual and so on), but still it has everything you might need to create a simple application.</p>
-<p class="last">It can be installed the same way as any other <a class="reference external" href="https://www.blender.org/manual/advanced/scripting/python/add_ons.html?highlight=addon#installation-of-a-3rd-party-add-on">Blender addon</a>.</p>
+<p class="last">It can be installed the same way as any other <a class="reference external" href="https://www.blender.org/manual/advanced/scripting/python/addons.html?highlight=install%20addon#installation-of-a-3rd-party-add-on">Blender addon</a>.</p>
 </div>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -258,18 +259,70 @@
 <div class="section" id="updating-the-sdk">
 <h3><a class="toc-backref" href="#id8">Updating the SDK</a><a class="headerlink" href="#updating-the-sdk" title="Permalink to this headline">¶</a></h3>
 <p>Before updating, we recommend to backup all projects in development using the <a class="reference internal" href="project_manager.html#export-projects"><span>project export</span></a> tools.</p>
-<p>There are two methods to update the SDK.</p>
-<p>Firstly, you can completely delete the SDK folder and, after that, extract the new version folder and set the path to it in the Blender settings, as if you were installing the SDK for the first time.</p>
-<p>Secondly, you can simply overwrite the outdated SDK files with the new ones. This method is considered less &#8220;pure&#8221;, but in most cases it should not cause any problems.</p>
+<p>To update the SDK, follow these steps:</p>
+<ol class="arabic">
+<li><p class="first">Download the new version of the SDK.</p>
+</li>
+<li><p class="first">Run Blender.</p>
+</li>
+<li><p class="first">Open the <code class="docutils literal"><span class="pre">User</span> <span class="pre">Preferences</span></code> window.</p>
+</li>
+<li><p class="first">Open the <code class="docutils literal"><span class="pre">Add-ons</span></code> panel.</p>
+</li>
+<li><p class="first">Disable <code class="docutils literal"><span class="pre">Blend4Web</span></code> Add-on.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">We recommend not to use the <code class="docutils literal"><span class="pre">Remove</span></code> button to disable the Add-on for updating the SDK, as doing so will completely delete the add-on, including its files in the SDK.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">Unpack the new version of the SDK from the archive.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>There are two methods to do this.</p>
+<p>Firstly, you can completely delete the SDK folder and, after that, extract the new version folder, as if you were installing the SDK for the first time.</p>
+<p class="last">Secondly, you can simply overwrite the outdated SDK files with the new ones. This method is considered less &#8220;pure&#8221;, but in most cases it should not cause any problems.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p class="first">Open the <code class="docutils literal"><span class="pre">File</span></code> panel in the <code class="docutils literal"><span class="pre">User</span> <span class="pre">Preferences</span></code> window.</p>
+</li>
+<li><p class="first">Set the path to the SDK folder in the <code class="docutils literal"><span class="pre">Scripts</span></code> field.</p>
+</li>
+<li><p class="first">Press the <code class="docutils literal"><span class="pre">Save</span> <span class="pre">User</span> <span class="pre">Settings</span></code> button.</p>
+</li>
+<li><p class="first">Restart Blender.</p>
+</li>
+<li><p class="first">Open the <code class="docutils literal"><span class="pre">User</span> <span class="pre">Preferences</span></code> window once again.</p>
+</li>
+<li><p class="first">Open the <code class="docutils literal"><span class="pre">Add-ons</span></code> panel.</p>
+</li>
+<li><p class="first">Enable <code class="docutils literal"><span class="pre">Blend4Web</span></code> add-on.</p>
+</li>
+<li><p class="first">Press the <code class="docutils literal"><span class="pre">Save</span> <span class="pre">User</span> <span class="pre">Settings</span></code> button once again.</p>
+</li>
+<li><p class="first">Check if everything works correctly.</p>
+</li>
+</ol>
 <p>After updating is complete, you can import all saved projects using the <a class="reference internal" href="project_manager.html#import-projects"><span>project import</span></a> tools.</p>
 </div>
-<div class="section" id="exporting-and-viewing-scenes">
-<span id="getting-started-export-viewer"></span><span id="index-0"></span><h3><a class="toc-backref" href="#id9">Exporting and Viewing Scenes</a><a class="headerlink" href="#exporting-and-viewing-scenes" title="Permalink to this headline">¶</a></h3>
-<p>The created scenes can be exported in HTML format. To do this use the <code class="file docutils literal"><span class="pre">File</span> <span class="pre">&gt;</span> <span class="pre">Export</span> <span class="pre">&gt;</span> <span class="pre">Blend4Web</span> <span class="pre">(.html)</span></code> or <code class="file docutils literal"><span class="pre">File</span> <span class="pre">&gt;</span> <span class="pre">Export</span> <span class="pre">&gt;</span> <span class="pre">Blend4Web</span> <span class="pre">(.json)</span></code> menu option and choose the export filepath. Scene export is described thoroughly in <a class="reference internal" href="addon.html#addon"><span>its own chapter</span></a>. The resulting HTML file can be opened with any browser with WebGL support.</p>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="about.html#browser-webgl-support"><span>WebGL Browsers Support</span></a></p>
-</div>
+<div class="section" id="updating-the-addon">
+<h3><a class="toc-backref" href="#id9">Updating the Addon</a><a class="headerlink" href="#updating-the-addon" title="Permalink to this headline">¶</a></h3>
+<p>If you are only using the Blend4Web add-on, follow this instruction instead.</p>
+<p>Before installing a new version of the add-on, you may firstly remove the existing one. To do this, unfold the information tab of the Blend4Web addon and press the <code class="docutils literal"><span class="pre">Remove</span></code> button. Removing the old version is not required before installing a new one, but doing so makes sure there won&#8217;t be any coflicts.</p>
+<a class="reference internal image-reference" href="_images/user_preferences_remove_addon.png"><img alt="_images/user_preferences_remove_addon.png" class="align-center" src="_images/user_preferences_remove_addon.png" style="width: 100%;" /></a>
+<ol class="arabic simple">
+<li>Download the archive that contains the new version of the add-on, and save it to any place on your hard drive.</li>
+<li>Run Blender.</li>
+<li>Open the <code class="docutils literal"><span class="pre">User</span> <span class="pre">Preferences</span></code> window.</li>
+<li>Switch to the <code class="docutils literal"><span class="pre">Add-ons</span></code> panel.</li>
+<li>Install the new version of the add-on from the archive you downloaded.</li>
+<li>Press the <code class="docutils literal"><span class="pre">Save</span> <span class="pre">User</span> <span class="pre">Settings</span> <span class="pre">button</span></code>.</li>
+<li>Restart Blender.</li>
+</ol>
+<p>Everything should be working now.</p>
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
@@ -297,7 +350,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2014-2016, Triumph.
-      Last updated on 2016-05-31.
+      Last updated on 2016-10-27.
 
     </p>
   </div>
@@ -353,7 +406,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'v16.05',
+            VERSION:'v16.10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

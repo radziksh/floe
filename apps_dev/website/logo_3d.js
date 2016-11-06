@@ -2,12 +2,16 @@
 
 b4w.register("logo_3d_main", function(exports, require) {
 
-var m_app   = require("app");
-var m_cfg   = require("config");
-var m_ctl   = require("controls");
-var m_data  = require("data");
-var m_main  = require("main");
-var m_scs   = require("scenes");
+var m_app      = require("app");
+var m_cfg      = require("config");
+var m_cont     = require("container");
+var m_ctl      = require("controls");
+var m_data     = require("data");
+var m_main     = require("main");
+var m_scs      = require("scenes");
+var m_version  = require("version");
+
+var DEBUG = (m_version.type() === "DEBUG");
 
 var CANVAS_CONTAINER_ID  = "main_canvas_container";
 var CANVAS_REPLACMENT    = "no_webgl_logo";
@@ -26,6 +30,8 @@ exports.init = function() {
         quality: m_cfg.P_HIGH,
         report_init_failure: false,
         alpha: true,
+        assets_dds_available: !DEBUG,
+        assets_min50_available: !DEBUG,
         track_container_position: true,
         force_container_ratio: 661 / 316,
         autoresize: true
@@ -47,8 +53,24 @@ function load_stuff() {
                 loaded_callback, false, true);
 }
 
+function check_user_agent(str) {
+    var user_agent = navigator.userAgent;
+
+    if (user_agent.indexOf(str) > -1)
+        return true;
+    else
+        return false;
+}
+
 function loaded_callback(data_id) {
     var canv_repl = document.getElementById(CANVAS_REPLACMENT);
+    var cont = m_cont.get_container();
+
+    if (check_user_agent("iPad") || check_user_agent("iPhone"))
+        if (window.innerWidth < 1366)
+            cont.style.width = "99%";
+        else
+            cont.style.width = "94%";
 
     if (canv_repl)
         canv_repl.style.display = "none";
@@ -74,8 +96,9 @@ function loaded_callback(data_id) {
 
     window.addEventListener("beforeunload", function() {
         _canvas_elem.style.display = "none";
-        canv_repl.style.display = "block";
-    }, false)
+        if (canv_repl)
+            canv_repl.style.display = "block";
+    })
 
     _canvas_elem.addEventListener("mousedown", resume_engine, false);
     _canvas_elem.addEventListener("mousewheel", resume_engine, false);

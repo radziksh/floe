@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -55,8 +54,13 @@ function init_light(type) {
         default_energy: 0,
         distance: 0,
 
+        use_sphere: false,
+
         spot_size: 0,
         spot_blend: 0,
+
+        clip_start: 0.1,
+        clip_end: 30.0,
 
         falloff_type: "",
 
@@ -91,7 +95,7 @@ exports.lamp_to_light = function(bpy_obj, obj) {
     light.use_diffuse = data["use_diffuse"];
     light.use_specular = data["use_specular"];
     var quat = m_tsr.get_quat_view(obj.render.world_tsr);
-    var dir = m_util.quat_to_dir(quat, m_util.AXIS_Y, _vec3_tmp);
+    var dir = m_util.quat_to_dir(quat, m_util.AXIS_Z, _vec3_tmp);
     // though dir seems to be normalized, do it explicitely
     m_vec3.normalize(dir, dir);
     light.direction.set(dir);
@@ -104,6 +108,10 @@ exports.lamp_to_light = function(bpy_obj, obj) {
     update_color_intensity(light);
 
     light.distance = data["distance"];
+    light.use_sphere = data["use_sphere"];
+
+    light.clip_start = data["clip_start"];
+    light.clip_end = data["clip_end"];
 
     if (light.type === "POINT" || light.type === "SPOT")
         light.distance = data["distance"];
@@ -173,15 +181,12 @@ exports.update_light_transform = update_light_transform;
  */
 function update_light_transform(obj) {
 
-    if (obj.type != "LAMP")
-        throw "Wrong light object";
-
     var light = obj.light;
     if (!light)
         return;
 
     var quat = m_tsr.get_quat_view(obj.render.world_tsr);
-    m_util.quat_to_dir(quat, m_util.AXIS_Y, light.direction);
+    m_util.quat_to_dir(quat, m_util.AXIS_Z, light.direction);
     m_vec3.normalize(light.direction, light.direction);
 
     if (light.type == "SUN") {

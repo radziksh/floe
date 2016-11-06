@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -117,6 +116,17 @@ exports.resize = function(width, height, update_canvas_css) {
                 + m_cont.DEFAULT_CANVAS_W + "x" + m_cont.DEFAULT_CANVAS_H + ".");
 
     m_cont.resize(width, height, update_canvas_css);
+}
+
+/**
+ * Fit canvas elements to match the size of container element.
+ * @method module:container.resize_to_container
+ * @param {Boolean} [force=false] Resize canvas element even in case of
+ * matching of canvas and container size.
+ */
+exports.resize_to_container = function(force) {
+    force = force || false;
+    m_cont.resize_to_container(force);
 }
 
 }

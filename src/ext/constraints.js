@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -231,8 +230,8 @@ exports.append_stiff_trans_rot = function(obj, target, offset, rotation_offset) 
 
 /**
  * Make the object "looking" at the target object or the position. The object's
- * facing direction is considered to be the -Y axis (-Z in Blender coordinates),
- * that is vertically downwards.
+ * facing direction is considered to be the -Z axis that is vertically
+ * downwards.
  *
  * Example: a spot light which is tracking the character; both objects can be
  * moved via API or animated.

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Problems and Solutions &mdash; Blend4Web 16.05 User Manual</title>
+  <title>Problems and Solutions &mdash; Blend4Web 16.10 User Manual</title>
   
 
   
@@ -32,7 +32,7 @@
   
         <link rel="author" title="About these documents"
               href="about.html"/>
-    <link rel="top" title="Blend4Web 16.05 User Manual" href="index.html"/>
+    <link rel="top" title="Blend4Web 16.10 User Manual" href="index.html"/>
         <link rel="next" title="Release Notes" href="release_notes.html"/>
         <link rel="prev" title="Team Work. Using Git" href="git_short_manual.html"/> 
 
@@ -61,7 +61,7 @@
           
           
             <div class="version">
-              v16.05
+              v16.10
             </div>
           
         
@@ -87,18 +87,19 @@
 <li class="toctree-l1"><a class="reference internal" href="engine_features.html">Engine Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup.html">Installing and Updating</a></li>
 <li class="toctree-l1"><a class="reference internal" href="workflow.html">Workflow</a></li>
-<li class="toctree-l1"><a class="reference internal" href="project_manager.html">Project Manager</a></li>
+<li class="toctree-l1"><a class="reference internal" href="project_manager.html">Project Management</a></li>
 <li class="toctree-l1"><a class="reference internal" href="viewer.html">Scene Viewer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="web_player.html">Web Player</a></li>
-<li class="toctree-l1"><a class="reference internal" href="addon.html">Addon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="addon.html">Add-on</a></li>
 <li class="toctree-l1"><a class="reference internal" href="scene_settings.html">Scene Settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="objects.html">Objects</a></li>
 <li class="toctree-l1"><a class="reference internal" href="meshes.html">Meshes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="normal_editor.html">Normal Editor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="camera.html">Camera</a></li>
 <li class="toctree-l1"><a class="reference internal" href="materials.html">Materials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="material_library.html">Material Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="node_materials.html">Node Materials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Logic Nodes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Logic Editor</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lighting.html">Lighting, Shadows and Background</a></li>
 <li class="toctree-l1"><a class="reference internal" href="postprocessing_effects.html">Postprocessing Effects</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stereo_rendering.html">Stereo Rendering</a></li>
@@ -260,7 +261,7 @@
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
-<p>For MacOS X, you can check System Report.</p>
+<p>For macOS, you can check System Report.</p>
 <p>To do it, please follow these steps:</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -302,7 +303,7 @@
 <ul>
 <li><p class="first">Problems with updating of the add-on.</p>
 <blockquote>
-<div><p>It’s strongly advised to restart Blender after installing a newer version of Addon/SDK.</p>
+<div><p>It’s strongly advised to restart Blender after installing a newer version of Add-on/SDK.</p>
 </div></blockquote>
 </li>
 <li><p class="first">NVIDIA 331 driver in Linux can cause WebGL errors.</p>
@@ -314,7 +315,7 @@
 </li>
 <li><p class="first">Some devices with Mail GPU require manual WebGL activation in browser settings.</p>
 </li>
-<li><p class="first">For the local development server to work on Apple OS X and Blender 2.76, you may need to install <cite>Python 3.4 &lt;https://www.python.org/downloads/release/python-343/&gt;</cite>. This is due to a bug in Blender <a class="reference external" href="https://developer.blender.org/T46623">https://developer.blender.org/T46623</a>. This bug has been fixed in Blender 2.76b, so updating it is advised.</p>
+<li><p class="first">For the local development server to work on Apple macOS and Blender 2.76, you may need to install <a class="reference external" href="https://www.python.org/downloads/release/python-343/">Python 3.4</a>. This is due to a bug in Blender <a class="reference external" href="https://developer.blender.org/T46623">https://developer.blender.org/T46623</a>. This bug has been fixed in Blender 2.76b, so updating it is advised.</p>
 </li>
 <li><p class="first">Skeletal animation may work incorrectly while using Nouveau drivers.</p>
 </li>
@@ -328,15 +329,28 @@
 <div><p>This issue is caused by incompatibility of Chromium sandbox and NVIDIA&#8217;s latest drivers. The solution is to downgrade drivers to the 340xx version.</p>
 </div></blockquote>
 </li>
-<li><p class="first">WebAudio issues.</p>
+<li><p class="first">Audio issues.</p>
 <blockquote>
 <div><p>Audio doesn&#8217;t work in some versions of Google Chrome for the &#8220;Background Music&#8221; speakers in case of HTML export. Currently, speaker type is automatically changed to &#8220;Background Sound&#8221; as a workaround.</p>
 <p>There is an audio context error when running too many instances (&gt;6) of b4w engine (for example, many browser tabs or many iframes on one page) in Google Chrome. The error is prevented by disabling the audio for an application if the audio context cannot be created for it.</p>
+<p>Pausing the audio may not work on such mobile devices as Nexus 6 and Nexus 9 in Google Chrome 50-52 versions. It should work again in Chrome 53. More info here: <a class="reference external" href="https://bugs.chromium.org/p/chromium/issues/detail?id=616772">https://bugs.chromium.org/p/chromium/issues/detail?id=616772</a>.</p>
 </div></blockquote>
 </li>
 <li><p class="first">QQ Browser doesn&#8217;t support WebGL at the moment.</p>
 </li>
 <li><p class="first">WebGL is unstable and sometimes crashes on Mesa 11.x drivers in Linux/Chrome with Intel GPUs. Downgrading to Mesa 10.x drivers can help.</p>
+</li>
+<li><p class="first">Information about moving fingers on GearVR touch sensor in VR-mode is not available.</p>
+<blockquote>
+<div><p>Samsung Internet browser doesn&#8217;t fire any events about moving fingers on touch sensor in VR-mode.</p>
+</div></blockquote>
+</li>
+<li><p class="first">Particles emitted by particle systems placed on inactive (hidden) layers can have their positions set to zero as inactive layers are not updated by Blender.</p>
+<blockquote>
+<div><p>This problem can be solved by activating layers before exporting a scene or by simply clicking the layers to make Blender update them.</p>
+</div></blockquote>
+</li>
+<li><p class="first">Alpha blending objects are rendered incorrect on the Mali 400 series GPU by Google Chrome browser.</p>
 </li>
 </ul>
 </div>
@@ -362,7 +376,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2014-2016, Triumph.
-      Last updated on 2016-05-31.
+      Last updated on 2016-10-27.
 
     </p>
   </div>
@@ -418,7 +432,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'v16.05',
+            VERSION:'v16.10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

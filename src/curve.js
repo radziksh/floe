@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -59,7 +58,7 @@ exports.create_spline = function(bpy_obj) {
     else if (bpy_curve["dimensions"] == "3D")
         spline.is_3d = true;
     else
-        throw "Wrong curve dimensions";
+        m_util.panic("Wrong curve dimensions");
 
     var cpoints = [];
     var weights = [];

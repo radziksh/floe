@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 /**
  * Low-level resource loader.
@@ -716,6 +715,19 @@ function get_video_mime_type(file_path) {
     }
 
     return mime_type;
+}
+
+exports.check_image_extension = function(ext) {
+    if (ext == "png"
+            || ext == "jpg"
+            || ext == "jpeg"
+            || ext == "gif"
+            || ext == "bmp"
+            || ext == "dds"
+            || ext == "pvr")
+        return true;
+
+    return false;
 }
 
 /**

@@ -60,7 +60,6 @@ SRC_FILES         = ['src/b4w.js',
                      'src/container.js',
                      'src/controls.js',
                      'src/curve.js',
-                     'src/dds.js',
                      'src/debug.js',
                      'src/extensions.js',
                      'src/graph.js',
@@ -77,11 +76,14 @@ SRC_FILES         = ['src/b4w.js',
                      'src/print.js',
                      'src/reformer.js',
                      'src/scenegraph.js',
+                     'src/subscene.js',
+                     'src/texcomp.js',
                      'src/textures.js',
                      'src/assets.js',
                      'src/loader.js',
                      'src/logic_nodes.js',
                      'src/math.js',
+                     'src/navmesh.js',
                      'src/nla.js',
                      'src/camera.js',
                      'src/lights.js',
@@ -230,10 +232,10 @@ def run():
     compiler_params.append('--js_output_file=' +
                            os.path.relpath(dest_engine_path))
 
-    print("    " + "-"*(len(dest_engine_path) + len("Compiling : ")))
+    print("    " + "-"*(len(normpath(dest_engine_path)) + len("Compiling : ")))
     print(GREEN + "    Compiling" + ENDCOL + " :",
-          BLUE + dest_engine_path + ENDCOL)
-    print("    " + "-"*(len(dest_engine_path) + len("Compiling : ")))
+          BLUE + normpath(dest_engine_path) + ENDCOL)
+    print("    " + "-"*(len(normpath(dest_engine_path)) + len("Compiling : ")))
 
     externs_gen_file.close()
 
@@ -249,6 +251,51 @@ def run():
     if os.path.exists(join(BASE_DIR, "..", "config_rel.js")):
         os.remove(join(BASE_DIR, "..", "config_rel.js"))
 
+def get_cur_modules():
+    curr_dir = BASE_DIR
+
+    sdk_root_dir = None
+
+    while True:
+        try:
+            ver_file_path = os.path.join(curr_dir, "VERSION")
+
+            with open(ver_file_path) as f:
+                lines = f.readlines()
+
+            params = lines[0].split()
+
+            if params[0] == "Blend4Web":
+                sdk_root_dir = os.path.normpath(curr_dir)
+                break
+        except:
+            pass
+
+        up_dir = os.path.normpath(os.path.join(curr_dir, ".."))
+
+        if up_dir == curr_dir:
+            return None
+        else:
+            curr_dir = up_dir
+
+    if not sdk_root_dir:
+        return
+
+    from mod_list import gen_module_list
+
+    src_modules = gen_module_list("src", join(sdk_root_dir, "src"))
+
+    global ADDONS, SRC_FILES, SRC_EXT_FILES, SRC_LIBS_FILES
+
+    EXCLUSION_MODULES.append('src/addons/ns_compat.js')
+    ADDONS = list(filter(lambda x: x.startswith("src/addons") and x not in EXCLUSION_MODULES, src_modules))
+    SRC_LIBS_FILES = list(filter(lambda x: x.startswith("src/libs/") and x not in EXCLUSION_MODULES, src_modules))
+    SRC_LIBS_FILES.append('src/libs/shader_texts.js')
+    SRC_EXT_FILES = list(filter(lambda x: x.startswith("src/ext/") and x not in EXCLUSION_MODULES, src_modules))
+    SRC_FILES = list(set(src_modules) -
+                     set(SRC_EXT_FILES) -
+                     set(ADDONS) -
+                     set(SRC_LIBS_FILES))
 
 def append_externs_items(paths, externs_js, externs_gen_file):
     """
@@ -328,14 +375,14 @@ def refact_config(app_js=False):
 
     for line in config_js_text:
         # TODO: refactor hardcoded paths
-        pattern_1 = r'(resources_dir\s*:\s*[\"|\'])+(..\/deploy\/apps\/common)'
-        pattern_2 = r'(ASSETS=..\/..\/)+(deploy\/)+(assets\/)'
+        pattern_1 = r'(B4W_ASSETS_PATH=)+(..\/deploy\/assets\/)'
+        pattern_2 = r'(B4W_URANIUM_PATH=)+(..\/deploy\/apps\/common\/uranium.js)'
 
-        line = re.sub(pattern_1, r'\1.', line)
-        line = re.sub(pattern_2, r'\1\3', line)
+        line = re.sub(pattern_1, r'\1..\/..\/assets\/', line)
+        line = re.sub(pattern_2, r'\1uranium.js', line)
 
         if app_js:
-            line = re.sub('USER_DEFINED_MODULE', app_js, line)
+            line = re.sub('B4W_MAIN_MODULE', app_js, line)
 
         config_rel_js_file.write(line)
 

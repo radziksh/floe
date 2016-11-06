@@ -1,8 +1,8 @@
 .. _logic_editor:
 
-***********
-Logic Nodes
-***********
+************
+Logic Editor
+************
 
 .. contents:: Table of Content
     :depth: 2
@@ -120,7 +120,7 @@ Internal Parameters
 Delay
 -----
 
-Make a delay before going to the next node.
+Make a delay (measured in seconds) before going to the next node.
 
 .. image:: src_images/logic_editor/logic_editor_delay.png
     :align: center

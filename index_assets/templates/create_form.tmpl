@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
 
-    <title>Blend4Web SDK</title>
+    <title>Create a new project</title>
 
     <link rel="shortcut icon" sizes="128x128" href="/index_assets/img/favicon_128.png" />
     <link rel="shortcut icon" sizes="196x196" href="/index_assets/img/favicon_196.png" />
@@ -82,6 +82,19 @@
                                 <label for="project_copy_scene_templates" class="check"></label>
                             </div>
                         </td>
+                    </tr>
+                    <tr>
+                        <td class="create">
+                            <h2>Use Material Library</h2>
+                            <p class="create_hint">copy material library blend and asset files into your project directory</p>
+                        </td>
+                        <td class="create">
+                            <div class="input_group">
+                                <input type="checkbox" id="project_copy_mat_library" name="project_copy_mat_library">
+                                <label for="project_copy_mat_library" class="check"></label>
+                            </div>
+                        </td>
+                    </tr>
                     <tr>
                         <td class="create">
                             <h2>Copy Project Management Script</h2>
@@ -123,14 +136,14 @@
                             <div class="input_group">
                                 <input type="radio" id="proj_copy" name="project_engine_type" value="copy">
                                 <label for="proj_copy" class="radio">Copy</label>
-                                <input type="radio" id="proj_upd" name="project_engine_type" value="update" disabled>
-                                <label for="proj_upd" class="radio">Update</label>
+                                <input type="radio" id="proj_none" name="project_engine_type" value="none">
+                                <label for="proj_none" class="radio">None</label>
                             </div>
                             <div class="input_group">
                                 <input type="radio" id="proj_json" name="project_engine_type" value="webplayer_json">
-                                <label for="proj_json" class="radio">WebPlayer JSON</label>
+                                <label for="proj_json" class="radio">Web Player JSON</label>
                                 <input type="radio" id="proj_html" name="project_engine_type" value="webplayer_html">
-                                <label for="proj_html" class="radio">WebPlayer HTML</label>
+                                <label for="proj_html" class="radio">Web Player HTML</label>
                             </div>
                         </td>
                     </tr>

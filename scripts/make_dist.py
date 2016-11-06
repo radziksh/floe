@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import getopt, json, os, sys, time, zipfile, re, shutil
+import getopt, json, os, sys, time, zipfile, re
 
 # for UNIX-like OSes only
 import fnmatch
@@ -12,40 +12,38 @@ DEST=os.path.join(SRC, "deploy", "pub")
 GPL_TEMPLATE=os.path.join(SRC, "scripts", "templates", "gpl_header.license")
 EULA_TEMPLATE=os.path.join(SRC, "scripts", "templates", "eula_header.license")
 ADDON_PATH=os.path.join("addons", "blend4web")
+BUILD=os.path.join("deploy", "apps", "common")
 
 LICENSE_PATHS=[
     {
-        "paths": [os.path.join("src", "*.js")], 
-        "file_type": ".js", 
-        "license_type": set(("free", "pro")), 
+        "paths": [os.path.join("src", "*.js")],
+        "file_type": ".js",
+        "license_type": set(("ce", "pro")),
+        "version_type": set(),
         "except_paths": []
     },
     {
-        "paths": [os.path.join(ADDON_PATH, "*.py")], 
-        "file_type": ".py", 
-        "license_type": set(("free",)), 
+        "paths": [os.path.join(ADDON_PATH, "*.py")],
+        "file_type": ".py",
+        "license_type": set(("ce", "pro")),
+        "version_type": set(),
         "except_paths": [os.path.join(ADDON_PATH, "lib", "*.py")]
+    },
+    {
+        "paths": [os.path.join(BUILD, "b4w")],
+        "file_type": ".js",
+        "license_type": set(("ce", "pro")),
+        "version_type": set(("ce", "pro")),
+        "except_paths": []
     },
 ]
 
 def help():
     print("Usage: make_dist.py [-v version] [-f] DIST_FILE")
 
-def create_blender_scripts_dir():
-    path_to_blender_scripts = os.path.join(SRC, "blender_scripts", "addons")
-    if os.path.isdir(path_to_blender_scripts):
-        remove_blender_scripts_dir()
-    path_to_addons = os.path.join(SRC, "addons")
-    shutil.copytree(path_to_addons, path_to_blender_scripts)
 
-def remove_blender_scripts_dir():
-    path_to_blender_scripts = os.path.join(SRC, "blender_scripts")
-    shutil.rmtree(path_to_blender_scripts)
-
-def process_dist_list(dist_path, version, force):
+def process_dist_list(dist_path, dist_root, version, force):
     print("Creating a distribution archive from " + str(dist_path))
-
-    create_blender_scripts_dir()
 
     try:
         dist_file = open(dist_path, "r")
@@ -72,6 +70,9 @@ def process_dist_list(dist_path, version, force):
 
     basename_dest = os.path.basename(dist_path).split(".lst")[0]
 
+    if not dist_root:
+        dist_root = basename_dest
+
     if version:
         dest_version_suffix = "_" + version.replace(".", "_")
     else:
@@ -97,7 +98,7 @@ def process_dist_list(dist_path, version, force):
             path_root_rel = os.path.relpath(path_curr_rel, SRC)
             if check_path(path_root_rel, pos_patterns, neg_patterns):
                 try:
-                    path_arc = os.path.join(basename_dest, 
+                    path_arc = os.path.join(dist_root, 
                             find_file_path(path_root_rel, pos_patterns))
                 except ValueError as err:
                     print("Failed to create file: " + str(err))
@@ -105,12 +106,7 @@ def process_dist_list(dist_path, version, force):
 
                 print("Writing:", path_root_rel)
 
-                if (path_root_rel == "apps_dev/viewer/assets.json" or 
-                        path_root_rel == "deploy/apps/viewer/assets.json"):
-                    assets = assets_cleanup(path_curr_rel, pos_patterns,
-                            neg_patterns)
-                    zip_str(z, path_arc, assets)
-                elif path_root_rel == "index.html":
+                if path_root_rel == "index.html":
                     index = index_cleanup(path_curr_rel, basename_dest, version)
                     zip_str(z, path_arc, index)
                 else:
@@ -118,14 +114,36 @@ def process_dist_list(dist_path, version, force):
                     for rule in LICENSE_PATHS:
                         if check_path(path_root_rel, rule["paths"], rule["except_paths"]) \
                                 and os.path.splitext(path_root_rel)[-1] == rule["file_type"]:
+                            src = ""
+                            name_list = basename_dest.split("_")
+                            is_pro = "pro" in name_list
 
-                            if basename_dest.split("_")[-1] == "pro" and "pro" in rule["license_type"]:
-                                src = insert_license(path_curr_rel, rule["file_type"], EULA_TEMPLATE)
-                            else:
-                                if "free" in rule["license_type"]:
-                                    src = insert_license(path_curr_rel, rule["file_type"], GPL_TEMPLATE)
-                                elif "pro" in rule["license_type"]:
-                                    src = insert_license(path_curr_rel, rule["file_type"], EULA_TEMPLATE)
+                            src_lines = []
+                            if is_pro and "pro" in rule["version_type"]:
+                                src_lines = get_version_text_lines("pro", version)
+                            elif "ce" in rule["version_type"]:
+                                src_lines = get_version_text_lines("ce", version)
+                            elif "pro" in rule["version_type"]:
+                                src_lines = get_version_text_lines("pro", version)
+
+                            if len(src_lines):
+                                print("Insert version info into file: " + path_curr_rel)
+
+                            lic_lines = []
+                            if is_pro and "pro" in rule["license_type"]:
+                                lic_lines = get_license_text_lines(EULA_TEMPLATE)
+                            elif "ce" in rule["license_type"]:
+                                lic_lines = get_license_text_lines(GPL_TEMPLATE)
+                            elif "pro" in rule["license_type"]:
+                                lic_lines = get_license_text_lines(EULA_TEMPLATE)
+
+                            if len(lic_lines):
+                                print("Insert license into file: " + path_curr_rel)
+
+                            src_lines.extend(lic_lines)
+                            if len(src_lines):
+                                src += get_comment(src_lines, rule["file_type"])
+                            src += get_code_text(path_curr_rel)
 
                     if src:
                         zip_str(z, path_arc, src)
@@ -133,8 +151,6 @@ def process_dist_list(dist_path, version, force):
                         z.write(path_curr_rel, path_arc)
 
     z.close()
-
-    remove_blender_scripts_dir()
 
     print("Archive created: " + str(path_dest))
 
@@ -146,39 +162,48 @@ def zip_str(zfile, path, data):
     info.compress_type = zipfile.ZIP_DEFLATED
     zfile.writestr(info, data)
 
-def insert_license(path, file_type, license_path):
+def get_code_text(path):
     try:
         fp = open(path, "r")
     except IOError:
         print("Source file not found: " + path)
         exit(1)
+    str = fp.read()
+    fp.close()
+    return str
 
+def get_license_text_lines(license_path):
     try:
         lic_fp = open(license_path, "r")
     except IOError:
         print("License file not found: " + license_path)
         exit(1)
-    
-    print("Insert license into file: " + path)
-
-    in_str = fp.read()
-    fp.close()
 
     lic_lines = lic_fp.readlines()
     lic_fp.close()
 
+    return lic_lines
+
+def get_version_text_lines(license_type, version):
+    str_lines = []
+    if license_type == "pro":
+        str_lines.append("Blend4Web PRO " + version + os.linesep)
+    elif license_type == "ce":
+        str_lines.append("Blend4Web CE " + version + os.linesep)
+
+    return str_lines
+
+def get_comment(text_lines, file_type):
     out_str = ""
     if file_type == ".py":
-        for line in lic_lines:
+        for line in text_lines:
             out_str += "# " + line
         out_str += os.linesep * 2
     elif file_type == ".js":
         out_str += "/**" + os.linesep
-        for line in lic_lines:
+        for line in text_lines:
             out_str += ' * ' + line
-        out_str += ' */' + os.linesep * 2
-
-    out_str += in_str
+        out_str += ' */' + os.linesep
     return out_str
 
 def check_path(path, pos_patterns, neg_patterns):
@@ -233,61 +258,6 @@ def find_file_path(path, pos_patterns):
             if fnmatch.fnmatch(path, pat):
                 return path
     return path
-            
-
-def assets_cleanup(path, pos_patterns, neg_patterns):
-    """Returns bytes with cleaned assets.json file"""
-
-    try:
-        fp_in = open(path, "r")
-    except IOError:
-        print("Assets file not found: " + path)
-        exit(1)
-
-    print("Performing cleanup: " + path)
-
-    try:
-        obj = json.load(fp_in)
-    except ValueError as err:
-        print("Failed to parse JSON: " + str(err))
-        exit(1)
-
-    fp_in.close()
-
-    obj_new = assets_cleanup_obj(obj, pos_patterns, neg_patterns)
-
-    assets_str = json.dumps(obj_new, indent=4, separators=(',', ': '),
-            sort_keys=True, cls=CustomJSONEncoder)
-
-    return assets_str.encode()
-
-def assets_cleanup_obj(sections, pos_patterns, neg_patterns):
-    sections_new = []
-
-    for sec in sections:
-        items = sec["items"]
-        items_new = []
-
-        for item in items:
-
-            path = os.path.normpath(os.path.join("deploy/assets",
-                    item["load_file"]))
-
-            if check_path(path, pos_patterns, neg_patterns):
-                items_new.append(item)
-            else:
-                print("Remove item: " + sec["name"] + ": " + item["name"])
-
-        if len(items_new) == 0:
-            print("Remove section: " + sec["name"])
-        else:
-            sec_new = {
-                "name" : sec["name"],
-                "items" : items_new
-            }
-            sections_new.append(sec_new)
-
-    return sections_new
 
 def index_cleanup(index_path, basename_dist, version):
 
@@ -325,7 +295,7 @@ def index_cleanup(index_path, basename_dist, version):
 if __name__ == "__main__":
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "fv:", ["version="])
+        opts, args = getopt.getopt(sys.argv[1:], "fr:v:", ["dist-root=", "version="])
     except getopt.GetoptError as err:
         help()
         exit(1)
@@ -336,15 +306,18 @@ if __name__ == "__main__":
 
     dist = args[0]
     version = ""
+    dist_root = ""
     force = False
 
     for opt, val in opts:
         if opt in ("-v", "--version"):
             version = val
+        elif opt in ("-r", "--dist-root"):
+            dist_root = val
         elif opt == "-f":
             force = True
         else:
             help()
             exit(0)
 
-    process_dist_list(dist, version, force)
+    process_dist_list(dist, dist_root, version, force)

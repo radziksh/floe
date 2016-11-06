@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -27,13 +26,17 @@ b4w.module["__anchors"] = function(exports, require) {
 
 var m_batch  = require("__batch");
 var m_cam    = require("__camera");
+var m_cfg    = require("__config");
 var m_cont   = require("__container");
 var m_obj    = require("__objects");
 var m_print  = require("__print");
 var m_render = require("__renderer");
 var m_scenes = require("__scenes");
+var m_subs   = require("__subscene");
 var m_time   = require("__time");
 var m_tsr    = require("__tsr");
+
+var cfg_def = m_cfg.defaults;
 
 var _anchors      = [];
 var _is_paused    = false;
@@ -53,7 +56,7 @@ exports.append = function(obj) {
 
     // NOTE: depends on subscene here because not supported for dynamically loaded data
     var det_vis = obj.anchor.detect_visibility &&
-            Boolean(m_scenes.get_subs(m_scenes.get_main(), "ANCHOR_VISIBILITY"));
+            Boolean(m_scenes.get_subs(m_scenes.get_main(), m_subs.ANCHOR_VISIBILITY));
 
     var anchor = {
         type: obj.anchor.type,
@@ -66,28 +69,29 @@ exports.append = function(obj) {
         element: null,
         move_cb: null,
         annotation_max_width: obj.anchor.max_width,
-        // DOM-access optimization (height won't change)
-        annotation_height: 0,
-        annotation_width: 0,
         element_id: obj.anchor.element_id
     }
 
     switch (anchor.type) {
     case "ANNOTATION":
-        anchor.element = create_annotation(obj, anchor.annotation_max_width);
-        anchor.annotation_height = anchor.element.offsetHeight;
-        anchor.annotation_width = anchor.element.offsetWidth;
+        anchor.element = create_annotation(anchor);
+
         break;
     case "ELEMENT":
-        anchor.element = document.getElementById(obj.anchor.element_id)
+        anchor.element = document.getElementById(obj.anchor.element_id);
 
-        if (anchor.element) {
-            // NOTE: the dimensions are always zero
-            anchor.annotation_height = anchor.element.offsetHeight;
-            anchor.annotation_width = anchor.element.offsetWidth;
-        } else {
-            m_print.warn("Anchor HTML element was not found, making it generic");
+        if (!anchor.element) {
+            m_print.warn("Anchor HTML element with the id '" 
+                    + obj.anchor.element_id + "' was not found, making it generic.");
             anchor.type = "GENERIC";
+        } else {
+            for (var i = 0; i < _anchors.length; i++)
+                if (_anchors[i].type == "ELEMENT" 
+                        && _anchors[i].element_id == obj.anchor.element_id) {
+                    m_print.warn("Anchor with the id '" + obj.anchor.element_id 
+                            + "' already exists, making the new anchor generic.");
+                    anchor.type = "GENERIC";
+                }
         }
 
         break;
@@ -131,62 +135,52 @@ function add_click_listener() {
             return;
 
         var anchor_descr = anchor_cont.lastElementChild;
+        var anchor_title = anchor_cont.firstElementChild;
         var descr_body   = anchor_descr.firstElementChild;
         var body_text    = descr_body.innerHTML;
 
         anchor_descr.style.visibility = "visible";
 
-        var descr_width  = Math.min(parseInt(anchor_descr.style.width) || 200, str_width(body_text) - 24)
+        var descr_width  = Math.min(parseInt(anchor_descr.style.width) || 200, str_width(body_text) - 24);
         var descr_height = str_height(body_text, descr_width);
 
-        var width_anim  = false;
-        var height_anim = false;
+        var width_anim  = true;
+        var height_anim = true;
 
-        var parent_width  = anchor_cont.offsetWidth - 24;
-        var parent_height = anchor_cont.offsetHeight - 16;
+        var parent_width  = anchor_cont.firstElementChild.offsetWidth - 24;
+        var parent_height = anchor_cont.firstElementChild.offsetHeight - 16;
 
-        if (descr_height == parent_height)
-            anchor_descr.style.height = descr_height + "px";
+        anchor_title.style.display = "none";
 
-        if (descr_width != parent_width) {
-            width_anim = true;
-            _is_anim = true
+        _is_anim = true
 
-            m_time.animate(parent_width, descr_width, 200, function(e) {
-                if (e == descr_width) {
-                    width_anim = false;
+        m_time.animate(0, descr_width, 200, function(e) {
+            if (e == descr_width) {
+                width_anim = false;
 
-                    if (!height_anim)
-                        _is_anim = false;
+                if (!height_anim)
+                    _is_anim = false;
 
-                    if (is_anim)
-                        descr_body.style.visibility = "visible";
-                }
+                if (is_anim)
+                    descr_body.style.visibility = "visible";
+            }
 
-                anchor_descr.style.width = e + "px";
-            });
-        } else
-            width_anim = false;
+            anchor_descr.style.width = e + "px";
+        });
 
-        if (descr_height != parent_height) {
-            height_anim = true;
-            _is_anim = true;
+        m_time.animate(0, descr_height, 200, function(e) {
+            if (e == descr_height) {
+                height_anim = false;
 
-            m_time.animate(parent_height, descr_height, 200, function(e) {
-                if (e == descr_height) {
-                    height_anim = false;
+                if (!width_anim)
+                    _is_anim = false;
 
-                    if (!width_anim)
-                        _is_anim = false;
+                if (is_anim)
+                    descr_body.style.visibility = "visible";
+            }
 
-                    if (is_anim)
-                        descr_body.style.visibility = "visible";
-                }
-
-                anchor_descr.style.height = e + "px";
-            });
-        } else
-            height_anim = false;
+            anchor_descr.style.height = e + "px";
+        });
 
         function is_anim() {
             return anchor_descr.style.visibility == "visible" &&
@@ -206,44 +200,52 @@ function has_anchor_obj(obj) {
 
 function close_descr() {
     var last_child = _clicked_elem.lastElementChild;
+    _clicked_elem.firstElementChild.style.display = "";
 
     last_child.style.visibility = "hidden";
     last_child.firstElementChild.style.visibility = "hidden";
 }
 
-function create_annotation(obj, max_width) {
-    var anchor_cont       = document.createElement("div");
-    var anchor_title_elem = document.createElement("span");
-    var anchor_desc       = "";
-    var anchor_title      = obj.name;
-    var canvas_cont       = m_cont.get_container();
-    var meta_tags         = m_obj.get_meta_tags(obj);
+function create_annotation(anchor) {
+    var obj = anchor.obj;
 
-    add_cont_style(anchor_cont);
+    var canvas_cont = m_cont.get_container();
+    var meta_tags   = m_obj.get_meta_tags(obj);
+    var title_text  = obj.name;
 
-    anchor_cont.style.visibility = "hidden";
+    var anchor_cont_elem = document.createElement("div");
+    var title_wrap_elem  = anchor_cont_elem.cloneNode();
+    var title_elem       = document.createElement("span");
+    var descr_text       = "";
 
-    canvas_cont.appendChild(anchor_cont);
+    add_cont_style(anchor_cont_elem);
+    add_title_wrap_style(title_wrap_elem);
+
+    anchor_cont_elem.style.visibility = "hidden";
 
     if (meta_tags) {
-        anchor_desc  = meta_tags.description || anchor_desc;
-        anchor_title = meta_tags.title || anchor_title;
+        descr_text = meta_tags.description || descr_text;
+        title_text = meta_tags.title || title_text;
     }
 
-    anchor_title_elem.innerHTML = anchor_title;
+    title_elem.innerHTML = title_text;
 
-    add_noselect_style(anchor_title_elem);
-    add_inner_style(anchor_title_elem);
+    add_noselect_style(title_elem);
+    add_inner_style(title_elem);
+    title_elem.style.whiteSpace = "nowrap";
 
-    anchor_cont.appendChild(anchor_title_elem);
+    title_wrap_elem.appendChild(title_elem);
+    anchor_cont_elem.appendChild(title_wrap_elem);
 
-    if (anchor_desc)
-        create_anchor_descr_elem(anchor_desc, anchor_cont, max_width);
+    if (descr_text)
+        create_anchor_descr_elem(descr_text, anchor_cont_elem, anchor.annotation_max_width);
 
-    return anchor_cont;
+    canvas_cont.appendChild(anchor_cont_elem);
+
+    return anchor_cont_elem;
 }
 
-function add_cont_style(elem) {
+function add_title_wrap_style(elem) {
     elem.style.cssText +=
         "background-color:   #000;" +
         "border-radius:      20px 20px 20px 0px;" +
@@ -252,8 +254,18 @@ function add_cont_style(elem) {
         "font-size:          12px;" +
         "line-height:        15px;"+
         "opacity:            1.0;" +
+        "bottom:             0;" +
+        "left:               0;" +
         "padding:            8px 12px;" +
         "position:           absolute;";
+}
+
+function add_cont_style(elem) {
+    // NOTE: transform-style property needed to prevent shaking of the child
+    // elements in FF under Linux
+    elem.style.cssText +=
+        "position:           absolute;" +
+        "transform-style:    preserve-3d;";
 }
 
 function add_inner_style(elem) {
@@ -293,32 +305,32 @@ function add_noselect_style(elem) {
         "cursor:                default;";
 }
 
-function create_anchor_descr_elem(anchor_desc, anchor_cont, max_width) {
-    var desc_elem      = document.createElement("div");
-    var desc_body_elem = document.createElement("span");
+function create_anchor_descr_elem(descr_text, anchor_cont_elem, annotation_max_width) {
+    var descr_wrap_elem = document.createElement("div");
+    var descr_elem      = document.createElement("span");
 
-    if (max_width)
-        desc_elem.style.width = max_width + "px";
+    if (annotation_max_width)
+        descr_wrap_elem.style.width = annotation_max_width + "px";
 
-    add_descr_style(desc_elem);
-    add_inner_style(desc_body_elem);
+    add_descr_style(descr_wrap_elem);
+    add_inner_style(descr_elem);
 
-    desc_body_elem.innerHTML = anchor_desc;
+    descr_elem.innerHTML = descr_text;
 
-    desc_elem.style.visibility      = "hidden";
-    desc_body_elem.style.visibility = "hidden";
+    descr_wrap_elem.style.visibility = "hidden";
+    descr_elem.style.visibility      = "hidden";
 
-    desc_elem.appendChild(desc_body_elem);
-    anchor_cont.appendChild(desc_elem);
+    descr_wrap_elem.appendChild(descr_elem);
+    anchor_cont_elem.appendChild(descr_wrap_elem);
 
-    anchor_cont.addEventListener("mousedown", function(e) {
+    anchor_cont_elem.addEventListener("mousedown", function(e) {
         if (_is_anim)
             return;
 
-        if (anchor_cont == _clicked_elem)
+        if (anchor_cont_elem == _clicked_elem)
             return;
 
-        if (anchor_cont.style.opacity != 1.0)
+        if (anchor_cont_elem.style.opacity != 1.0)
             return;
 
         if (_is_paused)
@@ -327,7 +339,7 @@ function create_anchor_descr_elem(anchor_desc, anchor_cont, max_width) {
         if (_clicked_elem && _clicked_elem.lastElementChild.style.visibility == "visible")
             close_descr();
 
-        _clicked_elem = anchor_cont;
+        _clicked_elem = anchor_cont_elem;
     })
 }
 
@@ -399,7 +411,7 @@ function sort_anchors_zindex(a, b) {
     return b.depth - a.depth;
 }
 
-exports.update = function() {
+exports.update = function(force_update) {
     var det_vis_cnt = 0;
 
     for (var i = _anchors.length; i--;) {
@@ -417,25 +429,22 @@ exports.update = function() {
         var depth = pp[2];
 
         // optimization
-        if (x == anchor.x && y == anchor.y && depth == anchor.depth)
+        if (!force_update && x == anchor.x && y == anchor.y && depth == anchor.depth)
             continue;
 
         switch (anchor.type) {
         case "ANNOTATION":
             // position by left down angle
-            var element = anchor.element;
-
-            element.style.left = Math.floor(x) + "px";
-            element.style.top = Math.floor(y - anchor.annotation_height) + "px";
+            var left = x;
+            var top = y;
+            transform_anchor_el(anchor, left, top);
             break;
         case "ELEMENT":
             // position by center, no width/height optimization here, may change
-            var element = anchor.element;
-            var bounding_box = element.getBoundingClientRect();
-
-            element.style.cssText +=
-                "left:" + Math.floor(x - bounding_box.width / 2) + "px;" +
-                "top:" + Math.floor(y - bounding_box.height / 2) + "px;";
+            var bounding_box = anchor.element.getBoundingClientRect();
+            var left = x - bounding_box.width / 2;
+            var top = y - bounding_box.height / 2;
+            transform_anchor_el(anchor, left, top);
             break;
         case "GENERIC":
             break;
@@ -446,22 +455,49 @@ exports.update = function() {
         anchor.depth = depth;
 
         if (anchor.move_cb)
-            anchor.move_cb(x, y, anchor.appearance, anchor.obj, element);
+            anchor.move_cb(x, y, anchor.appearance, anchor.obj, anchor.element);
     }
 
     _anchors.sort(sort_anchors_zindex);
 
+    // NOTE: setting z-index can be very slow on iPad in case of many 
+    // overlapping elements
     for (var i = 0; i < _anchors.length; i++) {
         var anchor = _anchors[i];
 
-        if (anchor.type != "GENERIC")
-            anchor.element.style.zIndex = i;
+        if (anchor.type != "GENERIC") {
+            if (_clicked_elem == anchor.element)
+                anchor.element.style.zIndex = _anchors.length;
+            else
+                anchor.element.style.zIndex = i;
+        }
     }
 
     if (det_vis_cnt > 0) {
-        var subs_anchor = m_scenes.get_subs(m_scenes.get_main(), "ANCHOR_VISIBILITY");
-        var batch_anchor = subs_anchor.bundles[0].batch;
+        var subs_anchor = m_scenes.get_subs(m_scenes.get_main(), m_subs.ANCHOR_VISIBILITY);
+        var bundle = subs_anchor.draw_data[0].bundles[0];
+        var batch_anchor = bundle.batch;
         m_batch.update_anchor_visibility_batch(batch_anchor, _anchor_batch_pos);
+        m_subs.append_draw_data(subs_anchor, bundle);
+    }
+}
+
+// subpixel smoothing works in chrome, safari and QQ by now
+function transform_anchor_el(anchor, left, top, depth) {
+    var el = anchor.element;
+
+    if (cfg_def.ie_edge_anchors_floor_hack) {
+        left = Math.floor(left);
+        top = Math.floor(top);
+    }
+
+    if ("transform" in el.style)
+        el.style.transform = "translate3d(" + left + "px, " + top + "px, 0px)";
+    else if ("webkitTransform" in el.style)
+        el.style.webkitTransform = "translate3d(" + left + "px, " + top + "px, 0px)";
+    else {
+        el.style.left = left + "px";
+        el.style.top = top + "px";
     }
 }
 
@@ -491,8 +527,9 @@ exports.update_visibility = function() {
         else
             var appearance = "visible";
 
-        if (anchor.detect_visibility && appearance != "out")
+        if (anchor.detect_visibility && appearance != "out") {
             appearance = pick_anchor_visibility(anchor);
+        }
 
         // optimization
 
@@ -527,14 +564,13 @@ exports.update_visibility = function() {
                     element.children[0].style.visibility = "visible";
 
                 // hide description div
-                if (anchor.type == "ANNOTATION" && element.children.length > 1) {
-                    var child = element.children[1];
+                if (anchor.type == "ANNOTATION" && element.children.length > 1)
+                    if (element.lastElementChild.style.visibility == "visible") {
+                        close_descr();
 
-                    child.style.visibility = "hidden";
-
-                    if (child.children.length)
-                        child.children[0].style.visibility = "hidden";
-                }
+                        if (element == _clicked_elem)
+                            _clicked_elem = null;
+                    }
             }
 
             break;
@@ -551,7 +587,7 @@ exports.update_visibility = function() {
 
 function pick_anchor_visibility(anchor) {
     // NOTE: slow
-    var subs_anchor = m_scenes.get_subs(m_scenes.get_main(), "ANCHOR_VISIBILITY");
+    var subs_anchor = m_scenes.get_subs(m_scenes.get_main(), m_subs.ANCHOR_VISIBILITY);
     var anchor_cam = subs_anchor.camera;
 
     var viewport_xy = m_cont.canvas_to_viewport_coords(anchor.x, anchor.y, 
@@ -643,8 +679,14 @@ exports.pick_anchor = function(x, y) {
 }
 
 function check_anchor_coords(anchor, x, y) {
-    var width = Math.round(anchor.annotation_width);
-    var height = Math.round(anchor.annotation_height);
+    if (anchor.element) {
+        var width = Math.round(anchor.element.offsetWidth) || 0;
+        var height = Math.round(anchor.element.offsetHeight) || 0;
+    } else {
+        var width = 0;
+        var height = 0;
+    }
+
     var a_x = anchor.x;
     var a_y = anchor.y;
 

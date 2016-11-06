@@ -19,7 +19,7 @@ var m_cons  = require("constraints");
 var m_mouse = require("mouse");
 var m_cam   = require("camera");
 var m_cont  = require("container");
-var m_obj   = require("objects");
+var m_mat   = require("material");
 
 var m_quat  = require("quat");
 
@@ -75,19 +75,23 @@ exports.init_wrapper = function(level_conf, json_name) {
     };
     m_anim.apply_def(_char_wrapper.hitsparks);
     m_anim.set_behavior(_char_wrapper.hitsparks, m_anim.AB_FINISH_RESET);
-    m_obj.set_nodemat_value(_char_wrapper.lava_shield_prot,
+    m_mat.set_nodemat_value(_char_wrapper.lava_shield_prot,
                             ["lava_shield_prot", "lava_prot_switcher"],
                             0);
-    m_obj.set_nodemat_value(_char_wrapper.lava_shield_prot,
+    m_mat.set_nodemat_value(_char_wrapper.lava_shield_prot,
                             ["lava_shield_prot", "shield_switcher"],
                             0);
 
     m_scs.hide_object(_char_wrapper.foot_smoke);
 
     if (level_conf && level_conf.LEVEL_NAME == "dungeon")
-        m_obj.set_nodemat_value(_char_wrapper.body,
+        m_mat.set_nodemat_value(_char_wrapper.body,
                                 ["petigor", m_conf.CHAR_SWORD_SWITCHER],
                                 1);
+    else
+        m_mat.set_nodemat_value(_char_wrapper.body,
+                                ["petigor", m_conf.CHAR_SWORD_SWITCHER],
+                                0);
 
     cleanup_cache();
     precache_speakers();
@@ -120,14 +124,14 @@ exports.setup_controls = function (elapsed_sensor) {
     var clamp_up    = Math.PI / 3;
     var clamp_down  = 0.01;
 
-    function rotation_cb(rot_x, rot_y) {
+    function rotation_cb(rot_x, rot_z) {
         m_phy.character_rotation_inc(_char_wrapper.phys_body, rot_x, 0);
-        if (rot_y) {
-            m_cam.eye_rotate(camobj, 0, rot_y);
+        if (rot_z) {
+            m_cam.eye_rotate(camobj, 0, rot_z);
 
             m_cam.get_camera_angles(camobj, _vec3_tmp);
-            offset[2] = -dist * Math.cos(_vec3_tmp[1]);
-            offset[1] = -dist * Math.sin(_vec3_tmp[1]);
+            offset[1] =  dist * Math.cos(_vec3_tmp[1]);
+            offset[2] = -dist * Math.sin(_vec3_tmp[1]);
 
             m_cons.append_semi_stiff_cam(camobj, _char_wrapper.target, offset, null,
                                  clamp_left, clamp_right, clamp_up, clamp_down);
@@ -153,7 +157,7 @@ exports.setup_controls = function (elapsed_sensor) {
 
     if (_level_conf) {
         _cam_indicator = m_scs.get_object_by_dupli_name_list(m_conf.CAMERA_INDICTAOR);
-        m_obj.set_nodemat_value(_cam_indicator,
+        m_mat.set_nodemat_value(_cam_indicator,
                                 ["camera_indicator", m_conf.CAM_INDICATOR_VAL], 0);
     }
 }
@@ -298,11 +302,11 @@ function init_island_detection() {
 
 function setup_ground_sensor(on_ground) {
     var ground_sens = m_ctl.create_ray_sensor(_char_wrapper.phys_body, [0, 0, 0],
-                                          [0, -m_conf.CHAR_RAY_LENGTH, 0], "GROUND", true);
+                                          [0, 0, -m_conf.CHAR_RAY_LENGTH], "GROUND", true);
     var lava_sens = m_ctl.create_ray_sensor(_char_wrapper.phys_body, [0, 0, 0],
-                                          [0, -m_conf.CHAR_RAY_LENGTH, 0], "LAVA", true);
+                                          [0, 0, -m_conf.CHAR_RAY_LENGTH], "LAVA", true);
     var common_coll_sens = m_ctl.create_ray_sensor(_char_wrapper.phys_body, [0, 0, 0],
-                                          [0, -m_conf.CHAR_RAY_LENGTH, 0], "COMMON", true);
+                                          [0, 0, -m_conf.CHAR_RAY_LENGTH], "COMMON", true);
     function ground_cb(obj, id, pulse) {
         var val = pulse == 1? 1: 0;
         m_ctl.set_custom_sensor(on_ground, val)
@@ -533,7 +537,7 @@ function setup_attack(touch_attack, elapsed) {
 
                 m_trans.get_translation(_char_wrapper.phys_body, trans);
                 m_trans.get_rotation(_char_wrapper.phys_body, cur_rot_q);
-                m_vec3.transformQuat(m_util.AXIS_Z, cur_rot_q, cur_dir);
+                m_vec3.transformQuat(m_util.AXIS_MY, cur_rot_q, cur_dir);
 
                 m_vec3.scaleAndAdd(trans, cur_dir, at_dst, at_pt);
                 if (m_combat.process_attack_on_enemies(at_pt, at_dst)) {
@@ -592,7 +596,7 @@ function setup_hurt_indicator() {
             return;
         }
         prev_ind_val = indicator_val;
-        m_obj.set_nodemat_value(_cam_indicator,
+        m_mat.set_nodemat_value(_cam_indicator,
                 ["camera_indicator", m_conf.CAM_INDICATOR_VAL], indicator_val);
     }
 
@@ -608,7 +612,7 @@ exports.apply_hp_potion = function() {
 exports.apply_lava_protect = function() {
     m_anim.set_behavior(_char_wrapper.body, m_anim.AB_FINISH_STOP, m_anim.SLOT_1);
     m_anim.play(_char_wrapper.body, null, m_anim.SLOT_1);
-    m_obj.set_nodemat_value(_char_wrapper.lava_shield_prot,
+    m_mat.set_nodemat_value(_char_wrapper.lava_shield_prot,
                             ["lava_shield_prot", "lava_prot_switcher"],
                             1);
 }
@@ -616,7 +620,7 @@ exports.apply_lava_protect = function() {
 exports.remove_lava_protect = remove_lava_protect;
 function remove_lava_protect() {
     m_bonuses.set_lava_protect_time(0);
-    m_obj.set_nodemat_value(_char_wrapper.lava_shield_prot,
+    m_mat.set_nodemat_value(_char_wrapper.lava_shield_prot,
                             ["lava_shield_prot", "lava_prot_switcher"],
                             0);
 }
@@ -625,7 +629,7 @@ exports.apply_shield = apply_shield;
 function apply_shield() {
     m_anim.set_behavior(_char_wrapper.body, m_anim.AB_FINISH_STOP, m_anim.SLOT_2);
     m_anim.play(_char_wrapper.body, null, m_anim.SLOT_2);
-    m_obj.set_nodemat_value(_char_wrapper.lava_shield_prot,
+    m_mat.set_nodemat_value(_char_wrapper.lava_shield_prot,
                             ["lava_shield_prot", "shield_switcher"],
                             1);
 }
@@ -633,7 +637,7 @@ function apply_shield() {
 exports.remove_shield = remove_shield;
 function remove_shield() {
     m_bonuses.set_shield_time(0);
-    m_obj.set_nodemat_value(_char_wrapper.lava_shield_prot,
+    m_mat.set_nodemat_value(_char_wrapper.lava_shield_prot,
                             ["lava_shield_prot", "shield_switcher"],
                             0);
 }
@@ -695,7 +699,7 @@ function kill() {
     if (m_bonuses.lava_protect_time_left() > 0)
         remove_lava_protect();
 
-    m_obj.set_nodemat_value(_cam_indicator,
+    m_mat.set_nodemat_value(_cam_indicator,
             ["camera_indicator", m_conf.CAM_INDICATOR_VAL], 1.0);
 }
 

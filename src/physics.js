@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -32,11 +31,13 @@ var m_obj_util = require("__obj_util");
 var m_print    = require("__print");
 var m_quat     = require("__quat");
 var m_scs      = require("__scenes");
+var m_subs     = require("__subscene");
 var m_trans    = require("__transform");
 var m_tsr      = require("__tsr");
 var m_util     = require("__util");
 var m_vec3     = require("__vec3");
 var m_version  = require("__version");
+var m_navmesh = require("__navmesh");
 
 var cfg_phy = m_cfg.physics;
 var cfg_def = m_cfg.defaults;
@@ -60,12 +61,12 @@ var _unique_counter = {
     ray_test: 0
 }
 
-var _vec3_tmp  = new Float32Array(3);
-var _vec4_tmp  = new Float32Array(4);
-var _quat4_tmp = new Float32Array(4);
-var _mat4_tmp  = new Float32Array(16);
-var _tsr_tmp   = m_tsr.create();
-var _tsr_tmp2  = m_tsr.create();
+var _vec3_tmp = new Float32Array(3);
+var _vec4_tmp = new Float32Array(4);
+var _quat_tmp = new Float32Array(4);
+var _mat4_tmp = new Float32Array(16);
+var _tsr_tmp  = m_tsr.create();
+var _tsr_tmp2 = m_tsr.create();
 
 // vehicle types for internal usage
 var VT_CHASSIS     = 10;
@@ -142,7 +143,7 @@ exports.append_object = function(obj, scene) {
 
     var render = obj.render;
     if (!render)
-        throw "No object render: " + obj.name;
+        m_util.panic("No object render: " + obj.name);
 
     var phy_set = obj.physics_settings;
 
@@ -161,8 +162,12 @@ exports.append_object = function(obj, scene) {
 
     if (is_vehicle_chassis(obj) || is_vehicle_hull(obj) ||
             is_character(obj) || is_floater_main(obj) || obj.use_obj_physics) {
+        var is_navmesh = is_navigation_mesh(obj);
+        if (is_navmesh)
+            var phy = init_navigation_mesh_physics(obj, scene);
+        else
+            var phy = init_bounding_physics(obj, compound_children, worker);
 
-        var phy = init_bounding_physics(obj, compound_children, worker);
         obj.physics = phy;
 
         var pb = {
@@ -170,8 +175,11 @@ exports.append_object = function(obj, scene) {
             physics: phy
         };
 
-        bundles.push(pb);
-        recalc_collision_tests(scene, worker, phy.collision_id);
+
+        if (!is_navmesh) {
+            bundles.push(pb);
+            recalc_collision_tests(scene, worker, phy.collision_id);
+        }
     } else {
         var sc_data = m_obj_util.get_scene_data(obj, scene);
         var batches = sc_data.batches;
@@ -507,7 +515,7 @@ exports.update = function(timeline, delta) {
         var scene = _scenes[i];
         var wp = scene._render.water_params;
         if (wp && wp.waves_height > 0.0) {
-            var subs = m_scs.get_subs(scene, "MAIN_OPAQUE");
+            var subs = m_scs.get_subs(scene, m_subs.MAIN_OPAQUE);
             var wind = m_vec3.length(subs.wind);
             m_ipc.post_msg(_workers[i], m_ipc.OUT_SET_WATER_TIME, subs.time * wind);
         }
@@ -709,7 +717,8 @@ function init_physics(body_id, type) {
         angvel: new Float32Array(3),
 
         cached_trans: new Float32Array(3),
-        cached_quat: new Float32Array(4)
+        cached_quat: new Float32Array(4),
+        navmesh: null
     };
 
     return phy;
@@ -824,6 +833,24 @@ function init_bounding_physics(obj, compound_children, worker) {
     return phy;
 }
 
+function init_navigation_mesh_physics(obj, scene) {
+    var body_id = get_unique_body_id();
+    var phy = init_physics(body_id, "NAVMESH");
+    var sc_data = m_obj_util.get_scene_data(obj, scene);
+    var batches = sc_data.batches;
+    phy.navmesh = null;
+    for (var i = 0; i < batches.length; i++) {
+        var batch = batches[i];
+        if (batch.type == "PHYSICS") {
+            // here we have single PHYSICS batch so quit after batch was being found
+            phy.navmesh = m_navmesh.navmesh_build_from_bufs_data(batch.bufs_data);
+            break;
+        }
+    }
+    return phy;
+}
+
+
 function get_children_params(render, children, bt, wb) {
 
     if (!children.length)
@@ -841,7 +868,7 @@ function get_children_params(render, children, bt, wb) {
     comp_children_params.push(parent_params);
 
     var wtsr_inv = m_tsr.invert(render.world_tsr, _tsr_tmp);
-    var quat_inv = _quat4_tmp;
+    var quat_inv = _quat_tmp;
     var quat = m_tsr.get_quat_view(render.world_tsr);
     m_quat.invert(quat, quat_inv);
 
@@ -968,11 +995,10 @@ function init_vehicle(obj, worker) {
         switch (obj.vehicle.type) {
 
         case VT_CHASSIS:
-            // NOTE: swap left and right wheels in vehicle
-            add_vehicle_prop(props[1], obj, body_id, true, worker);
             add_vehicle_prop(props[0], obj, body_id, true, worker);
-            add_vehicle_prop(props[3], obj, body_id, false, worker);
+            add_vehicle_prop(props[1], obj, body_id, true, worker);
             add_vehicle_prop(props[2], obj, body_id, false, worker);
+            add_vehicle_prop(props[3], obj, body_id, false, worker);
             break;
         case VT_HULL:
             for (var i = 0; i < props.length; i++)
@@ -1003,7 +1029,7 @@ function add_vehicle_prop(obj_prop, obj_chassis_hull, chassis_body_id,
 
         // NOTE: using bounding box, not cylinder
         var bb = obj_prop.render.bb_local;
-        var radius = (bb.max_y - bb.min_y) / 2;
+        var radius = (bb.max_z - bb.min_z) / 2;
 
         m_ipc.post_msg(worker, m_ipc.OUT_ADD_CAR_WHEEL, chassis_body_id, conn_point,
                 suspension_rest_length, roll_influence, radius, is_front);
@@ -1019,7 +1045,7 @@ function init_character(obj, worker) {
     var render = obj.render;
     var phy    = obj.physics;
 
-    var height       = render.bb_local.max_y - render.bb_local.min_y;
+    var height       = render.bb_local.max_z - render.bb_local.min_z;
     var character_id = phy.body_id;
 
     var char_settings = obj.character_settings;
@@ -1069,7 +1095,7 @@ function init_floater(obj, worker) {
 exports.enable_simulation = function(obj) {
     var phy = obj.physics;
     if (!phy)
-        throw "No object physics";
+        m_util.panic("No object physics");
 
     // prevent issues with recurrent exec
     if (phy.simulated)
@@ -1084,7 +1110,7 @@ exports.enable_simulation = function(obj) {
 exports.disable_simulation = function(obj) {
     var phy = obj.physics;
     if (!phy)
-        throw "No object physics";
+        m_util.panic("No object physics");
 
     // prevent issues with recurrent exec
     if (!phy.simulated)
@@ -1306,15 +1332,16 @@ exports.pull_to_constraint_pivot = function(obj_a, trans_a, quat_a,
 exports.set_transform = function(obj, trans, quat) {
 
     var phy = obj.physics;
-    var obj_trans = m_tsr.get_trans_view(obj.render.world_tsr);
-    var obj_quat = m_tsr.get_quat_view(obj.render.world_tsr);
+    var msg_cache = m_ipc.get_msg_cache(m_ipc.OUT_SET_TRANSFORM);
+
+    // use msg_cache as a temporary storage
+    var obj_trans = m_tsr.get_trans(obj.render.world_tsr, msg_cache.trans);
+    var obj_quat = m_tsr.get_quat(obj.render.world_tsr, msg_cache.quat);
     m_tsr.set_sep(obj_trans, 1, obj_quat, phy.curr_tsr);
 
-    var msg_cache = m_ipc.get_msg_cache(m_ipc.OUT_SET_TRANSFORM);
     msg_cache.body_id = phy.body_id;
-    msg_cache.trans = trans;
-    msg_cache.quat = quat;
-
+    m_vec3.copy(trans, msg_cache.trans);
+    m_quat.copy(quat, msg_cache.quat);
     // NOTE: slow
     var worker = find_worker_by_body_id(phy.body_id);
     m_ipc.post_msg(worker, m_ipc.OUT_SET_TRANSFORM);
@@ -1331,19 +1358,17 @@ function sync_transform(obj) {
         var phy = obj.physics;
         var render = obj.render;
 
-        var trans = m_tsr.get_trans_view(render.world_tsr);
-        var quat = m_tsr.get_quat_view(render.world_tsr);
+        var msg_cache = m_ipc.get_msg_cache(m_ipc.OUT_SET_TRANSFORM);
+        msg_cache.body_id = phy.body_id;
+
+        var trans = m_tsr.get_trans(render.world_tsr, msg_cache.trans);
+        var quat = m_tsr.get_quat(render.world_tsr, msg_cache.quat);
+
         m_vec3.copy(trans, phy.cached_trans);
         m_quat.copy(quat, phy.cached_quat);
 
-        var msg_cache = m_ipc.get_msg_cache(m_ipc.OUT_SET_TRANSFORM);
-        msg_cache.body_id = phy.body_id;
-        msg_cache.trans = trans;
-
         if (phy.type == "DYNAMIC")
             m_quat.identity(msg_cache.quat);
-        else
-            msg_cache.quat = quat;
 
         // NOTE: slow
         var worker = find_worker_by_body_id(phy.body_id);
@@ -1376,9 +1401,12 @@ function allows_transform(obj) {
         return false;
 }
 
+/**
+ * uses _vec3_tmp _quat_tmp
+ */
 function transform_changed(obj) {
-    var trans = m_tsr.get_trans_view(obj.render.world_tsr);
-    var quat = m_tsr.get_quat_view(obj.render.world_tsr);
+    var trans = m_tsr.get_trans(obj.render.world_tsr, _vec3_tmp);
+    var quat = m_tsr.get_quat(obj.render.world_tsr, _quat_tmp);
     return trans[0] != obj.physics.cached_trans[0] ||
            trans[1] != obj.physics.cached_trans[1] ||
            trans[2] != obj.physics.cached_trans[2] ||
@@ -1591,6 +1619,9 @@ exports.set_character_rotation_v = function(obj, angle) {
 exports.append_collision_test = function(obj_src, collision_id, callback,
                                          calc_pos_norm) {
     var phy = obj_src.physics;
+    if (phy.navmesh)
+        return;
+
     var body_id_src = phy.body_id;
 
     var collision_id = collision_id || "ANY";
@@ -1869,11 +1900,12 @@ function get_unique_ray_test_id() {
 function collision_id_to_body_ids(collision_id, bpy_scene, dest_arr, dest_obj) {
 
     if (!dest_arr && !dest_obj)
-        throw "At least one destination required";
+        m_util.panic("At least one destination required");
 
     for (var i = 0; i < bpy_scene._physics.bundles.length; i++) {
         var bundle = bpy_scene._physics.bundles[i];
-        if (collision_id == "ANY" || bundle.physics.collision_id == collision_id) {
+        if (collision_id == "ANY" || bundle.physics.collision_id == collision_id
+            && bundle.physics.type != "NAVMESH") {
             var body_id = bundle.physics.body_id;
 
             // unique
@@ -2019,7 +2051,7 @@ function update_steering_wheel_coords(obj_chassis) {
     var stw_axis_world = _vec3_tmp;
     m_tsr.transform_dir_vec3(stw_axis, obj_chassis.render.world_tsr, stw_axis_world);
 
-    var rotation = _quat4_tmp;
+    var rotation = _quat_tmp;
     m_quat.setAxisAngle(stw_axis_world, -vehicle.steering *
             vehicle.steering_max * 2 * Math.PI, rotation);
 
@@ -2046,7 +2078,7 @@ function update_speedometer(obj_chassis) {
     var sp_axis_world = _vec3_tmp;
     m_tsr.transform_dir_vec3(sp_axis, obj_chassis.render.world_tsr, sp_axis_world);
 
-    var rotation = _quat4_tmp;
+    var rotation = _quat_tmp;
     var angle = Math.abs(vehicle.speed) * vehicle.speed_ratio;
 
     if (angle > vehicle.max_speed_angle)
@@ -2077,7 +2109,7 @@ function update_tachometer(obj_chassis) {
     var tach_axis_world = _vec3_tmp;
     m_tsr.transform_dir_vec3(tach_axis, obj_chassis.render.world_tsr, tach_axis_world);
 
-    var rotation = _quat4_tmp;
+    var rotation = _quat_tmp;
 
     m_quat.setAxisAngle(tach_axis_world, -Math.abs(vehicle.engine_force) *
             vehicle.delta_tach_angle, rotation);
@@ -2097,6 +2129,11 @@ function is_vehicle_chassis(obj) {
 exports.is_vehicle_hull = is_vehicle_hull;
 function is_vehicle_hull(obj) {
     return obj.is_vehicle && obj.vehicle_settings.part == "HULL";
+}
+
+exports.is_navigation_mesh = is_navigation_mesh;
+function is_navigation_mesh(obj) {
+    return obj.physics_settings.physics_type == "NAVMESH";
 }
 
 exports.is_car_wheel = function(obj) {
@@ -2163,10 +2200,12 @@ exports.get_vehicle_speed = function(obj) {
 }
 
 exports.wheel_index = function(vehicle_part) {
+    /* 1 --- 0
+     * 2 --- 3 */
     switch (vehicle_part) {
-    case "WHEEL_FRONT_LEFT":
-        return 0;
     case "WHEEL_FRONT_RIGHT":
+        return 0;
+    case "WHEEL_FRONT_LEFT":
         return 1;
     case "WHEEL_BACK_LEFT":
         return 2;
@@ -2229,5 +2268,4 @@ exports.remove_object = function(obj) {
 
     m_ipc.post_msg(worker, m_ipc.OUT_REMOVE_BODY, body_id);
 }
-
 }

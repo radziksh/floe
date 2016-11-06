@@ -14,13 +14,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /** 
  * Low-level resource loader. In order to load exported scenes, use the {@link module:data|data} module instead.
  * @module assets
- * @local Asset
  * @local AssetCallback
  * @local ProgressCallback
  * @local PackCallback

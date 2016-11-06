@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Объекты &mdash; Руководство пользователя Blend4Web 16.05</title>
+  <title>Объекты &mdash; Руководство пользователя Blend4Web 16.10</title>
   
 
   
@@ -32,7 +32,7 @@
   
         <link rel="author" title="Об этих документах"
               href="about.html"/>
-    <link rel="top" title="Руководство пользователя Blend4Web 16.05" href="index.html"/>
+    <link rel="top" title="Руководство пользователя Blend4Web 16.10" href="index.html"/>
         <link rel="next" title="Меши" href="meshes.html"/>
         <link rel="prev" title="Параметры сцены" href="scene_settings.html"/> 
 
@@ -61,7 +61,7 @@
           
           
             <div class="version">
-              v16.05
+              v16.10
             </div>
           
         
@@ -96,7 +96,24 @@
 <li class="toctree-l2"><a class="reference internal" href="#types">Типы</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#static-and-dynamic-objects">Статические и динамические объекты</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#settings">Настройка</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#object-tab">Вкладка Object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#object-tab">Вкладка Object</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#transform-panel">Панель Transform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#groups-panel">Панель Groups</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#level-of-detail-panel">Панель Level of Detail</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#animation-panel">Панель Animation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#export-options-panel">Панель Export Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#rendering-properties-panel">Панель Rendering Properties</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#shadows-panel">Панель Shadows</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#billboard-panel">Панель Billboard</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#reflections-panel">Панель Reflections</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#selection-and-outlining-panel">Панель Selection and Outlining</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#anchors-panel">Панель Anchors</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#meta-tags-panel">Панель Meta Tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#relations-panel">Панель Relations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wind-bending-panel">Панель Wind Bending</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#special-effects-panel">Панель Special Effects</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#physics-tab">Вкладка Physics</a></li>
 </ul>
 </li>
@@ -114,7 +131,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#quaternion-example">Пример работы с кватернионами</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#differences-between-coordinate-systems-of-blender-and-blend4web">Отличия систем координат Blender&#8217;а и Blend4Web</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#moving-via-tsr-vectors">Перемещение с помощью векторов TSR</a></li>
 </ul>
 </li>
@@ -122,8 +138,9 @@
 <li class="toctree-l1"><a class="reference internal" href="normal_editor.html">Редактор нормалей</a></li>
 <li class="toctree-l1"><a class="reference internal" href="camera.html">Камера</a></li>
 <li class="toctree-l1"><a class="reference internal" href="materials.html">Материалы</a></li>
+<li class="toctree-l1"><a class="reference internal" href="material_library.html">Библиотека материалов</a></li>
 <li class="toctree-l1"><a class="reference internal" href="node_materials.html">Нодовые материалы</a></li>
-<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Логические ноды</a></li>
+<li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Редактор логики</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lighting.html">Освещение, тени и фон</a></li>
 <li class="toctree-l1"><a class="reference internal" href="postprocessing_effects.html">Спецэффекты</a></li>
 <li class="toctree-l1"><a class="reference internal" href="stereo_rendering.html">Стереоизображение</a></li>
@@ -208,8 +225,7 @@
 <li><a class="reference internal" href="#quaternion-example" id="id17">Пример работы с кватернионами</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#differences-between-coordinate-systems-of-blender-and-blend4web" id="id18">Отличия систем координат Blender&#8217;а и Blend4Web</a></li>
-<li><a class="reference internal" href="#moving-via-tsr-vectors" id="id19">Перемещение с помощью векторов TSR</a></li>
+<li><a class="reference internal" href="#moving-via-tsr-vectors" id="id18">Перемещение с помощью векторов TSR</a></li>
 </ul>
 </li>
 </ul>
@@ -267,10 +283,13 @@
 <p>Для объектов всех типов поддерживаются расположение в пространстве, указатель на блок данных, родительский объект, принадлежность к группе и ряд свойств, специфичных для Blend4Web.</p>
 <div class="section" id="object-tab">
 <h3><a class="toc-backref" href="#id6">Вкладка Object</a><a class="headerlink" href="#object-tab" title="Ссылка на этот заголовок">¶</a></h3>
-<a class="reference internal image-reference" href="_images/object_setup.png"><img alt="_images/object_setup.png" class="align-center" src="_images/object_setup.png" style="width: 100%;" /></a>
+<img alt="_images/object_settings.png" class="align-center" src="_images/object_settings.png" />
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
+<div class="section" id="transform-panel">
+<span id="object-settings-transform"></span><h4>Панель Transform<a class="headerlink" href="#transform-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_transform.png" class="align-center" src="_images/object_settings_transform.png" />
 <dl class="docutils">
 <dt><em>Transform &gt; Location</em></dt>
 <dd><p class="first last">Координаты местоположения.</p>
@@ -281,33 +300,48 @@
 <dt><em>Transform &gt; Scale</em></dt>
 <dd><p class="first last">Масштабирование. Все 3 компонента (x, y, z) должны быть одинаковы. Для физических объектов масштабирование не поддерживается.</p>
 </dd>
-<dt><em>Relations &gt; Parent</em></dt>
-<dd><p class="first">Указатель на родительский объект.</p>
-<p>Если в качестве родительского объекта выбрана камера, становятся доступными настройки <code class="docutils literal"><span class="pre">Viewport</span> <span class="pre">Alignment</span></code>.</p>
-<a class="reference internal image-reference" href="_images/objects_viewport_alignment.png"><img alt="_images/objects_viewport_alignment.png" class="align-center" src="_images/objects_viewport_alignment.png" style="width: 100%;" /></a>
-<div class="line-block">
-<div class="line"><br /></div>
+</dl>
 </div>
-<p class="last">Они могут применяться для привязывания объекта к текущей камере. Описаны в <a class="reference internal" href="camera.html#camera-viewport-alignment"><span>главе &#8220;Камера&#8221;</span></a>.</p>
-</dd>
+<div class="section" id="groups-panel">
+<span id="object-settings-groups"></span><h4>Панель Groups<a class="headerlink" href="#groups-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<dl class="docutils">
 <dt><em>Groups</em></dt>
 <dd><p class="first last">Группы объектов, которым принадлежит данный объект.</p>
 </dd>
 </dl>
-<img alt="_images/object_setup_end.png" class="align-center" src="_images/object_setup_end.png" />
+<img alt="_images/object_settings_groups.png" class="align-center" src="_images/object_settings_groups.png" />
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
+</div>
+<div class="section" id="level-of-detail-panel">
+<span id="object-settings-lod"></span><h4>Панель Level of Detail<a class="headerlink" href="#level-of-detail-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_lod.png" class="align-center" src="_images/object_settings_lod.png" />
 <dl class="docutils">
 <dt><em>Levels of Detail &gt; LOD Transition Ratio</em></dt>
 <dd><p class="first last">Параметр для сглаживания переключения между LOD объектами. Определяет, на каком дополнительном расстоянии LOD объекты будут видны до замены последующими LOD объектами. Назначается для главного объекта. Измеряется в долях от радиуса охватывающей сферы объекта.</p>
 </dd>
-<dt><em>Special Effects &gt; Disable Fogging</em></dt>
-<dd><p class="first last">Отключить туман для объекта.</p>
+</dl>
+</div>
+<div class="section" id="animation-panel">
+<span id="object-settings-animation"></span><h4>Панель Animation<a class="headerlink" href="#animation-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_animation.png" class="align-center" src="_images/object_settings_animation.png" />
+<dl class="docutils">
+<dt><em>Animation &gt; Apply Default Animation</em></dt>
+<dd><p class="first last">Начать воспроизведение в движке связанной с объектом анимации.</p>
 </dd>
-<dt><em>Special Effects &gt; Caustics</em></dt>
-<dd><p class="first last">На объекте будут видны эффекты от прилегающей к нему воды (каустика).</p>
+<dt><em>Animation &gt; Animation Blending</em></dt>
+<dd><p class="first last">Только для арматурных объектов. Разрешить плавный переход от одной скелетной анимации к другой.</p>
 </dd>
+<dt><em>Animation &gt; Behavior</em></dt>
+<dd><p class="first last">Поведение анимации при достижении последнего кадра: <code class="docutils literal"><span class="pre">Finish</span> <span class="pre">Stop</span></code> - остановить, <code class="docutils literal"><span class="pre">Finish</span> <span class="pre">Reset</span></code> - остановить и сбросить в нулевой кадр, <code class="docutils literal"><span class="pre">Loop</span></code> - циклически повторять.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="export-options-panel">
+<span id="object-settings-export"></span><h4>Панель Export Options<a class="headerlink" href="#export-options-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_export.png" class="align-center" src="_images/object_settings_export.png" />
+<dl class="docutils">
 <dt><em>Export Options &gt; Do Not Export</em></dt>
 <dd><p class="first last">Не экспортировать.</p>
 </dd>
@@ -330,15 +364,13 @@
 <p class="first admonition-title">Примечание</p>
 <p class="last">Свойства <em>Apply Modifiers</em>, <em>Apply Scale And Modifiers</em>, <em>Export Vertex Animation</em>, и <em>Export Shape Keys</em> взаимоисключают друг друга.</p>
 </div>
+</div>
+<div class="section" id="rendering-properties-panel">
+<span id="object-settings-render"></span><h4>Панель Rendering Properties<a class="headerlink" href="#rendering-properties-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_rendering.png" class="align-center" src="_images/object_settings_rendering.png" />
 <dl class="docutils">
-<dt><em>Animation &gt; Apply Default Animation</em></dt>
-<dd><p class="first last">Начать воспроизведение в движке связанной с объектом анимации.</p>
-</dd>
-<dt><em>Animation &gt; Animation Blending</em></dt>
-<dd><p class="first last">Только для арматурных объектов. Разрешить плавный переход от одной скелетной анимации к другой.</p>
-</dd>
-<dt><em>Animation &gt; Behavior</em></dt>
-<dd><p class="first last">Поведение анимации при достижении последнего кадра: <code class="docutils literal"><span class="pre">Finish</span> <span class="pre">Stop</span></code> - остановить, <code class="docutils literal"><span class="pre">Finish</span> <span class="pre">Reset</span></code> - остановить и сбросить в нулевой кадр, <code class="docutils literal"><span class="pre">Loop</span></code> - циклически повторять.</p>
+<dt><em>Rendering Properties &gt; Hidden</em></dt>
+<dd><p class="first last">Если это свойство активировано, объект будет невидим при запуске сцены.</p>
 </dd>
 <dt><em>Rendering Properties &gt; Do Not Render</em></dt>
 <dd><p class="first last">Отключить рендеринг объекта (например, вспомогательный объект физики).</p>
@@ -354,6 +386,12 @@
 <dt><em>Rendering Properties &gt; Dynamic Geometry</em></dt>
 <dd><p class="first last">Разрешить изменение геометрии объекта через API Blend4Web.</p>
 </dd>
+</dl>
+</div>
+<div class="section" id="shadows-panel">
+<span id="object-settings-shadows"></span><h4>Панель Shadows<a class="headerlink" href="#shadows-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_shadows.png" class="align-center" src="_images/object_settings_shadows.png" />
+<dl class="docutils">
 <dt><em>Shadows &gt; Cast</em></dt>
 <dd><p class="first last">Объект будет отбрасывать тени.</p>
 </dd>
@@ -363,11 +401,39 @@
 <dt><em>Shadows &gt; Receive</em></dt>
 <dd><p class="first last">Разрешить затенение от прилегающих объектов (получение теней) на объекте.</p>
 </dd>
+</dl>
+</div>
+<div class="section" id="billboard-panel">
+<span id="objects-billboarding-properties"></span><h4>Панель Billboard<a class="headerlink" href="#billboard-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_billboard.png" class="align-center" src="_images/object_settings_billboard.png" />
+<dl class="docutils">
+<dt><em>Billboard</em></dt>
+<dd><p class="first last">Использовать объект в качестве билборда (т.е. автоматически ориентировать его относительно камеры).</p>
+</dd>
+</dl>
+<dl class="docutils" id="billboarding-preserve">
+<dt><em>Billboard &gt; Preserve Global Orientation and Scale</em></dt>
+<dd><p class="first last">Билбординг объекта с учетом его ориентации и масштабирования в мировом пространстве. Объект всегда будет обращен к камере той стороной, которая видна при взгляде на него вдоль направления оси Y в системе координат Blender&#8217;а. Становится доступным после включения <code class="docutils literal"><span class="pre">Billboard</span></code>.</p>
+</dd>
+<dt><em>Billboard &gt; Billboard Type</em></dt>
+<dd><p class="first last">Способ ориентирования билборда. <code class="docutils literal"><span class="pre">Spherical</span></code> (по умолчанию) - объект всегда ориентирован к камере одной стороной независимо от угла обзора, <code class="docutils literal"><span class="pre">Cylindrical</span></code> - аналогично <code class="docutils literal"><span class="pre">Spherical</span></code>, только вращение ограничено осью Z мирового пространства в Blender. Становится доступным после включения <code class="docutils literal"><span class="pre">Billboard</span></code>.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="reflections-panel">
+<span id="object-settings-reflections"></span><h4>Панель Reflections<a class="headerlink" href="#reflections-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_reflections.png" class="align-center" src="_images/object_settings_reflections.png" />
+<dl class="docutils">
 <dt><em>Reflections &gt; Reflexible</em></dt>
 <dd><p class="first last">При включении объект будет отражаться от зеркальных поверхностей.</p>
 </dd>
 <dt><em>Reflections &gt; Reflexible Only</em></dt>
-<dd><p class="first last">При включении объект будет отражаться, при этом сам будет оставаться невидимым. Становится доступным после включения <code class="docutils literal"><span class="pre">Reflections</span> <span class="pre">&gt;</span> <span class="pre">Reflexible</span></code>.</p>
+<dd><p class="first">При включении объект будет отражаться, при этом сам будет оставаться невидимым. Становится доступным после включения <code class="docutils literal"><span class="pre">Reflections</span> <span class="pre">&gt;</span> <span class="pre">Reflexible</span></code>.</p>
+<div class="last admonition note">
+<p class="first admonition-title">Примечание</p>
+<p>Если опция <code class="docutils literal"><span class="pre">Reflexible</span> <span class="pre">Only</span></code> включена одновременно с <code class="docutils literal"><span class="pre">Shadows</span> <span class="pre">&gt;</span> <span class="pre">Cast</span> <span class="pre">Only</span></code>, движок не будет отображать сам объект, но будет рассчитывать отражение объекта и тень от него, как показано на изображении ниже.</p>
+<a class="last reference internal image-reference" href="_images/objects_cast_reflexible_only.png"><img alt="_images/objects_cast_reflexible_only.png" class="align-center" src="_images/objects_cast_reflexible_only.png" style="width: 100%;" /></a>
+</div>
 </dd>
 <dt><em>Reflections &gt; Reflective</em></dt>
 <dd><p class="first last">При включении объект будет отражать своей поверхностью другие объекты.</p>
@@ -375,6 +441,12 @@
 <dt><em>Reflections &gt; Reflection Plane</em></dt>
 <dd><p class="first last">Текстовое поле для названия пустого объекта, задающего плоскость отражения. Становится доступным после включения <code class="docutils literal"><span class="pre">Reflections</span> <span class="pre">&gt;</span> <span class="pre">Reflective</span></code>.</p>
 </dd>
+</dl>
+</div>
+<div class="section" id="selection-and-outlining-panel">
+<span id="object-settings-selection"></span><h4>Панель Selection and Outlining<a class="headerlink" href="#selection-and-outlining-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_selection.png" class="align-center" src="_images/object_settings_selection.png" />
+<dl class="docutils">
 <dt><em>Selection and Outlining &gt; Selectable</em></dt>
 <dd><p class="first last">Разрешить <a class="reference internal" href="#mesh-selection"><span>выделение объекта</span></a> с помощью мыши или другого устройства ввода.</p>
 </dd>
@@ -382,7 +454,20 @@
 <dd><p class="first last">Разрешить подсвечивание объекта (<a class="reference internal" href="postprocessing_effects.html#outline"><span>эффект Outline</span></a>).</p>
 </dd>
 </dl>
-<dl class="docutils" id="objects-meta-tags">
+</div>
+<div class="section" id="anchors-panel">
+<span id="object-settings-anchors"></span><h4>Панель Anchors<a class="headerlink" href="#anchors-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<dl class="docutils">
+<dt><em>Anchors &gt; Enable Anchor</em></dt>
+<dd><p class="first">Активирует интерфейс добавления якорей (двухмерных меток) к объектам. Доступно только для объектов типа <code class="docutils literal"><span class="pre">EMPTY</span></code>. Якоря подробно описаны в <a class="reference internal" href="#objects-anchors"><span>соответствующем разделе</span></a>.</p>
+<a class="last reference internal image-reference" href="_images/objects_enable_anchors.png"><img alt="_images/objects_enable_anchors.png" class="align-center" src="_images/objects_enable_anchors.png" style="width: 100%;" /></a>
+</dd>
+</dl>
+</div>
+<div class="section" id="meta-tags-panel">
+<span id="objects-meta-tags"></span><h4>Панель Meta Tags<a class="headerlink" href="#meta-tags-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_meta_tags.png" class="align-center" src="_images/object_settings_meta_tags.png" />
+<dl class="docutils">
 <dt><em>Meta Tags</em></dt>
 <dd><p class="first">Интерфейс добавления мета-тегов на объект:</p>
 <dl class="last docutils">
@@ -400,27 +485,44 @@
 </dd>
 </dl>
 </dd>
-<dt><em>Anchors &gt; Enable Anchor</em></dt>
-<dd><p class="first">Активирует интерфейс добавления якорей (двухмерных меток) к объектам. Доступно только для объектов типа <code class="docutils literal"><span class="pre">EMPTY</span></code>. Якоря подробно описаны в <a class="reference internal" href="#objects-anchors"><span>соответствующем разделе</span></a>.</p>
-<a class="last reference internal image-reference" href="_images/objects_enable_anchors.png"><img alt="_images/objects_enable_anchors.png" class="align-center" src="_images/objects_enable_anchors.png" style="width: 100%;" /></a>
+</dl>
+</div>
+<div class="section" id="relations-panel">
+<span id="object-settings-relations"></span><h4>Панель Relations<a class="headerlink" href="#relations-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_relations.png" class="align-center" src="_images/object_settings_relations.png" />
+<dl class="docutils">
+<dt><em>Relations &gt; Parent</em></dt>
+<dd><p class="first">Указатель на родительский объект.</p>
+<p>Если в качестве родительского объекта выбрана камера, становятся доступными настройки <code class="docutils literal"><span class="pre">Viewport</span> <span class="pre">Alignment</span></code>.</p>
+<a class="reference internal image-reference" href="_images/objects_viewport_alignment.png"><img alt="_images/objects_viewport_alignment.png" class="align-center" src="_images/objects_viewport_alignment.png" style="width: 100%;" /></a>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p class="last">Они могут применяться для привязывания объекта к текущей камере. Описаны в <a class="reference internal" href="camera.html#camera-viewport-alignment"><span>главе &#8220;Камера&#8221;</span></a>.</p>
 </dd>
+</dl>
+</div>
+<div class="section" id="wind-bending-panel">
+<span id="object-settings-wind"></span><h4>Панель Wind Bending<a class="headerlink" href="#wind-bending-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_wind.png" class="align-center" src="_images/object_settings_wind.png" />
+<dl class="docutils">
 <dt><em>Wind Bending</em></dt>
 <dd><p class="first last">Включить процедурную анимацию под действием ветра. Подробно описана в разделе, посвященном <a class="reference internal" href="outdoor_rendering.html#wind-bending"><span>рендерингу наружных сцен</span></a>.</p>
 </dd>
 </dl>
-<dl class="docutils" id="objects-billboarding-properties">
-<dt><em>Billboard</em></dt>
-<dd><p class="first last">Использовать объект в качестве билборда (т.е. автоматически ориентировать его относительно камеры).</p>
+</div>
+<div class="section" id="special-effects-panel">
+<span id="object-settings-fx"></span><h4>Панель Special Effects<a class="headerlink" href="#special-effects-panel" title="Ссылка на этот заголовок">¶</a></h4>
+<img alt="_images/object_settings_fx.png" class="align-center" src="_images/object_settings_fx.png" />
+<dl class="docutils">
+<dt><em>Special Effects &gt; Disable Fogging</em></dt>
+<dd><p class="first last">Отключить туман для объекта.</p>
+</dd>
+<dt><em>Special Effects &gt; Caustics</em></dt>
+<dd><p class="first last">На объекте будут видны эффекты от прилегающей к нему воды (каустика).</p>
 </dd>
 </dl>
-<dl class="docutils" id="billboarding-preserve">
-<dt><em>Billboard &gt; Preserve Global Orientation and Scale</em></dt>
-<dd><p class="first last">Билбординг объекта с учетом его ориентации и масштабирования в мировом пространстве. Объект всегда будет обращен к камере той стороной, которая видна при взгляде на него вдоль направления оси Y в системе координат Blender&#8217;а. Становится доступным после включения <code class="docutils literal"><span class="pre">Billboard</span></code>.</p>
-</dd>
-<dt><em>Billboard &gt; Billboard Type</em></dt>
-<dd><p class="first last">Способ ориентирования билборда. <code class="docutils literal"><span class="pre">Spherical</span></code> (по умолчанию) - объект всегда ориентирован к камере одной стороной независимо от угла обзора, <code class="docutils literal"><span class="pre">Cylindrical</span></code> - аналогично <code class="docutils literal"><span class="pre">Spherical</span></code>, только вращение ограничено осью Z мирового пространства в Blender. Становится доступным после включения <code class="docutils literal"><span class="pre">Billboard</span></code>.</p>
-</dd>
-</dl>
+</div>
 </div>
 <div class="section" id="physics-tab">
 <h3><a class="toc-backref" href="#id7">Вкладка Physics</a><a class="headerlink" href="#physics-tab" title="Ссылка на этот заголовок">¶</a></h3>
@@ -540,7 +642,7 @@
 <dl class="docutils">
 <dt><a class="reference external" href="https://www.blend4web.com/api_doc/module-scenes.html#.get_object_by_name">get_object_by_name()</a></dt>
 <dd><p class="first">Получить ссылку на объект, основываясь на известном имени объекта.</p>
-<div class="last highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="last highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">get_object_by_name</span><span class="p">(</span><span class="s2">&quot;Object&quot;</span><span class="p">);</span>
 <span class="c1">// ...</span>
 </pre></div>
@@ -548,7 +650,7 @@
 </dd>
 <dt><a class="reference external" href="https://www.blend4web.com/api_doc/module-scenes.html#.get_object_by_dupli_name">get_object_by_dupli_name()</a></dt>
 <dd><p class="first">Получить ссылку на скопированный объект, используя имя скопированного объекта и имя объекта типа <code class="docutils literal"><span class="pre">EMPTY</span></code>, который использовался для копирования.</p>
-<div class="last highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="last highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">get_object_by_dupli_name</span><span class="p">(</span><span class="s2">&quot;Empty&quot;</span><span class="p">,</span> <span class="s2">&quot;Object&quot;</span><span class="p">);</span>
 <span class="c1">// ...</span>
 </pre></div>
@@ -556,7 +658,7 @@
 </dd>
 <dt><a class="reference external" href="https://www.blend4web.com/api_doc/module-scenes.html#.get_object_by_dupli_name_list">get_object_by_dupli_name_list()</a></dt>
 <dd><p class="first">Получить ссылку на скопированный объект, используя списки (массивы элементов типа <code class="docutils literal"><span class="pre">String</span></code>) имён скопированных объектов и объектов типа <code class="docutils literal"><span class="pre">EMPTY</span></code>, использованных для копирования.</p>
-<div class="last highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="last highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">obj</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">get_object_by_dupli_name_list</span><span class="p">([</span><span class="s2">&quot;Empty1&quot;</span><span class="p">,</span> <span class="s2">&quot;Empty2&quot;</span><span class="p">,</span> <span class="s2">&quot;Object&quot;</span><span class="p">]);</span>
 <span class="c1">// ...</span>
 </pre></div>
@@ -564,7 +666,7 @@
 </dd>
 <dt><a class="reference external" href="https://www.blend4web.com/api_doc/module-scenes.html#.get_object_name_hierarchy">get_object_name_hierarchy()</a></dt>
 <dd><p class="first">Возвращает список (массив) имён предков заданного объекта, начиная от старшего предка и заканчивая самим объектом.</p>
-<div class="last highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="last highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">names</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">get_object_name_hierarchy</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span>
 <span class="c1">// ...</span>
 </pre></div>
@@ -572,7 +674,7 @@
 </dd>
 <dt><a class="reference external" href="https://www.blend4web.com/api_doc/module-scenes.html#.check_object_by_name">check_object_by_name()</a></dt>
 <dd><p class="first">Проверить, существует ли в сцене объект с указанным именем.</p>
-<div class="last highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="last highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">object_exists</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">check_object_by_name</span><span class="p">(</span><span class="s2">&quot;Cube&quot;</span><span class="p">);</span>
 <span class="c1">// ...</span>
 </pre></div>
@@ -580,7 +682,7 @@
 </dd>
 <dt><a class="reference external" href="https://www.blend4web.com/api_doc/module-scenes.html#.check_object_by_dupli_name">check_object_by_dupli_name()</a></dt>
 <dd><p class="first">Проверить, существует ли в сцене скопированный объект с заданным именем и заданным именем объекта типа <code class="docutils literal"><span class="pre">EMPTY</span></code>, который использовался для копирования.</p>
-<div class="last highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="last highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">object_exists</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">check_object_by_dupli_name</span><span class="p">(</span><span class="s2">&quot;Empty&quot;</span><span class="p">,</span> <span class="s2">&quot;Cube&quot;</span><span class="p">);</span>
 <span class="c1">// ...</span>
 </pre></div>
@@ -588,7 +690,7 @@
 </dd>
 <dt><a class="reference external" href="https://www.blend4web.com/api_doc/module-scenes.html#.check_object_by_dupli_name_list">check_object_by_dupli_name_list()</a></dt>
 <dd><p class="first">Проверить, существует ли в сцене скопированный объект, используя списки (массивы элементов типа <code class="docutils literal"><span class="pre">String</span></code>) имён скопированных объектов и объектов типа <code class="docutils literal"><span class="pre">EMPTY</span></code>, использованных для копирования.</p>
-<div class="last highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="last highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">object_exists</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">check_object_by_dupli_name_list</span><span class="p">([</span><span class="s2">&quot;Empty1&quot;</span><span class="p">,</span> <span class="s2">&quot;Empty2&quot;</span><span class="p">,</span> <span class="s2">&quot;Object&quot;</span><span class="p">]);</span>
 <span class="c1">// ...</span>
 </pre></div>
@@ -596,7 +698,7 @@
 </dd>
 <dt><a class="reference external" href="https://www.blend4web.com/api_doc/module-scenes.html#.get_object_name">get_object_name()</a></dt>
 <dd><p class="first">Получить имя объекта, основываясь на известной ссылке на этот объект.</p>
-<div class="last highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="last highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">object_name</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">get_object_name</span><span class="p">(</span><span class="nx">obj</span><span class="p">);</span>
 <span class="c1">// ...</span>
 </pre></div>
@@ -612,7 +714,7 @@
 <p class="last">Следует убедится в том, что в панели <code class="docutils literal"><span class="pre">Scene</span> <span class="pre">&gt;</span> <span class="pre">Object</span> <span class="pre">Outlining</span></code> установлено состояние <code class="docutils literal"><span class="pre">ON</span></code> или <code class="docutils literal"><span class="pre">AUTO</span></code>.</p>
 </div>
 <p>Выделение объекта возможно программно через API, например, в модуле <code class="docutils literal"><span class="pre">scenes.js</span></code> имеется функция <code class="docutils literal"><span class="pre">pick_object</span></code>, которая по координатам в canvas’е выделяет объект,</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">clientX</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="nx">event</span><span class="p">.</span><span class="nx">clientY</span><span class="p">;</span>
 
@@ -651,7 +753,7 @@
 <p>При глубоком копировании новый объект будет обладать уникальными для него свойствами, а именно, он будет иметь свою собственную геометрию. То есть при изменении геометрии на объекте-оригинале у объекта-копии геометрия изменяться не будет. Также при глубоком копировании canvas-текстуры на копиях - именно разные текстуры, в то время как при простом копировании - одна и та же. Для такого типа копирования на исходном объекте нужно дополнительно выставить опцию <a class="reference internal" href="#dynamic-geom"><span>Rendering Properties &gt; Dynamic Geometry</span></a>.</p>
 <p>Для копирования объектов в модуле <code class="docutils literal"><span class="pre">objects.js</span></code> предусмотрена функция <code class="docutils literal"><span class="pre">copy</span></code>, в которую надо передать идентификатор копируемого объекта, уникальное имя нового объекта и булеву переменную, определяющую тип копирования: <code class="docutils literal"><span class="pre">true</span></code> - глубокое, <code class="docutils literal"><span class="pre">false</span></code> - простое. По умолчанию будет осуществлено простое копирование.</p>
 <p>Созданный при копировании объект необходимо добавить на сцену. Для этого в модуле <code class="docutils literal"><span class="pre">scenes.js</span></code> существует функция <code class="docutils literal"><span class="pre">append_object</span></code>, куда нужно передать объект, полученный копированием.</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="kd">var</span> <span class="nx">new_obj</span> <span class="o">=</span> <span class="nx">m_objects</span><span class="p">.</span><span class="nx">copy</span><span class="p">(</span><span class="nx">obj</span><span class="p">,</span> <span class="s2">&quot;New_name&quot;</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
 <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">append_object</span><span class="p">(</span><span class="nx">new_obj</span><span class="p">);</span>
 <span class="nx">m_transform</span><span class="p">.</span><span class="nx">set_translation</span><span class="p">(</span><span class="nx">new_obj</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
@@ -662,7 +764,7 @@
 <div class="section" id="removing-objects">
 <h3><a class="toc-backref" href="#id15">Удаление объектов</a><a class="headerlink" href="#removing-objects" title="Ссылка на этот заголовок">¶</a></h3>
 <p>Для удаления объектов, в модуле <code class="docutils literal"><span class="pre">scenes.js</span></code> предусмотрена функция <code class="docutils literal"><span class="pre">remove_object</span></code>, куда надо передать объект. Возможно удаление динамических mesh- и empty-объектов.</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span class="c1">// ...</span>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// ...</span>
 <span class="nx">m_objects</span><span class="p">.</span><span class="nx">remove_object</span><span class="p">(</span><span class="nx">new_obj</span><span class="p">);</span>
 <span class="c1">// ...</span>
 </pre></div>
@@ -719,14 +821,12 @@
 <div class="line"><br /></div>
 </div>
 <p>Сохраним ссылку на объект в движке в переменной <strong>aircraft</strong>:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">aircraft</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">get_object_by_name</span><span class="p">(</span><span class="s2">&quot;Cessna&quot;</span><span class="p">);</span>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="kd">var</span> <span class="nx">aircraft</span> <span class="o">=</span> <span class="nx">m_scenes</span><span class="p">.</span><span class="nx">get_object_by_name</span><span class="p">(</span><span class="s2">&quot;Cessna&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Осуществим поворот:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p class="first">Расположение координатных осей в Blender&#8217;е и в движке различается, и при экспорте произойдет преобразование: [X Y Z] (Blender) -&gt; [X -Z Y] (движок). Поэтому поворот нужно осуществлять относительно оси Y, а не Z.</p>
-</li>
 <li><p class="first">Повороту вправо соответствует поворот по часовой стрелке, т.е. в отрицательном направлении.</p>
 </li>
 <li><p class="first">60 градусов = <span class="math">\(\pi/3\)</span> радиан.</p>
@@ -734,27 +834,27 @@
 </ul>
 </div></blockquote>
 <p>В итоге получаем:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span class="c1">// compose quaternion</span>
-<span class="kd">var</span> <span class="nx">quat_60_Y_neg</span> <span class="o">=</span> <span class="nx">m_quat</span><span class="p">.</span><span class="nx">setAxisAngle</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="nx">m_quat</span><span class="p">.</span><span class="nx">create</span><span class="p">());</span>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// compose quaternion</span>
+<span class="kd">var</span> <span class="nx">quat_60_Z_neg</span> <span class="o">=</span> <span class="nx">m_quat</span><span class="p">.</span><span class="nx">setAxisAngle</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="nx">m_quat</span><span class="p">.</span><span class="nx">create</span><span class="p">());</span>
 
 <span class="c1">// get old rotation</span>
 <span class="kd">var</span> <span class="nx">quat_old</span> <span class="o">=</span> <span class="nx">m_transform</span><span class="p">.</span><span class="nx">get_rotation</span><span class="p">(</span><span class="nx">aircraft</span><span class="p">);</span>
 
-<span class="c1">// left multiply: quat60_Y_neg * quat_old</span>
-<span class="kd">var</span> <span class="nx">quat_new</span> <span class="o">=</span> <span class="nx">m_quat</span><span class="p">.</span><span class="nx">multiply</span><span class="p">(</span><span class="nx">quat_60_Y_neg</span><span class="p">,</span> <span class="nx">quat_old</span><span class="p">,</span> <span class="nx">m_quat</span><span class="p">.</span><span class="nx">create</span><span class="p">());</span>
+<span class="c1">// left multiply: quat60_Z_neg * quat_old</span>
+<span class="kd">var</span> <span class="nx">quat_new</span> <span class="o">=</span> <span class="nx">m_quat</span><span class="p">.</span><span class="nx">multiply</span><span class="p">(</span><span class="nx">quat_60_Z_neg</span><span class="p">,</span> <span class="nx">quat_old</span><span class="p">,</span> <span class="nx">m_quat</span><span class="p">.</span><span class="nx">create</span><span class="p">());</span>
 
 <span class="c1">// set new rotation</span>
 <span class="nx">m_transform</span><span class="p">.</span><span class="nx">set_rotation_v</span><span class="p">(</span><span class="nx">aircraft</span><span class="p">,</span> <span class="nx">quat_new</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Оптимизированный вариант, не приводящий к созданию новых объектов:</p>
-<div class="highlight-javascript"><div class="highlight"><pre><span class="c1">// cache arrays as global vars</span>
-<span class="kd">var</span> <span class="nx">AXIS_Y</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Float32Array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="c1">// cache arrays as global vars</span>
+<span class="kd">var</span> <span class="nx">AXIS_Z</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Float32Array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 <span class="kd">var</span> <span class="nx">quat_tmp</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Float32Array</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">quat_tmp2</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Float32Array</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
 <span class="p">...</span>
 <span class="c1">// rotate</span>
-<span class="nx">m_quat</span><span class="p">.</span><span class="nx">setAxisAngle</span><span class="p">(</span><span class="nx">AXIS_Y</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="nx">quat_tmp</span><span class="p">);</span>
+<span class="nx">m_quat</span><span class="p">.</span><span class="nx">setAxisAngle</span><span class="p">(</span><span class="nx">AXIS_Z</span><span class="p">,</span> <span class="o">-</span><span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="nx">quat_tmp</span><span class="p">);</span>
 <span class="nx">m_transform</span><span class="p">.</span><span class="nx">get_rotation</span><span class="p">(</span><span class="nx">aircraft</span><span class="p">,</span> <span class="nx">quat_tmp2</span><span class="p">);</span>
 <span class="nx">m_quat</span><span class="p">.</span><span class="nx">multiply</span><span class="p">(</span><span class="nx">quat_tmp</span><span class="p">,</span> <span class="nx">quat_tmp2</span><span class="p">,</span> <span class="nx">quat_tmp</span><span class="p">);</span>
 <span class="nx">m_transform</span><span class="p">.</span><span class="nx">set_rotation_v</span><span class="p">(</span><span class="nx">aircraft</span><span class="p">,</span> <span class="nx">quat_tmp</span><span class="p">);</span>
@@ -762,17 +862,8 @@
 </div>
 </div>
 </div>
-<div class="section" id="differences-between-coordinate-systems-of-blender-and-blend4web">
-<span id="b4w-blender-coordinates"></span><h2><a class="toc-backref" href="#id18">Отличия систем координат Blender&#8217;а и Blend4Web</a><a class="headerlink" href="#differences-between-coordinate-systems-of-blender-and-blend4web" title="Ссылка на этот заголовок">¶</a></h2>
-<p>В системе координат Blender&#8217;а вектор <code class="docutils literal"><span class="pre">UP</span></code>, указывающий направление вверх, сонаправлен с осью Z. В движке Blend4Web, так же как и вообще в OpenGL, это направление совпадает с направлением оси Y. Таким образом система координат движка оказывается повернутой относительно системы координат Blender&#8217;а на 90 градусов вокруг оси X.</p>
-<img alt="_images/axes.png" class="align-center" src="_images/axes.png" />
-<div class="line-block">
-<div class="line"><br /></div>
-</div>
-<p>Методы API используют именно систему координат движка, поэтому работа с API может отличаться от работы с настройками непосредственно в Blender&#8217;е.</p>
-</div>
 <div class="section" id="moving-via-tsr-vectors">
-<h2><a class="toc-backref" href="#id19">Перемещение с помощью векторов TSR</a><a class="headerlink" href="#moving-via-tsr-vectors" title="Ссылка на этот заголовок">¶</a></h2>
+<h2><a class="toc-backref" href="#id18">Перемещение с помощью векторов TSR</a><a class="headerlink" href="#moving-via-tsr-vectors" title="Ссылка на этот заголовок">¶</a></h2>
 <p>Удобным способом управления перемещением объектов является использование специальных векторов, имеющих следующий формат:</p>
 <blockquote>
 <div><span class="math">\([T_x, T_y, T_z, S, R_x, R_y, R_z, R_w]\)</span></div></blockquote>
@@ -801,7 +892,7 @@
   <div role="contentinfo">
     <p>
         &copy; Copyright 2014-2016, Триумф.
-      Обновлено: 2016-05-31.
+      Обновлено: 2016-10-27.
 
     </p>
   </div>
@@ -857,7 +948,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'v16.05',
+            VERSION:'v16.10',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -1,41 +1,64 @@
-// lamp dirs
-#var NUM_LIGHTS 0
-#var LAMP_IND 0
-#var LAMP_SPOT_SIZE 0
-#var LAMP_SPOT_BLEND 0
-#var LAMP_LIGHT_DIST 0
-#var LAMP_LIGHT_FACT_IND 0
-#var LAMP_FAC_CHANNELS rgb
-#var LAMP_SHADOW_MAP_IND 0
-#var NUM_LFACTORS 0
+#version GLSL_VERSION
+
+/*==============================================================================
+                                    VARS
+==============================================================================*/
 #var NUM_VALUES 0
 #var NUM_RGBS 0
+
+#var PRECISION highp
+
 #var NUM_LAMP_LIGHTS 0
+#var NUM_LIGHTS 0
 
-#include <std_enums.glsl>
+#var PROCEDURAL_FOG 0
+#var SKY_TEXTURE 0
+#var NORMAL_TEXCOORD 0
+#var USE_VIEW_MATRIX 0
+#var USE_VIEW_MATRIX_INVERSE 0
+#var USE_MODEL_MATRIX 0
+#var USE_MODEL_MATRIX_INVERSE 0
 
+#var ALPHA 0
+#var ALPHA_CLIP 0
+
+#var SOFT_STRENGTH 0.25
+
+#var SOFT_PARTICLES 0
+#var NODES 0
+#var DISABLE_FOG 0
+#var WATER_EFFECTS 0
+#var USE_FOG 0
+#var USE_ENVIRONMENT_LIGHT 0
+#var SKY_COLOR 0
+#var REFLECTION_TYPE REFL_NONE
+#var TEXTURE_NORM_CO TEXTURE_COORDS_NONE
+#var CALC_TBN_SPACE 0
+#var USE_TBN_SHADING 0
+#var TEXTURE_COLOR 0
+
+/*==============================================================================
+                                  INCLUDES
+==============================================================================*/
 #include <precision_statement.glslf>
+#include <std.glsl>
+
 #include <color_util.glslf>
 #if SOFT_PARTICLES || NODES
 #include <pack.glslf>
 #endif
 
-#var PARTICLES_SHADELESS 0
-#var SOFT_STRENGTH 1.0
-
-
-
-/*============================================================================
+/*==============================================================================
                                GLOBAL UNIFORMS
-============================================================================*/
+==============================================================================*/
 
 uniform float u_environment_energy;
 
 #if NUM_LIGHTS > 0
-uniform vec3 u_light_positions[NUM_LIGHTS];
+// light_factors packed in the w componnets
+uniform vec4 u_light_positions[NUM_LIGHTS];
 uniform vec3 u_light_directions[NUM_LIGHTS];
-uniform vec3 u_light_color_intensities[NUM_LIGHTS];
-uniform vec4 u_light_factors[NUM_LFACTORS];
+uniform vec4 u_light_color_intensities[NUM_LIGHTS];
 #endif
 
 #if !DISABLE_FOG
@@ -59,9 +82,9 @@ uniform vec3 u_horizon_color;
 uniform vec3 u_zenith_color;
 #endif
 
-/*============================================================================
+/*==============================================================================
                                MATERIAL UNIFORMS
-============================================================================*/
+==============================================================================*/
 
 uniform float u_emit;
 uniform float u_ambient;
@@ -73,7 +96,6 @@ uniform vec3 u_camera_eye_frag;
 uniform vec3 u_lamp_light_positions[NUM_LAMP_LIGHTS];
 uniform vec3 u_lamp_light_directions[NUM_LAMP_LIGHTS];
 uniform vec3 u_lamp_light_color_intensities[NUM_LAMP_LIGHTS];
-uniform vec4 u_lamp_light_factors[NUM_LAMP_LIGHTS];
 #endif
 
 #if USE_NODE_VALUE
@@ -84,25 +106,19 @@ uniform float u_node_values[NUM_VALUES];
 uniform vec3 u_node_rgbs[NUM_RGBS];
 #endif
 
-#if NORMAL_TEXCOORD || REFLECTION_TYPE == REFL_PLANE || USE_NODE_B4W_VECTOR_VIEW
+#if NORMAL_TEXCOORD || REFLECTION_TYPE == REFL_PLANE || USE_NODE_GEOMETRY_VW || USE_VIEW_MATRIX
 uniform mat3 u_view_tsr_frag;
 #endif
 
-#if USE_ZUP_VIEW_MATRIX
-uniform mat3 u_view_zup_tsr;
+#if USE_VIEW_MATRIX_INVERSE
+uniform mat3 u_view_tsr_inverse;
 #endif
-#if USE_ZUP_VIEW_MATRIX_INVERSE
-uniform mat3 u_view_zup_tsr_inverse;
+#if USE_MODEL_MATRIX
+// it's always dynamic object
+uniform mat3 u_model_tsr;
 #endif
-#if USE_ZUP_MODEL_MATRIX
-uniform mat3 u_model_zup_tsr;
-#endif
-#if USE_ZUP_MODEL_MATRIX_INVERSE
-uniform mat3 u_model_zup_tsr_inverse;
-#endif
-
-#if TEXTURE_NORM_CO || CALC_TBN_SPACE
-varying vec4 v_tangent;
+#if USE_MODEL_MATRIX_INVERSE
+uniform mat3 u_model_tsr_inverse;
 #endif
 
 #if SOFT_PARTICLES
@@ -114,44 +130,48 @@ uniform float u_view_max_depth;
 uniform sampler2D u_nodes_texture;
 #endif
 
-/*============================================================================
-                                   VARYINGS
-============================================================================*/
+/*==============================================================================
+                                SHADER INTERFACE
+==============================================================================*/
+#if TEXTURE_NORM_CO != TEXTURE_COORDS_NONE || CALC_TBN_SPACE || USE_TBN_SHADING
+GLSL_IN vec4 v_tangent;
+#endif
+
 #if SOFT_PARTICLES
-varying vec3 v_tex_pos_clip;
+GLSL_IN vec3 v_tex_pos_clip;
 #endif
 
-#if TEXTURE_COLOR || USE_NODE_TEX_COORD_UV || USE_NODE_UV_MERGED \
-        || USE_NODE_UVMAP || USE_NODE_GEOMETRY_UV || USE_NODE_GEOMETRY_OR || USE_NODE_TEX_COORD_GE
-varying vec2 v_texcoord;
+#if TEXTURE_COLOR || USE_NODE_TEX_COORD_UV || USE_NODE_UV_MERGED || USE_NODE_UVMAP \
+        || USE_NODE_GEOMETRY_UV || USE_NODE_GEOMETRY_OR || USE_NODE_TEX_COORD_GE
+GLSL_IN vec2 v_texcoord;
 #endif
 
-varying vec3 v_pos_world;
+GLSL_IN vec3 v_pos_world;
 
 #if SOFT_PARTICLES || !DISABLE_FOG || NODES
-varying vec4 v_pos_view;
+GLSL_IN vec4 v_pos_view;
 #endif
 
-varying vec3 v_normal;
+GLSL_IN vec3 v_normal;
+//------------------------------------------------------------------------------
 
+GLSL_OUT vec4 GLSL_OUT_FRAG_COLOR;
 
-/*============================================================================
+/*==============================================================================
                                   FUNCTIONS
-============================================================================*/
+==============================================================================*/
 
 #if !DISABLE_FOG
 #include <fog.glslf>
 #endif
 
-#include <environment.glslf>
-
 #include <math.glslv>
 #include <particles_nodes.glslf>
 
 
-/*============================================================================
+/*==============================================================================
                                     MAIN
-============================================================================*/
+==============================================================================*/
 
 void main(void) {
 
@@ -162,35 +182,31 @@ void main(void) {
     vec4 nout_shadow_factor;
     float nout_alpha;
 
-    mat4 nin_view_matrix = mat4(0.0);
-    mat4 nin_zup_view_matrix = mat4(0.0);
-    mat4 nin_zup_view_matrix_inverse = mat4(0.0);
-    mat4 nin_zup_model_matrix = mat4(0.0);
-    mat4 nin_zup_model_matrix_inverse = mat4(0.0);
+    mat3 nin_view_tsr              = mat3(0.0);
 
-#if USE_NODE_B4W_VECTOR_VIEW || REFLECTION_TYPE == REFL_PLANE
-    nin_view_matrix = tsr_to_mat4(u_view_tsr_frag);
+    mat3 nin_view_tsr_inverse      = mat3(0.0);
+    mat3 nin_model_tsr             = mat3(0.0);
+    mat3 nin_model_tsr_inverse     = mat3(0.0);
+
+#if REFLECTION_TYPE == REFL_PLANE || USE_NODE_GEOMETRY_VW
+    nin_view_tsr = u_view_tsr_frag;
 #endif
 
-#if USE_ZUP_VIEW_MATRIX
-    nin_zup_view_matrix = tsr_to_mat4(u_view_zup_tsr);
+#if USE_VIEW_MATRIX_INVERSE
+    nin_view_tsr_inverse = u_view_tsr_inverse;
 #endif
-#if USE_ZUP_VIEW_MATRIX_INVERSE
-    nin_zup_view_matrix_inverse = tsr_to_mat4(u_view_zup_tsr_inverse);
+#if USE_MODEL_MATRIX
+    nin_model_tsr = u_model_tsr;
 #endif
-#if USE_ZUP_MODEL_MATRIX
-    nin_zup_model_matrix = tsr_to_mat4(u_model_zup_tsr);
-#endif
-#if USE_ZUP_MODEL_MATRIX_INVERSE
-    nin_zup_model_matrix_inverse = tsr_to_mat4(u_model_zup_tsr_inverse);
+#if USE_MODEL_MATRIX_INVERSE
+    nin_model_tsr_inverse = u_model_tsr_inverse;
 #endif
 
     nodes_main(eye_dir,
-            nin_view_matrix,
-            nin_zup_view_matrix,
-            nin_zup_view_matrix_inverse,
-            nin_zup_model_matrix,
-            nin_zup_model_matrix_inverse,
+            nin_view_tsr,
+            nin_view_tsr_inverse,
+            nin_model_tsr,
+            nin_model_tsr_inverse,
             nout_color,
             nout_specular_color,
             nout_normal,
@@ -216,7 +232,7 @@ void main(void) {
 
 #if SOFT_PARTICLES
     float view_depth = -v_pos_view.z / u_view_max_depth;
-    vec4 scene_depth_rgba = texture2DProj(u_scene_depth, v_tex_pos_clip);
+    vec4 scene_depth_rgba = GLSL_TEXTURE_PROJ(u_scene_depth, v_tex_pos_clip);
     float scene_depth = unpack_float(scene_depth_rgba);
     float delta = scene_depth - view_depth;
     float depth_diff = u_view_max_depth / SOFT_STRENGTH * delta;
@@ -226,5 +242,5 @@ void main(void) {
 #if ALPHA && !ALPHA_CLIP 
     premultiply_alpha(color, alpha);
 #endif
-    gl_FragColor = vec4(color, alpha);
+    GLSL_OUT_FRAG_COLOR = vec4(color, alpha);
 }

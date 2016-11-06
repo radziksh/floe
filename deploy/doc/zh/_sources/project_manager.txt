@@ -1,30 +1,52 @@
 
-项目管理器
-**********
+项目管理
+********
 
 
 目录
 ^^^^
 
-* 项目管理器
+* 项目管理
 
   * 项目管理器
 
-  * 项目创建向导
+    * 项目创建向导
 
-  * 项目信息
+    * 创建一个 Web 播放器应用程序
 
-    * 命令
+    * 项目信息
 
-    * 项目参数
+    * 项目导入
 
-  * 项目导入
+    * 项目导出
 
-  * 项目导出
+  * 高级项目管理
 
-    * 命令
+    * 依赖
 
-    * 项目参数
+    * 项目清单
+
+    * 项目结构
+
+    * ".b4w_project"  配置文件
+
+    * 创建项目
+
+    * 开发一个项目中的多个应用程序
+
+    * 构建项目
+
+    * 自动再导出
+
+    * 资源转换
+
+    * 部署项目
+
+    * 移除项目
+
+    * 应用程序升级新版本的SDK
+
+    * 加载的应用程序资产路径
 
 自版本 15.09，SDK 中包含一种项目管理功能，使它成为可能 ︰
 
@@ -74,19 +96,55 @@ SDK的首页的 *工具* 项中可以运行 *项目管理* 应用 。启动后�
 *帮助*
    打开  帮助文件.
 
-用于管理特定项目的命令。
+用于管理特定项目的命令在它的右侧。
 
-   [图片]
+注解: 根据项目的类型的一些命令可能无法使用。
 
-1. 编译项目 （WebPlayer JSON 和 WebPlayer HTML 项目不可用）。
+[图片]
 
-2. 从项目重新导出blend文件。
+1. Build project (not available for Web Player JSON and Web Player
+   HTML projects).
 
-3. 转换媒体资源。
+2. 检查是否缺少或不必要的API模块（WebPlayer JSON 和 WebPlayer HTML
+   项 目不可用）。
 
-4. 导出和下载项目档案。
+      激活此选项将使项目管理器检查应用程序使用的模块，并将检查结果的结
+      果输出到控制台。可能的警告消息如下：
 
-5. 移除项目
+      1. 如果一个或多个API模块从项目的文件夹中丢失，将会显示以下信
+         息：
+
+         '模块 'module_name' 在 'project_name.html'项目丢失，请包括它
+         或运行  `Update Modules`.`
+
+      [图片]
+
+      这些缺失的模块可以被添加到项目中的 "Update Modules" 按钮
+
+      2. 如果项目具有未在程序代码的任何地方使用的一个或多个的API模
+         块， 将显示以下信息：
+
+         在 `project_name.html` 中的 *不正确的模块 `module_name` ， 请
+         删除它或运行  `Update Modules`.*
+
+      [图片]
+
+      这些不正确的模块可以从项目中用 “更新模块” 按钮删除。
+
+      3. 在已检测缺失/不需要的模块没有任何问题的情况下，将显示以下
+         信息 ：
+
+      *模块检查完毕。在`module_name.html`. 中检测到没有问题*
+
+      [图片]
+
+3. 从项目重新导出blend文件。
+
+4. 转换媒体资源。
+
+5. 导出和下载项目档案。
+
+6. 移除项目
 
 注解: 项目的所有路径都是从它的.b4w_project 文件中检索。
 
@@ -104,7 +162,7 @@ SDK的首页的 *工具* 项中可以运行 *项目管理* 应用 。启动后�
 
 
 项目创建向导
-============
+------------
 
 该工具用于创建新的项目是列入项目管理应用程序中，由主页面上 "[Create
 New Project]" 按钮执行。
@@ -129,40 +187,131 @@ New Project]" 按钮执行。
    "deploy/assets/project_name" 目录;blend文件将添加到
    "blender/project_name" 目录。
 
-6. 复制项目管理脚本。Project.py 脚本将复制到项目目录。
+6. 使用材质库。材质库的Blend文件会复制到项目文件夹
+   "blender/project_name"，资产文件复制到 "deploy/assets/project_name"
+   目录。
 
-7. 所有的项目文件将位于相同的目录中。在小项目中最好使用此选项，如课
-   程 和范例。只有 "update" 项目类型可以用此选项。
+7. 复制项目管理脚本。Project.py 脚本将复制到项目目录。
 
-8. 项目的类型。有几个选项 ︰
+8. All project files will be located in the same directory. It is
+   preferable to use this option in small projects, such as lessons
+   and examples. Only "Web Player JSON" and "Web Player HTML" project
+   types are available for this option.
 
-      * "External" - 引擎将取自 "deploy/apps/common/" 目录。只有应用
-        程 序文件将被编译;
+9. 项目的类型。有几个选项 ︰
 
-      * "Copy" - 引擎复制到已编译的应用程序目录。只有应用程序文件进
-        行 编译;
+      * "External" - the project will use engine files in the
+        "deploy/apps/common/" directory, only application files will
+        be compiled. When the project is deployed, the
+        "deploy/apps/common/" folder will be copied to the project
+        directory;
 
-      * "Compile" -引擎源代码应用程序的脚本一同编译;
+      * "Copy" - engine files will be directly copied from the
+        "deploy/apps/common/" to the application folder. Only
+        application files are compiled;
 
-      * "Update" - 项目目录的引擎将被取代;
+      * "Compile" - engine sources are compiled with application
+        scripts;
 
-      * "Webplayer JSON" - 项目下的 json 文件通过SDK里的web播放器播
-        放 ；
+      * "None" - Project Manager will not copy the engine files to
+        the application folder, nor will it perform any operations
+        upon building the application. Application developers will
+        have to manually perform everything they need;
 
-      * "Webplayer HTML" - 项目被打包到单独的 html 文件，包含所有所
-        需 的资源。
+      * "Web Player JSON" - json-file placed inside the project is
+        run with the help of web-player inside SDK;
 
-9. Javascript 优化级别。
+      * "Web Player HTML" - project is packed into single html-file,
+        containing all required resources.
 
-      * "简单"— — 变量的名称替换代码;
+10. Javascript 优化级别。
 
-      * "先进"— — 进行了代码优化;
+    * "简单"— — 变量的名称替换代码;
 
-      * "空格"— — 只有空格从代码中移除。
+    * "先进"— — 进行了代码优化;
+
+    * "空格"— — 只有空格从代码中移除。
+
+11. 网络播放器的URL属性。此选项卡仅当 "Engine Binding Type" 参数设
+    置为 "Web Player JSON" 活 "Web Player HTML" 时可用。
+
+    * “显示FPS” 用于显示在玩家的右上角的FPS计数器。
+
+    * “自动旋转摄像头” 让场景加载后立即自动旋转相机。
+
+    * “禁用社交网络按钮” 禁用控制面板上的社交网络按钮。
+
+    * “背景透明” 启用渲染区域的透明度。
+
+    * "使用压缩纹理" 使精缩和压缩纹理加载（以DDS格式）。
+
+
+创建一个 Web 播放器应用程序
+---------------------------
+
+网络播放器应用的主要优点是易于在网站上部署这种应用。
+
+[图片]
+
+创建一个Web Player应用程序很简单。所有你需要做的，当创建一个新的项目选
+择时在引擎绑定类型面板下面选择 "Web Player JSON" 或 "Web Player HTML"
+选项。
+
+可用于在Web播放器项目的参数大多是和任何其他类型的项目一样的。唯一的例
+外是被称为网络播放器PARAMS组参数。
+
+
+项目设置
+~~~~~~~~
+
+[图片]
+
+如果 "Web Player JSON" 或 "Web Player HTML" 选项已启用，此面板才可用。
+这里列出的参数在本质上是运行该项目的Web播放器应用程序将使用的URL。
+
+
+部署项目
+~~~~~~~~
+
+您完成您的项目后，在项目管理器的主页面从 "Operations" 面板选择 "deploy
+project" 选项。该项目将被导出，打包成一个单一的存档，并下载到您的网页
+浏览器存储所有下载文件的文件夹。
+
+若要将项目放在网页上，你必须提取此文档，并用FTP，SSH或由支持的任何其他
+协议服务上传文件（"html" 文件和 "assets" 目录）发送到Web服务器。
+
+注解: 将项目文件上传到Web服务器上，应保留对其文件的归档和相关路径的
+  内部结 构。
+
+一个Web播放器的HTML应用程序然后可以使用一个 "iframe" 容器放置在任何网
+页。下面是可以用于此的HTML代码的示例：
+
+   <!DOCTYPE html>
+   <html>
+   <head>
+       <title>An Example Application</title>
+   </head>
+   <body>
+       <iframe width="800" height="500" allowfullscreen src="/tutorials/examples/web_page_integration/example_scene.html"></iframe>
+   </body>
+   </html>
+
+部署JSON项目也是同样地进行，但不是一个HTML文件，它是使用的Web应用程序
+播放器，并包含实际场景中的JSON文件的组合。
+
+   <!DOCTYPE html>
+   <html>
+   <head>
+       <title>Another Example Application</title>
+   </head>
+   <body>
+       <iframe width="800" height="500" allowfullscreen src="/apps/webplayer/webplayer.html?load=/tutorials/examples/web_page_integration/example_scene.json&show_fps"></iframe>
+   </body>
+   </html>
 
 
 项目信息
-========
+--------
 
 此页包含有关选定项目的信息，可以在该项目的标题旁边的 "[info]" 链接查看
 。
@@ -171,7 +320,7 @@ New Project]" 按钮执行。
 
 
 命令
-----
+~~~~
 
 *回到项目*
    返回到项目管理的主页面。
@@ -181,7 +330,7 @@ New Project]" 按钮执行。
 
 
 项目参数
---------
+~~~~~~~~
 
 项目名称
    项目名称
@@ -233,7 +382,7 @@ New Project]" 按钮执行。
 
 
 项目导入
-========
+--------
 
 导入项目工具是在 "[Import Project(s)]" 链接
 
@@ -241,7 +390,7 @@ New Project]" 按钮执行。
 
 
 项目导出
-========
+--------
 
 项目输出窗口可以通过 "[Export Project(s)]" 链接访问。
 
@@ -249,7 +398,7 @@ New Project]" 按钮执行。
 
 
 命令
-----
+~~~~
 
 *回到项目*
    返回到项目管理的主页面。
@@ -266,7 +415,7 @@ New Project]" 按钮执行。
 
 
 项目参数
---------
+~~~~~~~~
 
 *选择*
    显示项目是不是选择了要导出。
@@ -282,3 +431,339 @@ New Project]" 按钮执行。
 
 *档案名称*
    导出的项目打包的档案名称。
+
+
+高级项目管理
+============
+
+高级项目管理器由经验丰富的开发人员使用，在需要更多的灵活性和需要自动化
+项目开发过程中使用。
+
+高级项目管理器使用 *project.py* 脚本并手动编辑  *.b4w_project*  配置文
+件。
+
+The *project.py* script can be found in the "./apps_dev/" folder of
+the Blend4Web SDK directory.
+
+
+依赖
+----
+
+项目管理系统在所有操作系统都可用。但是，某些操作可能需要安装附加依赖项
+。为了检查是否满足所有依赖项，请使用以下命令 ︰
+
+   ./project.py check_deps
+
+对于MS Windows用户：
+
+   python project.py check_deps
+
+对于脚本运行它需要安装Java和  设置PATH系统变量.
+
+注解: Java is included by default in the Windows version of the SDK.
+  In Linux and macOS it should be installed manually.
+
+Resource Converter  也使用其自己的描述的外部工具集，在 另外章节 描述.
+
+
+项目清单
+--------
+
+可以用下面的命令查看的 SDK 中的所有项目列表︰
+
+   python3 project.py -p myproject list
+
+
+项目结构
+--------
+
+一个典型的应用程序开发中使用项目管理器如下所示展开：
+
+   blend4web/
+       apps_dev/
+           myproject/
+               project.py
+               .b4w_project
+               myproject.js
+               myproject.css
+               myproject_dev.html
+       blender/
+           myproject/
+               myproject.blend
+       deploy/
+           apps/
+               myproject/
+                   myproject.js
+                   myproject.css
+                   myproject.html
+           assets/
+               myproject/
+                   myproject.json
+                   myproject.bin
+
+这个应用程序包括4个不同的目录。
+
+1. apps_dev/myproject. 包含项目的应用程序的源文件。
+
+2. blender/myproject. 包含项目的场景源文件。
+
+3. deploy/assets/myproject. 包含项目的场景导出的文件。
+
+4. deploy/apps/myproject. 包含项目的场景导出的文件。
+
+此外，部署命令可以创建另一个目录中，但它通常放置在 SDK 之外，其名称和
+路径取决于目标服务器上的目录结构。
+
+
+".b4w_project"  配置文件
+------------------------
+
+如果你不使用任何参数执行的 *project.py* 脚本，会得到配置文件。
+
+   [info]
+   author =
+   name =
+   title =
+   icon =
+
+   [paths]
+   assets_dirs =
+   blend_dirs =
+   blender_exec =
+   build_dir =
+   deploy_dir =
+
+   [compile]
+   apps =
+   css_ignore =
+   engine_type = external
+   js_ignore =
+   optimization = simple
+   use_physics =
+   use_smaa_textures =
+   version =
+
+   [deploy]
+   assets_path_dest =
+   assets_path_prefix =
+   remove_exist_ext_dir =
+
+
+创建项目
+--------
+
+   ./project.py init myproject
+
+此命令将创建在当前目录指定名称的项目。默认情况下，项目目录只包括一个配
+置文件。
+
+可用参数：
+
+* "-A | --copy-APP-templates" （可选）创建项目目录的标准应用模板
+  (*<my_project_name>_dev.html*, *<my_project_name>.js*,
+  *<my_project_name>.css*).
+
+* "-B | --bundle" （可选）所有项目文件将被放置在一个单独的目录。
+
+* "-C | --author" （可选）写作者的还是公司的配置文件名。
+
+* "-o | --optimization" （可选）写在配置文件中的脚本优化级别。
+
+* "-P | --copy项目-script" （可选）在项目目录中创建 *project.py* 脚
+  本 的副本。
+
+* "-S | --copy-场景templates" （可选）创建目录
+  "deploy/assets/<my_project_name>" 和 "blender/<my_project_name>"
+  (*<my_project_name>.json/.bin* 和 *<my_project_name>.blend* 相应的).
+
+* "-T | --title"" （可选）写在配置文件的标题。编译时，里面将使用
+  "<title>" HTML元素。
+
+* "-t | --engine-type" （可选）写在配置文件中的引擎类型。
+
+示例：
+
+   ./project.py init -AS -C Blend4Web -o simple -T MyProject -t external myproject
+
+这个命令将创建一个名为 *myproject* 的目录，这里面以下文件将被放置：
+*myproject.js*, *myproject.css*, *myproject_dev.html* 和
+*.b4w_project*.
+
+该 .b4w_project 文件看起来像:
+
+   [info]
+   author = Blend4Web
+   name = myproject
+   title = MyProject
+
+   [paths]
+   assets_dirs = deploy/assets/myproject;
+   blend_dirs = blender/myproject;
+   blender_exec = blender
+   build_dir = deploy/apps/myproject
+   deploy_dir =
+
+   [compile]
+   apps =
+   css_ignore =
+   engine_type = external
+   js_ignore =
+   optimization = simple
+   use_physics =
+   use_smaa_textures =
+   version =
+
+   [deploy]
+   assets_path_prefix =
+   remove_exist_ext_dir =
+
+
+开发一个项目中的多个应用程序
+----------------------------
+
+一个项目可以包含多个应用程序。这可以通过用分号分隔的配置文件列表对应的
+HTML文件的形式提供:
+
+   ...
+   [compile]
+   apps = myapp1;myapp2;
+   ...
+
+
+构建项目
+--------
+
+   python3 project.py -p myproject compile
+
+构建在 "deploy/apps/myproject" 目录中的项目。
+
+可用参数：
+
+* "“-a | --app”" （可选）指定一个HTML文件，相对于该项目的应用程序将
+  建 成。
+
+* ""-c | --css-ignore"" （可选）添加CSS样式异常为了不编译它们。
+
+* ""-j | --js-ignore"" （可选）添加脚本例外为了不编译它们。
+
+* "“-o | --optimization”" （可选）指定JavaScript文件的优化级别：
+  "whitespace"，"simple``（默认）或 ``advanced"。
+
+* ""-t | --engine-type"" （可选）定义的应用程序编译类型。四种型号可
+  供 选择： *external* (默认), *copy*, *compile*, *update*.
+
+* "“-v | --version”" 加版本和脚本和样式的路径。
+
+编译器要求
+
+* 在一个HTML文件必须存放在目录的根目录如果  "-a" 选项被禁用
+
+* 脚本和样式可以存储在应用程序的根目录和子文件夹中
+
+
+自动再导出
+----------
+
+   python3 project.py -p myproject reexport
+
+此命令将重新导出混合在 JSON 和 HTML 格式的文件。
+
+可用参数：
+
+* "“-b | --blender_exec”" Blender可执行文件的路径。
+
+* "“-s | --assets”" 用场景资源指定目录。
+
+
+资源转换
+--------
+
+   python3 project.py -p myproject convert_resources
+
+外部资源（纹理，音频和视频文件）转换为另一种格式，以确保跨浏览器和跨平
+台性能。
+
+可用参数：
+
+* "“-s | --assets”" 用场景资源指定目录。
+
+资源的转换中详细描述在 对应部分.
+
+
+部署项目
+--------
+
+   python3 project.py -p myproject deploy DIRECTORY
+
+与所有依赖一起保存了一个项目在外部目录。
+
+可用参数：
+
+* ""-e | --assets-dest"" 资产目的地目录（“资产” 默认情况下）。
+
+* ""-E | --assets-prefix"" 资产网址前缀（默认情况下“资产”）。
+
+* "“-o | --override”" 如果它存在删除目录。
+
+* "“-s | --assets”" 用场景资源指定目录。
+
+* "-t | --engine-type" （可选）写在配置文件中的引擎类型。
+
+
+移除项目
+--------
+
+   python3 project.py -p myproject remove
+
+删除的项目。被删除的目录是从项目配置文件检索。
+
+
+应用程序升级新版本的SDK
+-----------------------
+
+当升级新的SDK版本往往两个问题就出来了：
+
+1. 引擎的新和旧版本的模块不匹配。
+
+2. 旧的和新的引擎API不匹配。
+
+为了更新应用程序的开发者版本导入模块列表转到项目源代码目录
+"apps_dev/my_project" 和执行模块列表生成脚本：
+
+   python3 ../../scripts/mod_list.py
+
+对于MS Windows用户：
+
+   python ..\..\scripts\mod_list.py
+
+注解: 要运行的Python 3.x的需要安装在你的系统中的脚本。
+
+控制台将打印模块列表 - 将它们复制并粘贴到主HTML文件：
+
+   <head>
+       <meta charset="UTF-8">
+       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+       <script type="text/javascript" src="../../src/b4w.js"></script>
+       <script type="text/javascript" src="../../src/anchors.js"></script>
+       <script type="text/javascript" src="../../src/animation.js"></script>
+       <script type="text/javascript" src="../../src/assets.js"></script>
+       <script type="text/javascript" src="../../src/batch.js"></script>
+       <script type="text/javascript" src="../../src/boundings.js"></script>
+       <script type="text/javascript" src="../../src/camera.js"></script>
+       . . .
+   </head>
+
+为了消除 API 不兼容性可能需要重构您的应用程序。所有的改变放在了  发行
+说明.
+
+
+加载的应用程序资产路径
+----------------------
+
+要加载.json 文件应从 *config.js* 模块使用 "get_std_assets_path()" 方法
+︰
+
+   m_data.load(m_config.get_std_assets_path() + "example/example.json", load_cb);
+
+完成应用程序构建后，到资产的路径将会改变。因此，使用
+"get_std_assets_path()" 将允许您避免不正确的路径的问题。

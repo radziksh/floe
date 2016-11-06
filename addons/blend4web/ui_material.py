@@ -182,6 +182,7 @@ class B4W_MATERIAL_PT_shading(MaterialButtonsPanel, Panel):
 
             col = split.column()
             col.prop(mat, "use_shadeless")
+            col.prop(mat, "use_tangent_shading")
             col.prop(mat, "b4w_double_sided_lighting", text = _("Double-Sided Lighting"))
 
 
@@ -322,6 +323,10 @@ class B4W_MATERIAL_PT_rendering_options(MaterialButtonsPanel, Panel):
         split = layout.split()
         col = split.column()
         col.prop(mat, "b4w_wettable", text=_("Wettable"))
+
+        split = layout.split()
+        col = split.column()
+        col.prop(mat, "b4w_lens_flares", text=_("Lens Flare"))
 
         col = split.column()
         col.active = not mat.use_nodes

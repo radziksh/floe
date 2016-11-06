@@ -2,9 +2,9 @@
 
 .. index:: add-on
 
-*****
-Addon
-*****
+******
+Add-on
+******
 
 .. contents:: Table of Content
     :depth: 3
@@ -27,9 +27,9 @@ After changing local development server settings in it required to restart Blend
 
 It is possible for the local server to process external requests. To do that enable the option ``Enable External Requests``.
 
-If you chose not to start the server automatically, you can always do it manually: go to the ``Render`` tab and press the ``Start Server`` button on the ``Development Server`` panel:
+If you chose not to start the server automatically, you can always do it manually: go to the ``Render`` tab and press the ``Start Server`` button on the ``Development Tools`` panel:
 
-.. image:: src_images/setup/server_start.png
+.. image:: src_images/addon/addon_development_server_start.png
    :align: center
    :width: 100%
 
@@ -85,18 +85,18 @@ The index page contains links for launching the scene viewer and the demo applic
 .. _export_formats:
 
 Export Formats
-==============
+--------------
 
 After the scene is finished, you need to convert it into a format supported by the Blend4Web engine.
 
 For now, two formats are supported: JSON and HTML.
 
 JSON
-----
+....
 
 Exporting the scene to this format creates a ``.json`` (JavaScript Object Notation) file that contains all exported data structures and links to external resources (images, sounds and such), and also a ``.bin`` file that contains model data arrays in binary format.
 
-If media resources are `packed into the .blend file <https://www.blender.org/manual/data_system/introduction.html#pack-and-unpack-data>`_, they will be unpacked during the export and placed to the hidden ``../tmp/`` folder in the project's directory (inside the SDK directory). It should be noted that the names of such files will be automatically changed, which can complicate working with them.
+If media resources are `packed into the .blend file <https://www.blender.org/manual/data_system/introduction.html#pack-and-unpack-data>`_, they will be unpacked during the export and placed in the project's directory (inside the SDK directory). It should be noted that the names of such files will be automatically changed, which can complicate working with them.
 
 It is recommended to store all the resources in a dedicated folder inside the SDK directory, it can be called ``deploy/assets/project_name`` for example.
 
@@ -108,16 +108,22 @@ Paths to the external resources should be relative. If this is not the case,  ex
 This is the main format for complex projects that include multiple scenes and require JavaScript programming. Project development is further described in the  :ref:`corresponding section <developers>`.
 
 HTML
-----
+....
 
 Exporting the scene to this format pack all scene resources into one file with the HTML extension. This HTML file contains not only the scene itself, but also textures, sounds, Blend4Web engine and standard :ref:`web player <web_player>`. A file like this can be executed on any computer and any mobile device that have a web browser with WebGL support.
 
-You can't use HTML files for further development, but you also don't need any additional actions to run them. This format is useful for developing relatively simple applications of moderate size (?).
+You can't use HTML files for further development, but you also don't need any additional actions to run them. This format is useful for developing relatively simple applications of moderate size.
+
+It should be noted, however, that HTML applications do not support following features:
+
+    * :ref:`Physics <physics>`
+    * :ref:`DDS textures <converter_data_format>`
+    * :ref:`min50 textures <converter>`
 
 .. _export_opts:
 
 Export Options
-==============
+--------------
 
 *Autosave blend File*
     Autosaving the file from which export occurs. **Enabled by default**. Autosaving is performed right after the export to guarantee conformity between the current blend file and the exported file contents. In addition, the relative path to the exported file is saved for convenience.
@@ -175,7 +181,7 @@ Export Options
 .. index:: addon; initialization errors
 
 Initialization Errors
-=====================
+---------------------
 
 Initialization errors can arise upon installation of the add-on or when a scene is opened in Blender. In this case a dialog window with the error description is showed.
 
@@ -189,14 +195,19 @@ Initialization errors can arise upon installation of the add-on or when a scene 
 | Error message                       | Cause                                     |
 +=====================================+===========================================+
 | Blend4Web initialization error!     | The Blend4Web add-on is not compatible    |
-| Addon is not compatible with        | with the PLATFORM platform.               |
+| Add-on is not compatible with       | with the PLATFORM platform.               |
 | the PLATFORM platform.              |                                           |
 +-------------------------------------+-------------------------------------------+
 | Warning: Blender version mismatch.  | Warning about possible incompatibility    |
 | Blender VER_REQUIRED is recommended | with the current Blender version.         |
-| for the Blend4Web addon.            | It is recommended to use VER_REQUIRED     |
+| for the Blend4Web add-on.           | It is recommended to use VER_REQUIRED     |
 | Current version is VER_CURRENT.     | Blender version. The current version is   |
 |                                     | VER_CURRENT.                              |
++-------------------------------------+-------------------------------------------+
+| Incorrect add-on directory name.    | Incorrect name of the add-on directory.   |
+|                                     | Add-on structure in the archive has been  |
+|                                     | damaged, or entirety of the archive has   |
+|                                     | been disrupted.                           |
 +-------------------------------------+-------------------------------------------+
 
 .. index:: version; errors
@@ -204,7 +215,7 @@ Initialization errors can arise upon installation of the add-on or when a scene 
 .. _version_errors:
 
 Compatibility Errors
-====================
+--------------------
 
 Compatibility errors may arise when trying to view a scene in a browser, in the following cases: if version of the add-on used to export the scene differs from version of the Blend4Web engine which tries to load the scene, or if .bin file does not correspond to the .json file.
 
@@ -225,7 +236,7 @@ Engine version is too old as compared to version of the add-on with which the sc
 | JSON version is too old relative to | Version of the add-on, with which the     |
 | B4W engine: VER_OLD, required:      | scene was exported, is too old: VER_OLD.  |
 | VER_NEW. Reexport scene with the    | The engine requires: VER_NEW.             |
-| latest B4W addon to fix it.         | The scene will not be loaded. We          |
+| latest B4W add-on to fix it.        | The scene will not be loaded. We          |
 |                                     | recommend you to reexport the scene using |
 |                                     | the latest version of the add-on. We also |
 |                                     | recommend to use the latest version of    |
@@ -235,7 +246,7 @@ Engine version is too old as compared to version of the add-on with which the sc
 | to B4W engine: VER_OLD, required:   | scene was exported, is a bit old:         |
 | VER_NEW. Some compatibility issues  | VER_OLD. The engine requires: VER_NEW.    |
 | can occur. Reexport scene with the  | The scene will be loaded as usual,        |
-| latest B4W addon to fix it.         | however some errors may occur. We         |
+| latest B4W add-on to fix it.        | however some errors may occur. We         |
 |                                     | recommend you to reexport the scene using |
 |                                     | the latest version of the add-on. We also |
 |                                     | recommend to use the latest version of    |
@@ -274,7 +285,7 @@ Engine version is too old as compared to version of the add-on with which the sc
 .. _export_errors:
 
 Critical Export Errors
-======================
+----------------------
 
 In case of export errors a ``BLEND4WEB EXPORT ERROR`` dialog box describing of the problem appears:
 
@@ -435,7 +446,7 @@ In case of export errors a ``BLEND4WEB EXPORT ERROR`` dialog box describing of t
 .. index:: export; warnings about export errors
 
 Non-Critical Export Errors
-==========================
+--------------------------
 
 In contrast to the above-listed critical export errors, these errors do not prohibit the export, but can make scenes displayed incorrectly. These messages can be viewed in the browser console (opens with ``F12``) when a scene is loaded. The message looks like this:
 
@@ -575,6 +586,11 @@ In contrast to the above-listed critical export errors, these errors do not proh
 | animation. Modifier removed.        | supported. As a result, the modifier has  |
 |                                     | been removed.                             |
 +-------------------------------------+-------------------------------------------+
+| The NAME object has the NAME        | The NAME object has the NAME              |
+| armature modifier. It belongs to a  | armature modifier. It belongs to a        |
+| not exported scene. Modifier        | not exported scene. Modifier removed.     |
+| removed.                            |                                           |
++-------------------------------------+-------------------------------------------+
 | The NAME LAMP node has no lamp      | Wrong object specified in the NAME        |
 | object. Material: NAME.             | ``LAMP`` node.                            |
 +-------------------------------------+-------------------------------------------+
@@ -624,7 +640,7 @@ In contrast to the above-listed critical export errors, these errors do not proh
 .. _export_errors_other:
 
 Other Messages
-==============
+--------------
 
 These messages can be viewed in the browser console (opens with ``F12``) when a scene is loaded. The message looks like this:
 
@@ -657,11 +673,15 @@ These messages can be viewed in the browser console (opens with ``F12``) when a 
 | PANORAMIC type. Changed to          | Perspective mode is used instead.         |
 | PERSPECTIVE type."                  |                                           |
 +-------------------------------------+-------------------------------------------+
+| Unsupported texture type or texture | There are no textures on the material     |
+| is missing for Lens Flare material  | or unsupported texture type is used       |
+| \"NAME\"                            | for material \"NAME\".                    |
++-------------------------------------+-------------------------------------------+
 
 .. _translator:
     
 Add-on Translations
-===================
+-------------------
 
 There is the possibility to translate the add-on to a language supported by Blender. In order to do this, rename the file "empty.po", which located in the directory SDK/blender_scripts/addons/blend4web/locales, to one of the names in the following table:
 

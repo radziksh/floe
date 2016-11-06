@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -23,7 +22,6 @@
  */
 b4w.module["gp_conf"] = function(exports, require) {
 
-var m_cfg       = require("config");
 var m_cont      = require("container");
 var m_ctrl      = require("controls");
 var m_input     = require("input");
@@ -124,7 +122,6 @@ _axes_prev_val[m_input.GMPD_AXIS_8] = -2;
 _axes_prev_val[m_input.GMPD_AXIS_9] = -2;
 _axes_prev_val[m_input.GMPD_AXIS_10] = -2;
 _axes_prev_val[m_input.GMPD_AXIS_11] = -2;
-_axes_prev_val[m_input.GMPD_AXIS_12] = -2;
 
 
 /**
@@ -474,7 +471,7 @@ function get_gamepads() {
 }
 
 function save_config_to_local_mem(red_btn_val, pressed_btn_key) {
-    var gmpd_stngs_str = m_storage.get(_selected_gamepad_num + "gmpd_stngs", "b4w") || "{}";
+    var gmpd_stngs_str = m_storage.get(_selected_gamepad_num + "_gmpd_stngs", "b4w") || "{}";
     var gmpd_stngs = JSON.parse(gmpd_stngs_str);
     gmpd_stngs[red_btn_val] = pressed_btn_key;
     m_storage.set(_selected_gamepad_num + "_gmpd_stngs", JSON.stringify(gmpd_stngs), "b4w");
@@ -498,6 +495,15 @@ function set_gmpd_config(gamepad_id) {
     } else {
         init_gmpd_stngs(gamepad_id);
     }
+}
+
+/**
+ * Update gamepad device config without showing configurator
+ * @method module:gp_conf.update
+ */
+exports.update = function() {
+   for(var i = 0; i < 4; i++)
+       set_gmpd_config(i);
 }
 
 function create_pad_interface(main_div) {

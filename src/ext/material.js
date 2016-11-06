@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -32,6 +31,7 @@ var m_obj_util = require("__obj_util");
 var m_print    = require("__print");
 var m_shaders  = require("__shaders");
 var m_util     = require("__util");
+var m_scenes   = require("__scenes");
 
 var cfg_def = m_cfg.defaults;
 
@@ -68,8 +68,8 @@ function check_batch_material(obj, mat_name) {
     for (var i = 0; i < batches.length; i++) {
         var batch = batches[i];
 
-        if (batch.material_names.indexOf(mat_name) > -1)
-            return (batch.type == "MAIN");
+        if (batch.material_names.indexOf(mat_name) > -1 && batch.type == "MAIN")
+            return true;
     }
     return false;
 }
@@ -640,7 +640,8 @@ exports.set_material_extended_params = function(obj, mat_name, mat_params) {
         if (typeof mat_params.material_parallax_steps == "number") {
             var parallax_steps = m_shaders.glsl_value(parseFloat(mat_params.material_parallax_steps));
             m_batch.set_batch_directive(batch, "PARALLAX_STEPS", parallax_steps);
-            m_batch.update_shader(batch, true);
+            m_batch.update_shader(batch);
+            m_scenes.recalculate_draw_data(batch);
         }
     }
 }
@@ -798,7 +799,8 @@ exports.set_water_material_params = function(obj, water_mat_name, water_mat_para
                 m_batch.set_batch_directive(batch, "WAVES_HOR_FAC", waves_hor_fac);
             }
         }
-        m_batch.update_shader(batch, true);
+        m_batch.update_shader(batch);
+        m_scenes.recalculate_draw_data(batch);
     }
 }
 
@@ -840,5 +842,153 @@ exports.get_line_params = function(obj) {
     }
 }
 
+/**
+ * Set value of the Value node in the object's material.
+ * @method module:material.set_nodemat_value
+ * @param {Object3D} obj Object 3D
+ * @param {String[]} name_list List consisting of the material name, the names of
+ * nested node groups (if any) and the name of the Value node itself. Should
+ * have at least 2 elements ["Mat","Node"]
+ * @param {Number} value The value to set the Value node to
+ */
+exports.set_nodemat_value = function(obj, name_list, value) {
+
+    if (!m_obj_util.is_dynamic_mesh(obj)) {
+        m_print.error("The type of the object \"" + obj.name +
+            "\" is not \"MESH\" or it is not dynamic.");
+        return;
+    }
+
+    var mat_name = name_list[0];
+    var batch_main = m_batch.find_batch_material(obj, mat_name, "MAIN");
+    if (batch_main === null) {
+        m_print.error("Material \"" + mat_name +
+                      "\" was not found in the object \"" + obj.name + "\".");
+        return null;
+    }
+
+    var ind = m_batch.get_node_ind_by_name_list(batch_main.node_value_inds,
+                                                name_list);
+    if (ind === null) {
+        m_print.error("Value node \"" + name_list[name_list.length - 1] +
+        "\" was not found in the object \"" + obj.name + "\".");
+        return null;
+    }
+
+    m_batch.set_nodemat_value(obj, mat_name, ind, value)
+}
+
+/**
+ * Get value of the Value node in the object's material.
+ * @method module:material.get_nodemat_value
+ * @param {Object3D} obj Object 3D
+ * @param {String[]} name_list List consisting of the material name, the names of
+ * nested node groups (if any) and the name of the Value node itself. Should
+ * have at least 2 elements ["Mat","Node"]
+ * @returns {Number} Value.
+ */
+exports.get_nodemat_value = function(obj, name_list) {
+
+    if (!m_obj_util.is_dynamic_mesh(obj)) {
+        m_print.error("The type of the object \"" + obj.name +
+            "\" is not \"MESH\" or it is not dynamic.");
+        return null;
+    }
+
+    var mat_name = name_list[0];
+    var batch_main = m_batch.find_batch_material(obj, mat_name, "MAIN");
+    if (batch_main === null) {
+        m_print.error("Material \"" + mat_name +
+                      "\" was not found in the object \"" + obj.name + "\".");
+        return null;
+    }
+
+    var ind = m_batch.get_node_ind_by_name_list(batch_main.node_value_inds,
+                                                name_list);
+    if (ind === null) {
+        m_print.error("Value node \"" + name_list[name_list.length - 1] +
+        "\" was not found in the object \"" + obj.name + "\".");
+        return null;
+    }
+
+    return m_batch.get_nodemat_value(batch_main, ind);
+}
+
+/**
+ * Set color of the RGB node in the object's material.
+ * @method module:material.set_nodemat_rgb
+ * @param {Object3D} obj Object 3D
+ * @param {String[]} name_list List consisting of the material name, the names of
+ * nested node groups (if any) and the name of the RGB node itself
+ * @param {Number} r The value to set the red channel of the RGB node to [0..1]
+ * @param {Number} g The value to set the green channel of the RGB node to [0..1]
+ * @param {Number} b The value to set the blue channel of the RGB node to [0..1]
+ */
+exports.set_nodemat_rgb = function(obj, name_list, r, g, b) {
+
+    if (!m_obj_util.is_dynamic_mesh(obj)) {
+        m_print.error("The type of the object \"" + obj.name +
+            "\" is not \"MESH\" or it is not dynamic.");
+        return;
+    }
+
+    var mat_name = name_list[0];
+    var batch_main = m_batch.find_batch_material(obj, mat_name, "MAIN");
+    if (batch_main === null) {
+        m_print.error("Material \"" + mat_name +
+                      "\" was not found in the object \"" + obj.name + "\".");
+        return;
+    }
+
+    // node index is assumed to be similar for all batches with the same material
+    var ind = m_batch.get_node_ind_by_name_list(batch_main.node_rgb_inds,
+                                                name_list);
+    if (ind === null) {
+        m_print.error("RGB node \"" + name_list[name_list.length - 1] +
+                      "\" was not found in the object \"" + obj.name + "\".");
+        return;
+    }
+
+    m_batch.set_nodemat_rgb(obj, mat_name, ind, r, g, b);
+}
+
+/**
+ * Get color of the RGB node in the object's material.
+ * @method module:material.get_nodemat_rgb
+ * @param {Object3D} obj Object 3D
+ * @param {String[]} name_list List consisting of the material name, the names of
+ * nested node groups (if any) and the name of the RGB node itself
+ * @param {Vec3} [dest] Destination color
+ * @returns {RGB} Destination color
+ */
+exports.get_nodemat_rgb = function(obj, name_list, dest) {
+
+    if (!m_obj_util.is_dynamic_mesh(obj)) {
+        m_print.error("The type of the object \"" + obj.name +
+            "\" is not \"MESH\" or it is not dynamic.");
+        return null;
+    }
+
+    var mat_name = name_list[0];
+    var batch_main = m_batch.find_batch_material(obj, mat_name, "MAIN");
+    if (batch_main === null) {
+        m_print.error("Material \"" + mat_name +
+                      "\" was not found in the object \"" + obj.name + "\".");
+        return null;
+    }
+
+    var ind = m_batch.get_node_ind_by_name_list(batch_main.node_rgb_inds,
+                                                name_list);
+    if (ind === null) {
+        m_print.error("RGB node \"" + name_list[name_list.length - 1] +
+                      "\" was not found in the object \"" + obj.name + "\".");
+        return null;
+    }
+
+    if (!dest)
+        dest = new Float32Array(3);
+
+    return m_batch.get_nodemat_rgb(batch_main, ind, dest);
+}
 
 }

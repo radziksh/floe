@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 "use strict";
 
 /**
@@ -36,6 +35,7 @@ var m_obj_util = require("__obj_util");
 var m_print    = require("__print");
 var m_quat     = require("__quat");
 var m_scenes   = require("__scenes");
+var m_subs     = require("__subscene");
 var m_trans    = require("__transform");
 var m_tsr      = require("__tsr");
 var m_util     = require("__util");
@@ -140,20 +140,24 @@ exports.camera_object_to_camera = function(bpy_camobj, camobj) {
     var cam_scenes_data = camobj.scenes_data;
     cam_scenes_data[0].cameras.push(cam);
     for (var i = 1; i < cam_scenes_data.length; i++) {
-        var new_cam =  m_util.clone_object_r(cam);
+        var new_cam = clone_camera(cam, false);
         cam_scenes_data[i].cameras.push(new_cam);
     }
 
-    render.underwater                = false;
     render.move_style                = move_style_bpy_to_b4w(camobj_data["b4w_move_style"]);
     render.dof_distance              = camobj_data["dof_distance"];
 
     var dof_obj = camobj_data["dof_object"];
     render.dof_object = dof_obj ? dof_obj._object : null;
 
-    render.dof_front                 = camobj_data["b4w_dof_front"];
-    render.dof_rear                  = camobj_data["b4w_dof_rear"];
+    render.dof_front_start           = camobj_data["b4w_dof_front_start"];
+    render.dof_front_end             = camobj_data["b4w_dof_front_end"];
+    render.dof_rear_start            = camobj_data["b4w_dof_rear_start"];
+    render.dof_rear_end              = camobj_data["b4w_dof_rear_end"];
     render.dof_power                 = camobj_data["b4w_dof_power"];
+    render.dof_bokeh                 = camobj_data["b4w_dof_bokeh"];
+    render.dof_bokeh_intensity       = camobj_data["b4w_dof_bokeh_intensity"];
+    render.dof_foreground_blur       = camobj_data["b4w_dof_foreground_blur"];
 
     render.velocity_trans = camobj_data["b4w_trans_velocity"];
     render.velocity_rot   = camobj_data["b4w_rot_velocity"];
@@ -314,14 +318,7 @@ function vert_trans_limits_bpy_to_b4w(bpy_camobj, camobj) {
             min: data["b4w_vertical_translation_min"],
             max: data["b4w_vertical_translation_max"]
         }
-
-        // inverted Z-axis compared to the Blender Y-axis
-        var max_z = -vert_trans_limits.min;
-        var min_z = -vert_trans_limits.max;
-        vert_trans_limits.min = min_z;
-        vert_trans_limits.max = max_z;
     }
-
     return vert_trans_limits;
 }
 
@@ -333,8 +330,8 @@ function pivot_limits_bpy_to_b4w(bpy_camobj, camobj) {
 
     if (ms == exports.MS_TARGET_CONTROLS && data["b4w_use_pivot_limits"])
         pivot_limits = {
-            min_y: data["b4w_pivot_z_min"],
-            max_y: data["b4w_pivot_z_max"]
+            min_z: data["b4w_pivot_z_min"],
+            max_z: data["b4w_pivot_z_max"]
         }
 
     return pivot_limits;
@@ -396,12 +393,12 @@ function init_hover_pivot(camobj, zero_level, dest) {
     var quat = m_tsr.get_quat_view(render.world_tsr);
     
     var normal_plane_oxy = _vec4_tmp;
-    normal_plane_oxy.set(m_util.AXIS_Y);
+    normal_plane_oxy.set(m_util.AXIS_Z);
     normal_plane_oxy[3] = 0;
 
     var theta = get_camera_angles(camobj, _vec2_tmp)[1];
 
-    var view_vector = m_util.quat_to_dir(quat, m_util.AXIS_MY, _vec3_tmp);
+    var view_vector = m_util.quat_to_dir(quat, m_util.AXIS_MZ, _vec3_tmp);
 
     m_math.set_pline_initial_point(_pline_tmp, trans);
     m_math.set_pline_directional_vec(_pline_tmp, view_vector);
@@ -476,26 +473,30 @@ function init_camera(type) {
         // some uniforms
         world_tsr             : new Float32Array(9),
         view_matrix           : new Float32Array(16),
+        view_refl_matrix      : new Float32Array(16),
         proj_matrix           : new Float32Array(16),
         view_proj_matrix      : new Float32Array(16),
         view_proj_inv_matrix  : new Float32Array(16),
         prev_view_proj_matrix : new Float32Array(16),
         sky_vp_inv_matrix     : new Float32Array(16),
 
-        view_tsr                       : m_tsr.create_ext(),
-        view_zup_tsr                   : m_tsr.create_ext(),
-        view_inv_zup_tsr               : m_tsr.create_ext(),
-        real_view_tsr                  : m_tsr.create_ext(), // for reflections
-        real_view_zup_tsr              : m_tsr.create_ext(),
-        real_view_inv_zup_tsr          : m_tsr.create_ext(),
-        shadow_cast_billboard_view_tsr : m_tsr.create_ext(),
+        view_tsr                        : m_tsr.create_ext(),
+        view_tsr_inv                    : m_tsr.create_ext(),
+        real_view_tsr                   : m_tsr.create_ext(), // for reflections
+        real_view_tsr_inv               : m_tsr.create_ext(),
+        shadow_cast_billboard_view_tsr  : m_tsr.create_ext(),
 
         // dof stuff
         dof_distance : 0,
-        dof_front : 0,
-        dof_rear : 0,
+        dof_front_start : 0,
+        dof_front_end : 0,
+        dof_rear_start : 0,
+        dof_rear_end : 0,
         dof_power : 0,
+        dof_bokeh_intensity : 0,
         dof_object : null,
+        dof_bokeh_ : false,
+        dof_foreground_blur : false,
         dof_on : false,
         lod_eye: new Float32Array(3),
 
@@ -518,6 +519,83 @@ function init_camera(type) {
     return cam;
 }
 
+exports.clone_camera = clone_camera;
+function clone_camera(cam, reset_attachments) {
+
+    var cam_new = init_camera(cam.type);
+
+    cam_new.name = cam.name;
+
+    cam_new.size_mult = cam.size_mult;
+
+    cam_new.width  = cam.width;
+    cam_new.height = cam.height;
+
+    if (!reset_attachments) {
+        cam_new.framebuffer = cam.framebuffer;
+        cam_new.framebuffer_prev = cam.framebuffer_prev;
+        cam_new.color_attachment = cam.color_attachment;
+        cam_new.depth_attachment = cam.depth_attachment;
+    }
+
+    // frustum stuff
+    cam_new.aspect = cam.aspect;
+    cam_new.fov    = cam.fov;
+    cam_new.near   = cam.near;
+    cam_new.far    = cam.far;
+    cam_new.left   = cam.left;
+    cam_new.right  = cam.right;
+    cam_new.top    = cam.top;
+    cam_new.bottom = cam.bottom;
+
+    m_vec4.copy(cam.hmd_fov, cam_new.hmd_fov);
+
+    // some uniforms
+    m_tsr.copy(cam.world_tsr, cam_new.world_tsr);
+
+    m_mat4.copy(cam.view_matrix, cam_new.view_matrix);
+    m_mat4.copy(cam.proj_matrix, cam_new.proj_matrix);
+    m_mat4.copy(cam.view_proj_matrix, cam_new.view_proj_matrix);
+    m_mat4.copy(cam.view_proj_inv_matrix, cam_new.view_proj_inv_matrix);
+    m_mat4.copy(cam.prev_view_proj_matrix, cam_new.prev_view_proj_matrix);
+    m_mat4.copy(cam.sky_vp_inv_matrix, cam_new.sky_vp_inv_matrix);
+
+    m_tsr.copy(cam.view_tsr, cam_new.view_tsr);
+    m_tsr.copy(cam.view_tsr_inv, cam_new.view_tsr_inv);
+    m_tsr.copy(cam.real_view_tsr, cam_new.real_view_tsr);
+    m_tsr.copy(cam.real_view_tsr_inv, cam_new.real_view_tsr_inv);
+    m_tsr.copy(cam.shadow_cast_billboard_view_tsr, cam_new.shadow_cast_billboard_view_tsr);
+
+    // dof stuff
+    cam_new.dof_distance = cam.dof_distance;
+    cam_new.dof_front_start = cam.dof_front_start;
+    cam_new.dof_front_end = cam.dof_front_end;
+    cam_new.dof_rear_start = cam.dof_rear_start;
+    cam_new.dof_rear_end = cam.dof_rear_end;
+    cam_new.dof_power = cam.dof_power;
+    cam_new.dof_bokeh_intensity = cam.dof_bokeh_intensity;
+    cam_new.dof_object = cam.dof_object;
+    cam_new.dof_bokeh_ = cam.dof_bokeh_;
+    cam_new.dof_foreground_blur = cam.dof_foreground_blur;
+    cam_new.dof_on = cam.dof_on;
+    m_vec3.copy(cam.lod_eye, cam_new.lod_eye);
+
+    copy_frustum_planes(cam.frustum_planes, cam_new.frustum_planes);
+    cam_new.stereo_conv_dist = cam.stereo_conv_dist;
+    cam_new.stereo_eye_dist = cam.stereo_eye_dist;
+
+    if (cam.reflection_plane)
+        cam_new.reflection_plane = m_vec4.clone(cam.reflection_plane);
+
+    // shadow cascades stuff
+    clone_camera_csm(cam, cam_new);
+    m_vec4.copy(cam.csm_center_dists, cam_new.csm_center_dists);
+    m_vec4.copy(cam.pcf_blur_radii, cam_new.pcf_blur_radii);
+
+    return cam_new;
+}
+
+
 exports.create_frustum_planes = create_frustum_planes;
 function create_frustum_planes() {
     var frustum_planes = {
@@ -529,6 +607,16 @@ function create_frustum_planes() {
         far:    new Float32Array([0, 0, 0, 0])
     };
     return frustum_planes;
+}
+
+function copy_frustum_planes(planes, planes_new) {
+    m_vec4.copy(planes.left, planes_new.left);
+    m_vec4.copy(planes.right, planes_new.right);
+    m_vec4.copy(planes.top, planes_new.top);
+    m_vec4.copy(planes.bottom, planes_new.bottom);
+    m_vec4.copy(planes.near, planes_new.near);
+    m_vec4.copy(planes.far, planes_new.far);
+    return planes_new;
 }
 
 exports.move_style_bpy_to_b4w = move_style_bpy_to_b4w
@@ -547,7 +635,7 @@ function move_style_bpy_to_b4w(bpy_move_style) {
         return exports.MS_HOVER_CONTROLS;
         break;
     default:
-        throw "Unknown move style";
+        m_util.panic("Unknown move style");
     }
 }
 
@@ -579,10 +667,10 @@ function create_camera(type) {
     case exports.TYPE_STEREO_RIGHT:
     case exports.TYPE_HMD_LEFT:
     case exports.TYPE_HMD_RIGHT:
-        throw "Stereo camera may only be created from perspective one";
+        m_util.panic("Stereo camera may only be created from perspective one");
         break;
     default:
-        throw "Unknown camera type";
+        m_util.panic("Unknown camera type");
         break;
     }
 
@@ -599,7 +687,7 @@ exports.check_attachment = function(cam, type) {
     case "SCREEN":
         return (!Boolean(cam.color_attachment) && !Boolean(cam.depth_attachment));
     default:
-        throw "Wrong attachment type: " + type;
+        m_util.panic("Wrong attachment type: " + type);
         break;
     }
 }
@@ -618,7 +706,7 @@ exports.set_attachment = function(cam, type, tex) {
         cam.depth_attachment = null;
         break;
     default:
-        throw "Wrong attachment type: " + type;
+        m_util.panic("Wrong attachment type: " + type);
         break;
     }
 }
@@ -633,7 +721,7 @@ exports.get_attachment = function(cam, type) {
     case "SCREEN":
         return null;
     default:
-        throw "Wrong attachment type: " + type;
+        m_util.panic("Wrong attachment type: " + type);
         break;
     }
 }
@@ -651,7 +739,7 @@ exports.make_stereo = function(cam, type) {
             type == exports.TYPE_STEREO_RIGHT ||
             type == exports.TYPE_HMD_LEFT ||
             type == exports.TYPE_HMD_RIGHT)))
-        throw "make_stereo(): wrong camera type";
+        m_util.panic("make_stereo(): wrong camera type");
 
     cam.type = type;
 
@@ -668,7 +756,7 @@ function set_stereo_params(cam, conv_dist, eye_dist) {
                 cam.type == exports.TYPE_STEREO_RIGHT ||
                 cam.type == exports.TYPE_HMD_LEFT ||
                 cam.type == exports.TYPE_HMD_RIGHT))
-        throw "set_stereo_params(): wrong camera type";
+        m_util.panic("set_stereo_params(): wrong camera type");
 
     if (cam.type == exports.TYPE_STEREO_LEFT ||
             cam.type == exports.TYPE_STEREO_RIGHT)
@@ -707,25 +795,25 @@ function get_camera_angles(cam, dest) {
  */
 exports.get_camera_angles_from_quat = get_camera_angles_from_quat;
 function get_camera_angles_from_quat(quat, dest) {
-    var y_world_cam = m_util.quat_to_dir(quat, m_util.AXIS_Y, _vec3_tmp);
-    var z_world_cam = m_util.quat_to_dir(quat, m_util.AXIS_Z, _vec3_tmp2);
+    var z_world_cam = m_util.quat_to_dir(quat, m_util.AXIS_Z, _vec3_tmp);
+    var my_world_cam = m_util.quat_to_dir(quat, m_util.AXIS_MY, _vec3_tmp2);
 
     // base angles
-    var base_theta = -Math.asin(y_world_cam[1] / m_vec3.length(y_world_cam));
+    var base_theta = -Math.asin(z_world_cam[2] / m_vec3.length(z_world_cam));
     if (Math.abs(base_theta) > Math.PI / 4)
-        var phi_dir = m_vec3.scale(z_world_cam, -m_util.sign(base_theta), _vec3_tmp3);
+        var phi_dir = m_vec3.scale(my_world_cam, -m_util.sign(base_theta), _vec3_tmp3);
     else
-        var phi_dir = m_vec3.scale(y_world_cam, -m_util.sign(z_world_cam[1]), _vec3_tmp3);
-    var base_phi = Math.atan(Math.abs(phi_dir[0] / phi_dir[2]));
+        var phi_dir = m_vec3.scale(z_world_cam, -m_util.sign(my_world_cam[2]), _vec3_tmp3);
+    var base_phi = Math.atan(Math.abs(phi_dir[0] / phi_dir[1]));
 
     // resulted theta
     var theta = base_theta;
-    if (z_world_cam[1] > 0)
+    if (my_world_cam[2] > 0)
         theta = m_util.sign(theta) * Math.PI - theta;
 
     // resulted phi
     var phi = base_phi;
-    if (phi_dir[2] < 0)
+    if (phi_dir[1] > 0)
         phi = Math.PI - phi;
     if (phi_dir[0] < 0)
         phi = 2 * Math.PI - phi;
@@ -771,7 +859,6 @@ function set_frustum(cam, v_fov_or_top, near, far, h_fov_or_right) {
         break;
 
     case exports.TYPE_PERSP_ASPECT:
-        delete cam.fov;
         cam.fov = v_fov_or_top;
         cam.aspect = h_fov_or_right / v_fov_or_top;
         break;
@@ -823,15 +910,14 @@ function get_move_style(camobj) {
 
 exports.set_view = set_view;
 /**
- * uses _mat4_tmp
+ * uses _vec3_tmp, _quat4_tmp, _mat4_tmp
  */
 function set_view(cam, camobj) {
     // ignore scale for view_matrix
-    var trans = m_tsr.get_trans_view(camobj.render.world_tsr);
-    var quat = m_tsr.get_quat_view(camobj.render.world_tsr);
+    var trans = m_tsr.get_trans(camobj.render.world_tsr, _vec3_tmp);
+    var quat = m_tsr.get_quat(camobj.render.world_tsr, _quat4_tmp);
     var wm = m_mat4.fromRotationTranslation(quat, trans, _mat4_tmp);
 
-    m_mat4.rotateX(wm, -Math.PI/2, wm);
     m_mat4.invert(wm, cam.view_matrix);
 
     var x = cam.view_matrix[12];
@@ -840,7 +926,7 @@ function set_view(cam, camobj) {
 
     if (m_scenes.check_active()) {
         var active_scene = m_scenes.get_active();
-        var subs_stereo = m_scenes.get_subs(active_scene, "STEREO");
+        var subs_stereo = m_scenes.get_subs(active_scene, m_subs.STEREO);
     }
 
     if (cam.type == exports.TYPE_STEREO_LEFT ||
@@ -853,18 +939,17 @@ function set_view(cam, camobj) {
         cam.view_matrix[12] -= cam.stereo_eye_dist/2;
 
     if (cam.reflection_plane) {
-        // store original view tsr and view zup tsr before reflecting the view matrix
+        // store original view tsr before reflecting the view matrix
         m_tsr.from_mat4(cam.view_matrix, cam.real_view_tsr);
-        m_tsr.to_zup_view(cam.real_view_tsr, cam.real_view_zup_tsr);
-        m_tsr.invert(cam.real_view_zup_tsr, cam.real_view_inv_zup_tsr);
+        m_tsr.invert(cam.real_view_tsr, cam.real_view_tsr_inv);
+        update_view_refl_matrix(cam);
         reflect_view_matrix(cam);
         reflect_proj_matrix(cam);
     }
 
     // update view tsr and view zup tsr
     m_tsr.from_mat4(cam.view_matrix, cam.view_tsr);
-    m_tsr.to_zup_view(cam.view_tsr, cam.view_zup_tsr);
-    m_tsr.invert(cam.view_zup_tsr, cam.view_inv_zup_tsr);
+    m_tsr.invert(cam.view_tsr, cam.view_tsr_inv);
 
     // update view projection matrix and inversed view projection matrix
     calc_view_proj_inverse(cam);
@@ -874,16 +959,15 @@ function set_view(cam, camobj) {
 }
 
 /**
- * Reflect view matrix during reflection pass
- * uses _mat4_tmp
+ * Update view_refl_matrix during reflection pass
  */
-function reflect_view_matrix(cam) {
+function update_view_refl_matrix(cam) {
     var Nx = cam.reflection_plane[0];
     var Ny = cam.reflection_plane[1];
     var Nz = cam.reflection_plane[2];
     var D  = cam.reflection_plane[3];
 
-    var refl_mat = _mat4_tmp;
+    var refl_mat = cam.view_refl_matrix;
 
     refl_mat[0] = 1.0 - 2.0 * Nx * Nx;
     refl_mat[1] = -2.0 * Nx * Ny;
@@ -904,8 +988,13 @@ function reflect_view_matrix(cam) {
     refl_mat[13] = -2.0 * Ny * D;
     refl_mat[14] = -2.0 * Nz * D;
     refl_mat[15] = 1.0;
+}
 
-    m_mat4.multiply(cam.view_matrix, refl_mat, cam.view_matrix);
+/**
+* Reflect view matrix during reflection pass
+ */
+function reflect_view_matrix(cam) {
+    m_mat4.multiply(cam.view_matrix, cam.view_refl_matrix, cam.view_matrix);
 }
 
 /**
@@ -955,11 +1044,11 @@ function set_view_eye_target_up(cam, eye, target, up) {
     m_mat4.lookAt(eye, target, up, cam.view_matrix);
 
     var active_scene = m_scenes.get_active();
-    var subs_stereo = m_scenes.get_subs(active_scene, "STEREO");
+    var subs_stereo = m_scenes.get_subs(active_scene, m_subs.STEREO);
 
     if (m_scenes.check_active()) {
         var active_scene = m_scenes.get_active();
-        var subs_stereo = m_scenes.get_subs(active_scene, "STEREO");
+        var subs_stereo = m_scenes.get_subs(active_scene, m_subs.STEREO);
     }
 
     if (cam.type == exports.TYPE_STEREO_LEFT ||
@@ -993,8 +1082,8 @@ exports.set_view_trans_quat = function(cam, trans, quat) {
     // eye relative target
     var target = _vec3_tmp;
     target[0] = 0;
-    target[1] =-1;
-    target[2] = 0;
+    target[1] = 0;
+    target[2] =-1;
 
     m_vec3.transformQuat(target, quat, target);
 
@@ -1005,8 +1094,8 @@ exports.set_view_trans_quat = function(cam, trans, quat) {
 
     var up = _vec3_tmp2;
     up[0] = 0;
-    up[1] = 0;
-    up[2] =-1;
+    up[1] = 1;
+    up[2] = 0;
     m_vec3.transformQuat(up, quat, up);
 
     // NOTE: set view directly
@@ -1021,7 +1110,7 @@ function set_look_at(camobj, trans, look_at) {
     var dest_vect = m_vec3.subtract(look_at, trans, _vec3_tmp);
     if (m_vec3.length(dest_vect)) {
         m_vec3.normalize(dest_vect, dest_vect);
-        var quat = m_util.rotation_to_stable(m_util.AXIS_MY, dest_vect, _quat4_tmp);
+        var quat = m_util.rotation_to_stable(m_util.AXIS_MZ, dest_vect, _quat4_tmp);
 
         m_trans.set_rotation(camobj, quat);
     }
@@ -1056,7 +1145,7 @@ function update_camera_transform(obj, cam_scene_data) {
     var cameras = cam_scene_data.cameras;
 
     if (!cameras)
-        throw "Wrong object";
+        m_util.panic("Wrong object");
 
     var shadow_cameras = cam_scene_data.shadow_cameras;
     for (var i = 0; i < shadow_cameras.length; i++) {
@@ -1131,8 +1220,8 @@ function update_camera_upside_down(camobj) {
  */ 
 function is_upside_down(camobj) {
     var quat = m_tsr.get_quat_view(camobj.render.world_tsr);
-    var z_world_cam = m_util.quat_to_dir(quat, m_util.AXIS_Z, _vec3_tmp);
-    return z_world_cam[1] > 0;
+    var y_world_cam = m_util.quat_to_dir(quat, m_util.AXIS_Y, _vec3_tmp);
+    return y_world_cam[2] < 0;
 }
 
 exports.set_horizontal_rot_limits = set_horizontal_rot_limits;
@@ -1292,8 +1381,8 @@ function set_pivot_limits(camobj, limits) {
 
     if (limits) {
         render.pivot_limits = render.pivot_limits || {};
-        render.pivot_limits.min_y = limits.min_y;
-        render.pivot_limits.max_y = limits.max_y;
+        render.pivot_limits.min_z = limits.min_z;
+        render.pivot_limits.max_z = limits.max_z;
     } else
         render.pivot_limits = null;
 }
@@ -1383,6 +1472,7 @@ function clamp_limits(obj) {
                 var ret_angle = m_util.calc_returning_angle(angles[0], right, left);
 
             if (ret_angle) {
+                
                 if (ms == exports.MS_TARGET_CONTROLS)
                     rotate_target_camera(obj, ret_angle, 0);
                 else
@@ -1528,7 +1618,7 @@ function camera_rotate_point_pivot(obj, pivot, d_phi, d_theta) {
         var rot_quat = m_quat.identity(_quat4_tmp);
 
         if (d_phi) {
-            var quat_phi = m_quat.setAxisAngle(m_util.AXIS_Y, d_phi, _quat4_tmp2);
+            var quat_phi = m_quat.setAxisAngle(m_util.AXIS_Z, d_phi, _quat4_tmp2);
             m_quat.multiply(rot_quat, quat_phi, rot_quat);
         }
 
@@ -1563,7 +1653,7 @@ function hover_camera_update_distance(obj) {
     // NOTE: don't use trans->pivot vector, because of errors near pivot (distance ~ 0)
     var trans = m_tsr.get_trans_view(render.world_tsr);
     var quat  = m_tsr.get_quat_view(render.world_tsr);
-    var view_vector = m_util.quat_to_dir(quat, m_util.AXIS_MY, _vec3_tmp);
+    var view_vector = m_util.quat_to_dir(quat, m_util.AXIS_MZ, _vec3_tmp);
     m_vec3.normalize(view_vector, view_vector);
     m_vec3.scale(view_vector, dist, view_vector);
     m_vec3.subtract(render.hover_pivot, view_vector, trans);
@@ -1602,7 +1692,7 @@ function target_cam_clamp_distance(obj) {
         // add scaled camera view vector (the more the better) to stabilize
         // minimum distance clamping
         var quat = m_tsr.get_quat_view(render.world_tsr);
-        var cam_view = m_util.quat_to_dir(quat, m_util.AXIS_MY, _vec3_tmp2);
+        var cam_view = m_util.quat_to_dir(quat, m_util.AXIS_MZ, _vec3_tmp2);
         m_vec3.scale(cam_view, 100 * render.distance_limits.min, cam_view);
         m_vec3.add(dist_vector, cam_view, dist_vector);
 
@@ -1616,12 +1706,12 @@ function target_cam_clamp_distance(obj) {
 function target_clamp_pivot_limits(obj) {
     var render = obj.render;
 
-    var y_old = render.pivot[1];
-    var y_new = m_util.clamp(render.pivot[1], render.pivot_limits.min_y, 
-            render.pivot_limits.max_y);
+    var z_old = render.pivot[2];
+    var z_new = m_util.clamp(render.pivot[2], render.pivot_limits.min_z,
+            render.pivot_limits.max_z);
 
-    if (y_new != y_old) {
-        var correction_vec = m_vec3.set(0, y_new - y_old, 0, _vec3_tmp);
+    if (z_new != z_old) {
+        var correction_vec = m_vec3.set(0, 0, z_new - z_old, _vec3_tmp);
         m_vec3.add(render.pivot, correction_vec, render.pivot);
 
         var trans = m_tsr.get_trans_view(render.world_tsr);
@@ -1642,13 +1732,13 @@ function hover_cam_clamp_axis_limits(obj) {
     }
 
     if (render.hover_vert_trans_limits) {
-        var vert_delta = m_util.clamp(render.hover_pivot[2], 
+        var vert_delta = m_util.clamp(render.hover_pivot[1], 
                 render.hover_vert_trans_limits.min, 
                 render.hover_vert_trans_limits.max) 
-                - render.hover_pivot[2];
-        render.hover_pivot[2] += vert_delta;
+                - render.hover_pivot[1];
+        render.hover_pivot[1] += vert_delta;
         var trans = m_tsr.get_trans_view(render.world_tsr);
-        trans[2] += vert_delta;
+        trans[1] += vert_delta;
     }
 }
 
@@ -1711,7 +1801,7 @@ function set_projection(cam, aspect, keep_proj_view) {
     switch (cam.type) {
     case exports.TYPE_PERSP:
         if (!aspect)
-            throw "No aspect ratio";
+            m_util.panic("No aspect ratio");
         cam.aspect = aspect;
         // continue
     case exports.TYPE_PERSP_ASPECT:
@@ -1721,7 +1811,7 @@ function set_projection(cam, aspect, keep_proj_view) {
 
     case exports.TYPE_ORTHO:
         if (!aspect)
-            throw "No aspect ratio";
+            m_util.panic("No aspect ratio");
         cam.aspect = aspect;
         // continue
     case exports.TYPE_ORTHO_ASPECT:
@@ -1739,7 +1829,7 @@ function set_projection(cam, aspect, keep_proj_view) {
     case exports.TYPE_STEREO_LEFT:
     case exports.TYPE_STEREO_RIGHT:
         if (!aspect)
-            throw "No aspect ratio";
+            m_util.panic("No aspect ratio");
         cam.aspect = aspect;
         set_projection_stereo(cam);
         break;
@@ -1751,7 +1841,7 @@ function set_projection(cam, aspect, keep_proj_view) {
     case exports.TYPE_NONE:
         return;
     default:
-        throw "Wrong camera type: " + cam.type;
+        m_util.panic("Wrong camera type: " + cam.type);
     }
 
     // update view projection matrix
@@ -1798,13 +1888,13 @@ function set_projection_hmd(cam, aspect) {
     }
 
     var active_scene = m_scenes.get_active();
-    var subs_stereo = m_scenes.get_subs(active_scene, "STEREO");
+    var subs_stereo = m_scenes.get_subs(active_scene, m_subs.STEREO);
     if (subs_stereo && subs_stereo.enable_hmd_stereo) {
         // VR mode
-        var up_fov_tan    = Math.tan(m_util.deg_to_rad(cam.hmd_fov[0]) / 2);
-        var right_fov_tan = Math.tan(m_util.deg_to_rad(cam.hmd_fov[1]) / 2);
-        var down_fov_tan  = Math.tan(m_util.deg_to_rad(cam.hmd_fov[2]) / 2);
-        var left_fov_tan  = Math.tan(m_util.deg_to_rad(cam.hmd_fov[3]) / 2);
+        var up_fov_tan    = Math.tan(m_util.deg_to_rad(cam.hmd_fov[0]));
+        var right_fov_tan = Math.tan(m_util.deg_to_rad(cam.hmd_fov[1]));
+        var down_fov_tan  = Math.tan(m_util.deg_to_rad(cam.hmd_fov[2]));
+        var left_fov_tan  = Math.tan(m_util.deg_to_rad(cam.hmd_fov[3]));
 
         // NOTE: save for extraction
         cam.top    = cam.near * up_fov_tan;
@@ -1822,6 +1912,54 @@ function set_projection_hmd(cam, aspect) {
         m_mat4.perspective(m_util.deg_to_rad(cam.fov), aspect, cam.near, cam.far,
                 cam.proj_matrix);
     }
+}
+
+exports.set_color_pick_proj = function(camera, x, y, w, h) {
+    // less is better
+    var sq = 1 / Math.max(h, w);
+
+    switch (camera.type) {
+    case exports.TYPE_PERSP:
+    case exports.TYPE_PERSP_ASPECT:
+        var h2 = h / 2;
+        var w2 = w / 2;
+        var y = - (y - h2) / h2 * Math.tan(m_util.deg_to_rad(camera.fov) / 2.0);
+        var x = (x - w2) / w2 * Math.tan(m_util.deg_to_rad(camera.fov) / 2.0) * camera.aspect;
+        var top    = camera.near * (y + sq);
+        var right  = camera.near * (x + sq);
+        var bottom = camera.near * (y - sq);
+        var left   = camera.near * (x - sq);
+        m_mat4.frustum(left, right, bottom, top, camera.near, camera.far,
+                camera.proj_matrix);
+        break;
+    case exports.TYPE_ORTHO:
+    case exports.TYPE_ORTHO_ASPECT:
+        camera.right = camera.top * camera.aspect;
+        var y = - y / h;
+        var x = x / w;
+        var top    = camera.top + (y + sq) * (camera.top + camera.top);
+        var right  = - camera.right + (x + sq) * (camera.right + camera.right);
+        var bottom = camera.top + (y - sq) * (camera.top + camera.top);
+        var left   = - camera.right + (x - sq) * (camera.right + camera.right);
+        m_mat4.ortho(left, right, bottom, top, camera.near, camera.far,
+                camera.proj_matrix);
+        break;
+    case exports.TYPE_ORTHO_ASYMMETRIC:
+        var y = - y / h;
+        var x = x / w;
+        var top    = camera.top + (y + sq) * (camera.top - camera.bottom);
+        var right  = camera.left + (x + sq) * (camera.right - camera.left);
+        var bottom = camera.top + (y - sq) * (camera.top - camera.bottom);
+        var left   = camera.left + (x - sq) * (camera.right - camera.left);
+        m_mat4.ortho(left, right, bottom, top, camera.near, camera.far,
+                camera.proj_matrix);
+        break;
+    }
+    m_mat4.copy(camera.view_matrix, camera.view_proj_matrix);
+    m_mat4.multiply(camera.proj_matrix, camera.view_proj_matrix,
+            camera.view_proj_matrix);
+    m_util.extract_frustum_planes(camera.view_proj_matrix,
+            camera.frustum_planes);
 }
 
 exports.calc_sky_vp_inverse = calc_sky_vp_inverse;
@@ -1866,7 +2004,7 @@ function extract_frustum_corners(cam, near, far, corners, is_world_space) {
     switch (cam.type) {
 
     case exports.TYPE_NONE:
-        throw "Extraction from NONE camera is not possible";
+        m_util.panic("Extraction from NONE camera is not possible");
         break;
 
     case exports.TYPE_PERSP:
@@ -1942,7 +2080,7 @@ function extract_frustum_corners(cam, near, far, corners, is_world_space) {
         break;
 
     default:
-        throw "Wrong camera type: " + cam.type;
+        m_util.panic("Wrong camera type: " + cam.type);
     }
 
     // near 1,2,3,4 CCW from zero point of view
@@ -1996,7 +2134,7 @@ exports.assign_boundings = function(camobj) {
 
     var render = camobj.render;
 
-    var bb = m_bounds.zero_bounding_box();
+    var bb = m_bounds.create_bb();
 
     bb.min_x =-1;
     bb.max_x = 1;
@@ -2007,12 +2145,12 @@ exports.assign_boundings = function(camobj) {
 
     render.bb_local = bb;
 
-    var bs = m_bounds.create_bounding_sphere(1, [0,0,0]);
+    var bs = m_bounds.bs_from_values(1, m_util.f32([0,0,0]));
     render.bs_local = bs;
 
-    render.bcap_local = m_bounds.create_bounding_capsule(1, bb);
-    render.bcyl_local = m_bounds.create_bounding_cylinder(1, bb);
-    render.bcon_local = m_bounds.create_bounding_cone(1, bb);
+    render.bcap_local = m_bounds.bcap_from_values(1, bb);
+    render.bcyl_local = m_bounds.bcyl_from_values(1, bb);
+    render.bcon_local = m_bounds.bcon_from_values(1, bb);
 }
 
 exports.is_static_camera = is_static_camera;
@@ -2087,6 +2225,18 @@ function init_camera_csm(cam, shadow_params) {
         cam.csm_centers[i] = new Float32Array(3);
 
     cam.csm_radii = new Float32Array(csm_num);
+}
+
+function clone_camera_csm(cam, cam_new) {
+    if (!cam.csm_centers)
+        return;
+
+    var csm_num = cam.csm_centers.length;
+    cam_new.csm_centers = new Array(csm_num);
+    for (var i = 0; i < csm_num; i++)
+        cam_new.csm_centers[i] = m_vec3.clone(cam.csm_centers[i]);
+
+    cam_new.csm_radii = new Float32Array(cam.csm_radii);
 }
 
 exports.csm_far_plane = csm_far_plane;
@@ -2223,13 +2373,13 @@ exports.get_edge = function(cam, edge_type) {
     case exports.TYPE_HMD_RIGHT:
         switch (edge_type) {
         case "LEFT":
-            return Math.tan(m_util.deg_to_rad(cam.hmd_fov[3]) / 2);
+            return Math.tan(m_util.deg_to_rad(cam.hmd_fov[3]));
         case "RIGHT":
-            return Math.tan(m_util.deg_to_rad(cam.hmd_fov[1]) / 2);
+            return Math.tan(m_util.deg_to_rad(cam.hmd_fov[1]));
         case "TOP":
-            return Math.tan(m_util.deg_to_rad(cam.hmd_fov[0]) / 2);
+            return Math.tan(m_util.deg_to_rad(cam.hmd_fov[0]));
         case "BOTTOM":
-            return Math.tan(m_util.deg_to_rad(cam.hmd_fov[2]) / 2);
+            return Math.tan(m_util.deg_to_rad(cam.hmd_fov[2]));
         }
         break;
     default:
@@ -2342,7 +2492,7 @@ exports.set_move_style = function(camobj, move_style) {
     case exports.MS_TARGET_CONTROLS:
         var cam_eye = get_eye(camobj, _vec3_tmp);
         var quat = m_tsr.get_quat_view(camobj.render.world_tsr);
-        var view_vector = m_util.quat_to_dir(quat, m_util.AXIS_MY, _vec3_tmp2);
+        var view_vector = m_util.quat_to_dir(quat, m_util.AXIS_MZ, _vec3_tmp2);
         var pivot = m_vec3.scaleAndAdd(cam_eye, view_vector, PIVOT_DEFAULT_DIST, view_vector);
         m_vec3.copy(pivot, camobj.render.pivot);
         break;

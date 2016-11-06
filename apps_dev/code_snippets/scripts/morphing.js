@@ -7,6 +7,10 @@ var m_data      = require("data");
 var m_scenes    = require("scenes");
 var m_geom      = require("geometry");
 var m_cfg       = require("config");
+var m_obj       = require("objects");
+var m_version   = require("version");
+
+var DEBUG = (m_version.type() === "DEBUG");
 
 var APP_ASSETS_PATH = m_cfg.get_std_assets_path() + "code_snippets/morphing/";
 
@@ -16,6 +20,8 @@ exports.init = function() {
         callback: init_cb,
         show_fps: true,
         autoresize: true,
+        assets_dds_available: !DEBUG,
+        assets_min50_available: !DEBUG,
         console_verbose: true
     });
 }
@@ -70,6 +76,7 @@ function create_slider(obj, key_name, slider_name) {
 
     function slider_changed(e) {
         m_geom.set_shape_key_value(obj, key_name, slider.value);
+        m_obj.update_boundings(obj);
         value_label.textContent = slider.value;
     }
 

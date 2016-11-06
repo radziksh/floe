@@ -12,6 +12,7 @@ var m_scenes    = require("scenes");
 var m_anim      = require("animation");
 var m_cam       = require("camera");
 var m_vec3      = require("vec3");
+var m_cont      = require("container");
 var m_controls  = require("controls");
 var m_trans     = require("transform");
 var m_utils     = require("util");
@@ -20,7 +21,7 @@ var m_mouse     = require("mouse");
 var m_lights    = require("lights");
 var m_preloader = require("preloader");
 var mc_lang     = require("new_year_language");
-var m_cfg      = require("config");
+var m_cfg       = require("config");
 
 var _assets_dir;
 var DEBUG = (m_version.type() === "DEBUG");
@@ -51,15 +52,29 @@ var _lamp_params;
 
 var _disable_interaction = false;
 
+var _pl_bar = null;
+var _pl_caption = null;
+
+
 exports.init = function() {
+    var show_fps = DEBUG;
+
+    var url_params = m_app.get_url_params();
+
+    if (url_params && "show_fps" in url_params)
+        show_fps = true;
+
     set_quality_config();
+
     m_app.init({
         canvas_container_id: "canvas3d",
         callback: init_cb,
         pause_invisible: false,
         physics_enabled: false,
+        show_fps: show_fps,
         key_pause_enabled: false,
         assets_dds_available: !DEBUG,
+        assets_pvr_available: !DEBUG,
         assets_min50_available: !DEBUG,
         console_verbose: DEBUG,
         gl_debug: DEBUG
@@ -67,27 +82,38 @@ exports.init = function() {
 }
 
 function init_cb(canvas_elem, success) {
-
     if(!success) {
         console.log("b4w init failure");
         return;
     }
 
     if (PRELOADING)
-        m_preloader.create_simple_preloader({
-            bg_color:"#00000000",
-            bar_color:"#FFF",
-            background_container_id: "background_image_container",
-            canvas_container_id: "canvas3d",
-            preloader_fadeout: true});
+        create_preloader();
 
     if (!m_main.detect_mobile())
        canvas_elem.addEventListener("mousedown", main_canvas_down);
+
     canvas_elem.addEventListener("touchstart", main_canvas_down);
 
     window.onresize = on_resize;
     on_resize();
     load();
+}
+
+function create_preloader() {
+    m_main.pause();
+
+    var pl_cont = document.querySelector("#pl_cont");
+    var pl_frame = pl_cont.querySelector("#pl_frame");
+
+    _pl_bar = document.querySelector("#pl_bar");
+    _pl_caption = document.querySelector("#pl_caption");
+
+    m_app.css_animate(pl_cont, "opacity", 0, 1, 500, "", "", function() {
+        m_main.resume();
+
+        pl_frame.style.opacity = 1;
+    })
 }
 
 function load() {
@@ -101,6 +127,7 @@ function load() {
 
 function fix_yandex_share_href() {
     var links = document.getElementsByTagName("a");
+
     for (var i =0; i < links.length; i++)
         links[i].href = links[i].href.replace("&amp;", "&");
 }
@@ -390,7 +417,7 @@ function send_button_click_cb() {
 
 function on_resize() {
 
-    m_app.resize_to_container();
+    m_cont.resize_to_container();
 
     var h = window.innerHeight;
     var w = window.innerWidth;
@@ -697,7 +724,7 @@ function create_sensors() {
             var delta_distance = (_default_cam_dist - _current_cam_dist) * (elapsed/LETTER_ANIM_TIME);
             var delta_horisontal_angle = (_default_cam_angles[0] - _current_cam_angles[0]) * (elapsed/LETTER_ANIM_TIME);
             var delta_vertical_angle = (_default_cam_angles[1] - _current_cam_angles[1]) * (elapsed/LETTER_ANIM_TIME);
-            m_trans.move_local(cam_obj, 0, delta_distance, 0);
+            m_trans.move_local(cam_obj, 0, 0, delta_distance);
             m_cam.target_rotate(cam_obj, delta_horisontal_angle, delta_vertical_angle);
         } else
             m_cam.target_set_trans_pivot(cam_obj, _default_cam_eye, null);
@@ -709,7 +736,19 @@ function create_sensors() {
 }
 
 function preloader_cb(percentage) {
-    m_preloader.update_preloader(percentage);
+    _pl_bar.style.width = percentage + "%";
+    _pl_caption.innerHTML = percentage + "%";
+
+    if (percentage == 100) {
+        var pl_cont = document.querySelector("#pl_cont");
+        var pl_frame = pl_cont.querySelector("#pl_frame");
+
+        pl_frame.style.opacity = 0;
+
+        m_app.css_animate(pl_cont, "opacity", 1, 0, 2000, "", "", function() {
+            pl_cont.parentNode.removeChild(pl_cont);
+        })
+    }
 }
 
 });

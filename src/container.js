@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -28,6 +27,7 @@ var m_anchors = require("__anchors");
 var m_cfg     = require("__config");
 var m_data    = require("__data");
 var m_hud     = require("__hud");
+var m_input   = require("__input");
 var m_print   = require("__print");
 var m_scenes  = require("__scenes");
 var m_time    = require("__time");
@@ -35,7 +35,9 @@ var m_trans   = require("__transform");
 var m_util    = require("__util");
 
 var cfg_def = m_cfg.defaults;
+var cfg_lim = m_cfg.context_limits;
 
+var _gl          = null;
 var _canvas      = null;
 var _canvas_hud  = null;
 var _canvas_cont = null;
@@ -50,8 +52,6 @@ var _viewport_layout = {
     offset_top: 0,  // css pixels
     offset_left: 0  // css pixels
 }
-
-var _gl = null;
 
 // default canvas dimensions
 exports.DEFAULT_CANVAS_W = 320;
@@ -292,11 +292,14 @@ function resize(width, height, update_canvas_css) {
     canvas_webgl.width  = cw;
     canvas_webgl.height = ch;
 
-    if (cw > _gl.drawingBufferWidth || ch > _gl.drawingBufferHeight) {
+    var width_limit = Math.min(_gl.drawingBufferWidth,
+            cfg_lim.max_renderbuffer_size, cfg_lim.max_viewport_dims[0]);
+    var height_limit = Math.min(_gl.drawingBufferHeight,
+            cfg_lim.max_renderbuffer_size, cfg_lim.max_viewport_dims[1]);
+    if (cw > width_limit || ch > height_limit) {
         m_print.warn("Canvas size exceeds platform limits, downscaling");
 
-        var downscale = Math.min(_gl.drawingBufferWidth/cw,
-                _gl.drawingBufferHeight/ch);
+        var downscale = Math.min(width_limit / cw, height_limit / ch);
 
         cw *= downscale;
         ch *= downscale;
@@ -325,6 +328,28 @@ function resize(width, height, update_canvas_css) {
 
     // anchors
     m_anchors.update_visibility();
+}
+
+exports.resize_to_container = function(force) {
+    var container = get_container();
+    var canvas = get_canvas();
+
+    var w = container.clientWidth;
+    var h = container.clientHeight;
+
+    if (force || w != canvas.clientWidth || h != canvas.clientHeight) {
+        var vr_display = cfg_def.stereo === "HMD" && m_input.get_webvr_display();
+        // NOTE: don't resize in case of HMD fullscreen (WebVR API 1.0)
+        if (!vr_display || !vr_display.isPresenting)
+            resize(w, h, true);
+    }
+}
+
+exports.reset = function() {
+    _gl          = null;
+    _canvas      = null;
+    _canvas_hud  = null;
+    _canvas_cont = null;
 }
 
 }

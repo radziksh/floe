@@ -4,6 +4,7 @@
 #include <math.h>
 #include "mikktspace.h"
 #include "weldmesh.h"
+#include "vertex_cache.h"
 
 #include <stdint.h>
 #include "./includes/makesdna/DNA_meshdata_types.h"
@@ -109,12 +110,14 @@ PyMODINIT_FUNC INIT_FUNC_NAME(void)
 #define TCO_NUM_COMP 2
 #define GRP_NUM_COMP 1
 #define COL_NUM_COMP 3
+#define SHADE_TNB_NUM_COMP 3
 
 /**
  * Maximum value of some types
  */
+#define UNS_CHAR_MAX 255.0f
 #define SHORT_MAX 32767.0f
-#define USHORT_MAX 65535.0f
+#define UNS_SHORT_MAX 65535.0f
 
 /**
  * Get IDProperty from IDProperty of IDP_IDPARRAY type
@@ -138,6 +141,18 @@ PyMODINIT_FUNC INIT_FUNC_NAME(void)
 #define TCO2_ERR 5
 #define GRP_ERR 6
 #define COL_ERR 7
+#define SHADE_TNB_ERR 8
+
+#define VIDEO_CACHE_SIZE 48
+#define MAX_IND_PART_SIZE 9000
+
+/**
+ * Boundings data
+ */
+#define MATRIX_PRES  0.0005
+#define MAX_ITER_NUM 100
+#define ELL_EPS 0.000000001
+#define MIN_SEMIAXIS_LEN 0.00000001
 
 
 struct TBNCalcData {
@@ -164,6 +179,8 @@ struct SubmeshData {
     float *tco;
     float *tco2;
 
+    float *shade_tangs;
+
     float *grp;
     int grp_num;    // number of vertex groups
 
@@ -184,6 +201,7 @@ struct MeshData {
     float *col;
     float *tco0;
     float *tco1;
+    float *shade_tangs;
     // blender data
     int *origindex; // concordance between poly/loop and tessfaces data
     // counts
@@ -209,6 +227,10 @@ struct BoundingData {
     float min_x;
     float min_y;
     float min_z;
+    // rotated bounding box data
+    float *t_mat;
+    float *rbb_scale;
+    float *r_bbcen;
     // bounding sphere radius
     float srad;
     float scen_x;
@@ -256,10 +278,6 @@ float *falloc(int num) {
     return (float *)malloc(num * sizeof(float));
 }
 
-float clampf(float a, float min, float max) {
-    return MAX(MIN(a, max), min);
-}
-
 /**
  * Allocate memory for unsigned ints
  */
@@ -272,6 +290,17 @@ unsigned int *uialloc(int num) {
  */
 short *shalloc(int num) {
     return (short *)malloc(num * sizeof(short));
+}
+
+/**
+ * Allocate memory for unsigned chars
+ */
+unsigned char *ucalloc(int num) {
+    return (unsigned char *)malloc(num * sizeof(unsigned char));
+}
+
+float clampf(float a, float min, float max) {
+    return MAX(MIN(a, max), min);
 }
 
 /**
@@ -291,7 +320,14 @@ void buffer_float_to_ushort(float *in, unsigned short *out, int length) {
     int i;
 
     for (i = 0; i < length; i++)
-        out[i] = (unsigned short)(clampf(in[i], 0.0f, 1.0f) * USHORT_MAX);
+        out[i] = (unsigned short)(clampf(in[i], 0.0f, 1.0f) * UNS_SHORT_MAX);
+}
+
+void buffer_float_to_uchar(float *in, unsigned char *out, int length) {
+    int i;
+
+    for (i = 0; i < length; i++)
+        out[i] = (unsigned char)(clampf(in[i], 0.0f, 1.0f) * UNS_CHAR_MAX);
 }
 
 /**
@@ -586,14 +622,14 @@ int get_vertex_normals_list(float *normals, Object *obj)
             if (normal_data->subtype == IDP_FLOAT) {
                 f_norm_vector = (float *)normal_data->data.pointer;
                 normals[3 * i] = f_norm_vector[0];
-                normals[3 * i + 1] = f_norm_vector[2];
-                normals[3 * i + 2] = -f_norm_vector[1];
+                normals[3 * i + 1] = f_norm_vector[1];
+                normals[3 * i + 2] = f_norm_vector[2];
             }
             else {
                 d_norm_vector = (double *)normal_data->data.pointer;
                 normals[3 * i] = (float)d_norm_vector[0];
-                normals[3 * i + 1] = (float)d_norm_vector[2];
-                normals[3 * i + 2] = (float)(-d_norm_vector[1]);
+                normals[3 * i + 1] = (float)d_norm_vector[1];
+                normals[3 * i + 2] = (float)(d_norm_vector[2]);
             }
         }
         return NO_ERROR;
@@ -637,6 +673,8 @@ int get_groups_data(float *groups_data, Mesh *mesh, int groups_num)
             weights_count = def_vertices->totweight;
 
             for (j = 0; j < weights_count; j++) {
+                if (dweight[j].def_nr < 0)
+                    return ERR_WRONG_GROUP_INDICES;
                 index = mesh->totvert * dweight[j].def_nr + i;
 
                 if (dweight[j].def_nr >= groups_num)
@@ -776,8 +814,8 @@ void combine_positions_normals(struct MeshData *mesh_data, Mesh *mesh,
                 if (normal_container) {
                     normal = (float *)normal_container->data.pointer;
                     mesh_data->nor[NOR_NUM_COMP * i] = normal[0];
-                    mesh_data->nor[NOR_NUM_COMP * i + 1] = normal[2];
-                    mesh_data->nor[NOR_NUM_COMP * i + 2] = -normal[1];
+                    mesh_data->nor[NOR_NUM_COMP * i + 1] = normal[1];
+                    mesh_data->nor[NOR_NUM_COMP * i + 2] = normal[2];
                 }
             }
             for (block = mesh->key->block.first, j = 0; block; block = block->next, j++) {
@@ -788,8 +826,8 @@ void combine_positions_normals(struct MeshData *mesh_data, Mesh *mesh,
                 for (i = 0; i < mesh_data->base_length; i++) {
                     // NOTE: rotate by 90 degrees around X axis
                     mesh_data->pos[cr_cursor + POS_NUM_COMP * i] = pos_data[i * POS_NUM_COMP];
-                    mesh_data->pos[cr_cursor + POS_NUM_COMP * i + 1] = pos_data[i * POS_NUM_COMP + 2];
-                    mesh_data->pos[cr_cursor + POS_NUM_COMP * i + 2] = -pos_data[i * POS_NUM_COMP + 1];
+                    mesh_data->pos[cr_cursor + POS_NUM_COMP * i + 1] = pos_data[i * POS_NUM_COMP + 1];
+                    mesh_data->pos[cr_cursor + POS_NUM_COMP * i + 2] = pos_data[i * POS_NUM_COMP + 2];
                 }
             }
         } else {
@@ -810,8 +848,8 @@ void combine_positions_normals(struct MeshData *mesh_data, Mesh *mesh,
         for (i = 0; i < mesh_data->base_length; i++) {
             // NOTE: rotate by 90 degrees around X axis
             mesh_data->pos[3 * i] = vertices[i].co[0];
-            mesh_data->pos[3 * i + 1] = vertices[i].co[2];
-            mesh_data->pos[3 * i + 2] = -vertices[i].co[1];
+            mesh_data->pos[3 * i + 1] = vertices[i].co[1];
+            mesh_data->pos[3 * i + 2] = vertices[i].co[2];
         }
     }
 
@@ -821,8 +859,8 @@ void combine_positions_normals(struct MeshData *mesh_data, Mesh *mesh,
             // NOTE: rotate by 90 degrees around X axis
             // NOTE: get normal componenets from "short" type value
             mesh_data->nor[3 * i] = vertices[i].no[0] * (1.0f / 32767.0f);
-            mesh_data->nor[3 * i + 1] = vertices[i].no[2] * (1.0f / 32767.0f);
-            mesh_data->nor[3 * i + 2] = -vertices[i].no[1] * (1.0f / 32767.0f);
+            mesh_data->nor[3 * i + 1] = vertices[i].no[1] * (1.0f / 32767.0f);
+            mesh_data->nor[3 * i + 2] = vertices[i].no[2] * (1.0f / 32767.0f);
         }
     }
 }
@@ -927,14 +965,126 @@ void combine_colors(struct MeshData *mesh_data, Mesh *mesh, int vertex_colors,
     }
 }
 
-void combine_tco(struct MeshData *mesh_data, Mesh *mesh, int mat_index)
+void sub_v3_v3v3(float r[3], const float a[3], const float b[3])
+{
+    r[0] = a[0] - b[0];
+    r[1] = a[1] - b[1];
+    r[2] = a[2] - b[2];
+}
+
+void cross_v3_v3v3(float r[3], const float a[3], const float b[3])
+{
+    r[0] = a[1] * b[2] - a[2] * b[1];
+    r[1] = a[2] * b[0] - a[0] * b[2];
+    r[2] = a[0] * b[1] - a[1] * b[0];
+}
+
+float dot_v3v3(const float a[3], const float b[3])
+{
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+}
+
+void tangent_from_uv(
+        const float uv1[2], const float uv2[2], const float uv3[3],
+        const float co1[3], const float co2[3], const float co3[3],
+        const float n[3],
+        float r_tang[3])
+{
+    const float s1 = uv2[0] - uv1[0];
+    const float s2 = uv3[0] - uv1[0];
+    const float t1 = uv2[1] - uv1[1];
+    const float t2 = uv3[1] - uv1[1];
+    float det = (s1 * t2 - s2 * t1);
+
+    /* otherwise 'r_tang' becomes nan */
+    if (det != 0.0f) {
+        float tangv[3], ct[3], e1[3], e2[3];
+
+        det = 1.0f / det;
+
+        /* normals in render are inversed... */
+        sub_v3_v3v3(e1, co1, co2);
+        sub_v3_v3v3(e2, co1, co3);
+        r_tang[0] = (t2 * e1[0] - t1 * e2[0]) * det;
+        r_tang[1] = (t2 * e1[1] - t1 * e2[1]) * det;
+        r_tang[2] = (t2 * e1[2] - t1 * e2[2]) * det;
+        tangv[0] = (s1 * e2[0] - s2 * e1[0]) * det;
+        tangv[1] = (s1 * e2[1] - s2 * e1[1]) * det;
+        tangv[2] = (s1 * e2[2] - s2 * e1[2]) * det;
+        cross_v3_v3v3(ct, r_tang, tangv);
+
+        /* check flip */
+        if (dot_v3v3(ct, n) > 0.0f) {
+            r_tang[0] = -r_tang[0];
+            r_tang[1] = -r_tang[1];
+            r_tang[2] = -r_tang[2];
+        }
+    }
+    else {
+        r_tang[0] = 0.0f;
+        r_tang[1] = 0.0f;
+        r_tang[2] = 0.0f;
+    }
+}
+
+float *get_vert_tang(int v, float *vert_tang_buff)
+{
+    return vert_tang_buff + v * SHADE_TNB_NUM_COMP;
+}
+
+float *get_vert_norm(int v, float *vert_tang_buff)
+{
+    return vert_tang_buff + v * NOR_NUM_COMP;
+}
+
+void vec3_add(float *tan_buff_ptr, float tang[3]) {
+    tan_buff_ptr[0] += tang[0];
+    tan_buff_ptr[1] += tang[1];
+    tan_buff_ptr[2] += tang[2];
+}
+
+void vec3_set(float *nor_buff_ptr, short nx, short ny, short nz) {
+    float x,y,z,len;
+    x = nx * (1.0f / 32767.0f);
+    y = ny * (1.0f / 32767.0f);
+    z = nz * (1.0f / 32767.0f);
+    len = sqrt(x * x + y * y + z * z);
+    if (len > 0.0) {
+        x /= len;
+        y /= len;
+        z /= len;
+    }
+    nor_buff_ptr[0] = x;
+    nor_buff_ptr[1] = y;
+    nor_buff_ptr[2] = z;
+}
+
+void set_tangent_buff(float *tan_buff, float *tan_ptr, float nor[3], int index) {
+    float tdn = tan_ptr[0] * nor[0] + tan_ptr[1] * nor[1] + tan_ptr[2] * nor[2];
+    float x,y,z,len;
+    x = tan_ptr[0] - nor[0] * tdn;
+    y = tan_ptr[1] - nor[1] * tdn;
+    z = tan_ptr[2] - nor[2] * tdn;
+    len = sqrt(x * x + y * y + z * z);
+    if (len > 0.0) {
+        x /= len;
+        y /= len;
+        z /= len;
+    }
+    tan_buff[index * 3] = x;
+    tan_buff[index * 3 + 1] = y;
+    tan_buff[index * 3 + 2] = z;
+}
+
+void combine_tco(struct MeshData *mesh_data, Mesh *mesh, Object *obj, int mat_index,
+        int tnb_shading)
 {
     MFace *mface = mesh->mface;
     MTFace *mtface;
     CustomData *fdata = &mesh->fdata;
     CustomDataLayer *layer;
 
-    int i,j, tco_size = 0;
+    int i,j, tco_size = 0, shade_tnb_size = 0;
     int layers_counter = 0, tco_counter;
 
     float *curr_tco_buff = NULL;
@@ -948,10 +1098,13 @@ void combine_tco(struct MeshData *mesh_data, Mesh *mesh, int mat_index)
                 for (j = 0; j < mesh->totface; j++) {
                     if (mat_index != -1 && mface[j].mat_nr != mat_index)
                         continue;
-                    if (mface[j].v4)
+                    if (mface[j].v4) {
                         tco_size += 8;
-                    else
+                        shade_tnb_size += 12;
+                    } else {
                         tco_size += 6;
+                        shade_tnb_size += 9;
+                    }
                 }
                 break;
             }
@@ -995,8 +1148,192 @@ void combine_tco(struct MeshData *mesh_data, Mesh *mesh, int mat_index)
     }
 }
 
+int check_vert_normal(int face_ind, int v, int lnv, short *hnormals, short (*lnor)[4][3],
+        int max_vert_num, int uniq_v_num, int *indices)
+{
+    int i, j, max_v_len;
+    short *n = lnor[face_ind][lnv];
+    /* First face, we can use existing vert and assign it current lnor */
+    j = 3 * v;
+    if (hnormals[j] == 0 && hnormals[j + 1] == 0 && hnormals[j + 2] == 0) {
+        hnormals[j] = n[0];
+        hnormals[j + 1] = n[1];
+        hnormals[j + 2] = n[2];
+
+        return v;
+    }
+
+    /* In case existing ver has same normal as current lnor, we can simply use it */
+    if (hnormals[j] == n[0] && hnormals[j + 1] == n[1] && hnormals[j + 2] == n[2]) {
+        return v;
+    }
+
+    max_v_len = max_vert_num * 3;
+    for (i = uniq_v_num * 3; i < max_v_len; i = i + 3) {
+        /* this face already made a copy for this vertex */
+        if (indices[i / 3] == v && hnormals[i] == n[0] && hnormals[i + 1] == n[1]
+                && hnormals[i + 2] == n[2]) {
+            return i / 3;
+        }
+        if (hnormals[i] == 0 && hnormals[i + 1] == 0 && hnormals[i + 2] == 0)
+            break;
+    }
+    return -1;
+}
+
+int check_one_vert(int face_ind, int v, int lnv, short *hnormals, short (*lnor)[4][3],
+        int max_v_num, int uniq_v_num, int curr_v_num, int *indices, int *new_indices)
+{
+    int res = check_vert_normal(face_ind, v, lnv, hnormals, lnor, max_v_num,
+            uniq_v_num, indices);
+    if (res < 0) {
+        hnormals[curr_v_num * 3] = lnor[face_ind][lnv][0];
+        hnormals[curr_v_num * 3 + 1] = lnor[face_ind][lnv][1];
+        hnormals[curr_v_num * 3 + 2] = lnor[face_ind][lnv][2];
+        indices[curr_v_num] = v;
+        new_indices[face_ind * 4 + lnv] = curr_v_num;
+        curr_v_num++;
+    } else if (res != v)
+        new_indices[face_ind * 4 + lnv] = res;
+
+    return curr_v_num;
+}
+
+float *calc_tri_shade_tans(Mesh *mesh, short (*split_normals)[4][3], int mat_index)
+{
+    int v1, v2, v3, v4, i, j, max_v_num = mesh->totface * 4,
+        uniq_v_num = mesh->totvert;
+    int curr_v_num = uniq_v_num, *indices, *new_indices, vnum_count, tnb_shad_counter = 0;
+    int shade_tnb_size = 0, vnum = 0, ver_tri_ind;
+    short *lnormals = malloc(3 * max_v_num * sizeof(short));
+    memset(lnormals, 0, 3 * max_v_num * sizeof(short));
+    indices = malloc(max_v_num * sizeof(int));
+    new_indices = malloc(max_v_num * sizeof(int));
+    CustomData *fdata = &mesh->fdata;
+    CustomDataLayer *layer;
+    MVert *vertices = mesh->mvert;
+    MTFace *mtface;
+    float *tang = falloc(3);
+    float *no = falloc(3);
+    float *vert_tang_buff = NULL;
+    float *tri_tnb_shad = NULL;
+    float *tav, *shade_tang_buff, *uv1, *uv2, *uv3, *uv4;
+    int t_indices[] = {0, 1, 2, 0, 2, 3};
+    for (i = 0; i < max_v_num; i++)
+        if (i < uniq_v_num)
+            indices[i] = i;
+        else
+            indices[i] = -1;
+    MFace *mface = mesh->mface;
+    /* prepare normals info */
+    for (i = 0; i < mesh->totface; i++) {
+        v1 = mface[i].v1;
+        v2 = mface[i].v2;
+        v3 = mface[i].v3;
+        v4 = mface[i].v4;
+        new_indices[i * 4] = v1;
+        new_indices[i * 4 + 1] = v2;
+        new_indices[i * 4 + 2] = v3;
+        new_indices[i * 4 + 3] = v4;
+        curr_v_num = check_one_vert(i, v1, 0, lnormals, split_normals, max_v_num,
+                uniq_v_num, curr_v_num, indices, new_indices);
+        curr_v_num = check_one_vert(i, v2, 1, lnormals, split_normals, max_v_num,
+                uniq_v_num, curr_v_num, indices, new_indices);
+        curr_v_num = check_one_vert(i, v3, 2, lnormals, split_normals, max_v_num,
+                uniq_v_num, curr_v_num, indices, new_indices);
+        if (v4) {
+            curr_v_num = check_one_vert(i, v4, 3, lnormals, split_normals, max_v_num,
+                uniq_v_num, curr_v_num, indices, new_indices);
+            shade_tnb_size += 12;
+            vnum += 6;
+        } else {
+            vnum += 3;
+            shade_tnb_size += 9;
+        }
+    }
+
+    vert_tang_buff = falloc(curr_v_num * SHADE_TNB_NUM_COMP);
+    memset(vert_tang_buff, 0, SHADE_TNB_NUM_COMP * curr_v_num * sizeof(float));
+    /* we use only the first layer */
+    for (i = 0, layer = fdata->layers; i < fdata->totlayer; i++, layer++) {
+        if (layer->type == CD_MTFACE) {
+            mtface = (MTFace *)layer->data;
+            for (j = 0; j < mesh->totface; j++) {
+                uv1 = mtface[j].uv[0];
+                uv2 = mtface[j].uv[1];
+                uv3 = mtface[j].uv[2];
+                uv4 = mtface[j].uv[3];
+
+                v1 = new_indices[j * 4];
+                v2 = new_indices[j * 4 + 1];
+                v3 = new_indices[j * 4 + 2];
+                v4 = new_indices[j * 4 + 3];
+
+                calc_face_normal(mface[j], vertices, no);
+
+                tangent_from_uv(uv1, uv2, uv3, vertices[mface[j].v1].co,
+                        vertices[mface[j].v2].co, vertices[mface[j].v3].co, no, tang);
+                tav = get_vert_tang(v1, vert_tang_buff);
+                vec3_add(tav, tang);
+                tav = get_vert_tang(v2, vert_tang_buff);
+                vec3_add(tav, tang);
+                tav = get_vert_tang(v3, vert_tang_buff);
+                vec3_add(tav, tang);
+
+                if (v4) {
+                    tangent_from_uv(uv1, uv3, uv4, vertices[mface[j].v1].co, vertices[mface[j].v3].co,
+                            vertices[mface[j].v4].co, no, tang);
+                    tav = get_vert_tang(v4, vert_tang_buff);
+                    vec3_add(tav, tang);
+                    tav = get_vert_tang(v1, vert_tang_buff);
+                    vec3_add(tav, tang);
+                    tav = get_vert_tang(v3, vert_tang_buff);
+                    vec3_add(tav, tang);
+                }
+            }
+            break;
+        }
+    }
+    shade_tang_buff = falloc(shade_tnb_size);
+    for (j = 0; j < curr_v_num; j++) {
+        tav = get_vert_tang(j, vert_tang_buff);
+        no[0] = lnormals[j * 3] * (1.0f / 32767.0f);
+        no[1] = lnormals[j * 3 + 1] * (1.0f / 32767.0f);
+        no[2] = lnormals[j * 3 + 2] * (1.0f / 32767.0f);
+        set_tangent_buff(shade_tang_buff, tav, no, j);
+    }
+
+    /* triangulate shade tangents*/
+    tri_tnb_shad = falloc(vnum * SHADE_TNB_NUM_COMP);
+    for (i = 0; i < mesh->totface; i++) {
+        v1 = new_indices[i * 4];
+        v2 = new_indices[i * 4 + 1];
+        v3 = new_indices[i * 4 + 2];
+        v4 = new_indices[i * 4 + 3];
+        if (new_indices[i * 4 + 3])
+            vnum_count = 6;
+        else
+            vnum_count = 3;
+        for (j = 0; j < vnum_count; j++) {
+            ver_tri_ind = new_indices[i * 4 + t_indices[j]];
+            tri_tnb_shad[tnb_shad_counter] = shade_tang_buff[ver_tri_ind * 3];
+            tri_tnb_shad[tnb_shad_counter + 1] = shade_tang_buff[ver_tri_ind * 3 + 1];
+            tri_tnb_shad[tnb_shad_counter + 2] = shade_tang_buff[ver_tri_ind * 3 + 2];
+            tnb_shad_counter += 3;
+        }
+    }
+
+    free(lnormals);
+    free(indices);
+    free(new_indices);
+    free(tang); free(no);
+    free(vert_tang_buff); free(shade_tang_buff);
+
+    return tri_tnb_shad;
+}
+
 void triangulate_mesh(struct MeshData *mesh_data, Mesh *mesh, int mat_index, 
-        int disab_flat, int edited_normals)
+        int disab_flat, int edited_normals, int tnb_shading)
 {
     // TODO: divide
     MFace *mface = mesh->mface;
@@ -1013,8 +1350,9 @@ void triangulate_mesh(struct MeshData *mesh_data, Mesh *mesh, int mat_index,
     float *tri_tco1 = NULL;
     float *tri_grp = NULL;
     float *tri_col = NULL;
+    float *tri_tnb_shad = NULL;
 
-    int is_flat;
+    int is_flat = 0;
     int vnum = 0, vnum_count, tco_count;
     int *v_indices = malloc(6 * sizeof(int));
     int t_indices[] = {0, 1, 2, 0, 2, 3};
@@ -1047,7 +1385,7 @@ void triangulate_mesh(struct MeshData *mesh_data, Mesh *mesh, int mat_index,
     if (mesh_data->origindex != NULL)
         vcol_indices = malloc(6 * sizeof(int));
 
-    if (edited_normals)
+    if (edited_normals || tnb_shading)
         split_normals = custom_data_get_layer(&mesh->fdata, CD_TESSLOOPNORMAL);
 
     // NOTE: get triangulated sizes
@@ -1079,7 +1417,7 @@ void triangulate_mesh(struct MeshData *mesh_data, Mesh *mesh, int mat_index,
     if (mesh_data->uv_layers_count > 0)
         tri_tco0 = falloc(vnum * 2);
     if (mesh_data->uv_layers_count > 1)
-       tri_tco1 = falloc(vnum * 2);
+        tri_tco1 = falloc(vnum * 2);
     if (mesh_data->groups_num > 0)
         tri_grp = falloc(vnum * mesh_data->groups_num);
     if (mesh_data->col_layers_count)
@@ -1130,20 +1468,19 @@ void triangulate_mesh(struct MeshData *mesh_data, Mesh *mesh, int mat_index,
                         case 3:
                             l = 0;
                             break;
-                            case 4:
+                        case 4:
                             l = 2;
                             break;
-                            case 5:
+                        case 5:
                             l = 3;
                         }
                     }
 
                     tri_norm[tri_frame_offset + face_offset + k * 3] = split_normals[i][l][0]* (1.0f / 32767.0f);
-                    tri_norm[tri_frame_offset + face_offset + k * 3 + 1] = split_normals[i][l][2]* (1.0f / 32767.0f);
-                    tri_norm[tri_frame_offset + face_offset + k * 3 + 2] = -split_normals[i][l][1]* (1.0f / 32767.0f);
+                    tri_norm[tri_frame_offset + face_offset + k * 3 + 1] = split_normals[i][l][1]* (1.0f / 32767.0f);
+                    tri_norm[tri_frame_offset + face_offset + k * 3 + 2] = split_normals[i][l][2]* (1.0f / 32767.0f);
 
-                }
-                else {
+                } else {
                     if (!is_flat) {
                         tri_norm[tri_frame_offset + face_offset + k * 3]
                                 = mesh_data->nor[frame_offset + vert_offset];
@@ -1151,13 +1488,11 @@ void triangulate_mesh(struct MeshData *mesh_data, Mesh *mesh, int mat_index,
                                 = mesh_data->nor[frame_offset + vert_offset + 1];
                         tri_norm[tri_frame_offset + face_offset + k * 3 + 2]
                                 = mesh_data->nor[frame_offset + vert_offset + 2];
-                }
-                else {
-                    calc_face_normal(mface[i], mvert, no);
-                    // rotate by 90 degrees around X axis
-                    tri_norm[tri_frame_offset + face_offset + k * 3] = no[0];
-                    tri_norm[tri_frame_offset + face_offset + k * 3 + 1] = no[2];
-                    tri_norm[tri_frame_offset + face_offset + k * 3 + 2] = -no[1];
+                    } else {
+                        calc_face_normal(mface[i], mvert, no);
+                        tri_norm[tri_frame_offset + face_offset + k * 3] = no[0];
+                        tri_norm[tri_frame_offset + face_offset + k * 3 + 1] = no[1];
+                        tri_norm[tri_frame_offset + face_offset + k * 3 + 2] = no[2];
                     }
                 }
             }
@@ -1244,12 +1579,16 @@ void triangulate_mesh(struct MeshData *mesh_data, Mesh *mesh, int mat_index,
         color_face_offset += vnum_count * COL_NUM_COMP;
     }
 
+    if (tnb_shading && split_normals)
+        tri_tnb_shad = calc_tri_shade_tans(mesh, split_normals, mat_index);
+
     free(mesh_data->pos);
     free(mesh_data->nor);
     free(mesh_data->grp);
     free(mesh_data->col);
     free(mesh_data->tco0);
     free(mesh_data->tco1);
+    free(mesh_data->shade_tangs);
 
     mesh_data->pos = tri_pos;
     mesh_data->nor = tri_norm;
@@ -1258,6 +1597,8 @@ void triangulate_mesh(struct MeshData *mesh_data, Mesh *mesh, int mat_index,
     mesh_data->tco0 = tri_tco0;
     mesh_data->tco1 = tri_tco1;
     mesh_data->base_length = vnum;
+    mesh_data->shade_tangs = tri_tnb_shad;
+
 }
 
 float *optimize_vertex_colors(struct SubmeshData *data, unsigned int *channels_presence) {
@@ -1419,7 +1760,7 @@ void va_extract(float *in, float *out, int partitions, int offset, int stride, i
  * vnum, frames, grp_num, col_layers, inum must be initialized
  */
 void allocate_submesh(struct SubmeshData *data, int use_normals, int use_tangents,
-                      int use_second_uv)
+                      int use_second_uv, int use_shade_tnb)
 {
     data->pos = malloc(POS_NUM_COMP * data->frames * data->vnum * sizeof(float));
     if (use_normals)
@@ -1439,6 +1780,11 @@ void allocate_submesh(struct SubmeshData *data, int use_normals, int use_tangent
         data->tco = NULL;
         data->tco2 = NULL;
     }
+
+    if (use_shade_tnb)
+        data->shade_tangs = malloc(SHADE_TNB_NUM_COMP * data->vnum * sizeof(float));
+    else
+        data->shade_tangs = NULL;
 
     if (data->grp_num)
         data->grp = malloc(GRP_NUM_COMP * data->grp_num * data->vnum * sizeof(float));
@@ -1472,6 +1818,123 @@ void free_submesh(struct SubmeshData *data)
     free(data->indices);
 }
 
+int find_larg_num(int *array, int size)
+{
+    int i, larg_num = -1;
+    for(i = 0; i < size; i++){
+        if(array[i] > larg_num)
+            larg_num = array[i];
+    }
+    return larg_num;
+}
+
+void radix_sort(int *array, int size)
+{
+    int i;
+    int *semi_sorted = malloc(size * sizeof(int));
+    int sig_digit = 1;
+    int larg_num = find_larg_num(array, size);
+    while (larg_num / sig_digit > 0) {
+        int bucket[10] = { 0 };
+        for (i = 0; i < size; i++)
+            bucket[(array[i] / sig_digit) % 10]++;
+        for (i = 1; i < 10; i++)
+            bucket[i] += bucket[i - 1];
+        for (i = size - 1; i >= 0; i--)
+            semi_sorted[--bucket[(array[i] / sig_digit) % 10]] = array[i];
+        for (i = 0; i < size; i++)
+            array[i] = semi_sorted[i];
+        sig_digit *= 10;
+    }
+    free(semi_sorted);
+}
+
+int *find_uniq_verts(int *vertices, int *vert_num, int len)
+{
+    int i, *uniq_vertices, ind = 1, num = 1;
+    int *sorted_vert = malloc(len * sizeof(int));
+    memcpy(sorted_vert, vertices, len * sizeof(int));
+    radix_sort(sorted_vert, len);
+    for (i = 1; i < len; i++)
+        if (sorted_vert[i] != sorted_vert[i-1])
+            num++;
+    uniq_vertices = malloc(num * sizeof(int));
+    uniq_vertices[0] = sorted_vert[0];
+    for (i = 1; i < len; i++)
+        if (sorted_vert[i] != sorted_vert[i-1]) {
+            uniq_vertices[ind] = sorted_vert[i];
+            ind++;
+        }
+    free(sorted_vert);
+    *vert_num = num;
+    return uniq_vertices;
+}
+
+void replace_indices(int *vertices, int *uniq_vertices, int vert_len, int uniq_vert_len)
+{
+    int i, j, curr_vert;
+    for (i = 0; i < uniq_vert_len; i++) {
+        curr_vert = uniq_vertices[i];
+        for (j = 0; j < vert_len; j++)
+            if (vertices[j] == curr_vert)
+                vertices[j] = i;
+    }
+}
+
+void restore_indices(int *vertices, int *uniq_vertices, int vert_len, int uniq_vert_len)
+{
+    int i, j, curr_vert;
+    for (i = uniq_vert_len - 1; i >= 0; i--) {
+        curr_vert = uniq_vertices[i];
+        for (j = 0; j < vert_len; j++)
+            if (vertices[j] == i)
+                vertices[j] = curr_vert;
+    }
+}
+/**
+ * Sort face indices for optimal usage of GPU cache.
+ * Indices is separated on chunks, each chunk is sorted independently.
+ */
+void optimize_faces(int *indices, int ind_len, int vnum)
+{
+    int chunk_num, last_chunk_len, offset, len, vert_num, i;
+    int *chunk_index_list, *new_chunk_index_list, *new_index_list = NULL,
+         *uniq_vertices = NULL;
+
+    new_index_list = malloc(ind_len * sizeof(int));
+    chunk_num = ind_len / MAX_IND_PART_SIZE;
+    if (chunk_num) {
+        last_chunk_len = ind_len % MAX_IND_PART_SIZE;
+        if (last_chunk_len)
+            chunk_num++;
+        chunk_index_list = malloc(MAX_IND_PART_SIZE * sizeof(int));
+        new_chunk_index_list = malloc(MAX_IND_PART_SIZE * sizeof(int));
+        len = MAX_IND_PART_SIZE;
+        for (i = 0; i < chunk_num; i++) {
+            offset = i * MAX_IND_PART_SIZE;
+            if (last_chunk_len && i == chunk_num - 1)
+                len = last_chunk_len;
+            memcpy(chunk_index_list, indices + offset, len * sizeof(int));
+            uniq_vertices = find_uniq_verts(chunk_index_list, &vert_num, len);
+            replace_indices(chunk_index_list, uniq_vertices, len, vert_num);
+            OptimizeFaces(chunk_index_list, len, vert_num, new_chunk_index_list,
+                    VIDEO_CACHE_SIZE);
+            restore_indices(new_chunk_index_list, uniq_vertices, len, vert_num);
+            memcpy(new_index_list + offset, new_chunk_index_list,
+                    len * sizeof(int));
+            free(uniq_vertices);
+        }
+        free(chunk_index_list);
+        free(new_chunk_index_list);
+    } else
+        OptimizeFaces(indices, ind_len, vnum, new_index_list, VIDEO_CACHE_SIZE);
+
+    for (i = 0; i < ind_len; i++)
+        indices[i] = new_index_list[i];
+
+    free(new_index_list);
+}
+
 int weld_submesh(struct SubmeshData *src, struct SubmeshData *dst)
 {
     int i, offset;
@@ -1483,13 +1946,14 @@ int weld_submesh(struct SubmeshData *src, struct SubmeshData *dst)
     int tan_floats = src->tan ? TAN_NUM_COMP * src->frames : 0;
     int tco_floats = src->tco ? TCO_NUM_COMP : 0;
     int tco2_floats = src->tco2 ? TCO_NUM_COMP : 0;
+    int shade_tnb_floats = src->shade_tangs ? SHADE_TNB_NUM_COMP : 0;
 
     int grp_floats = src->grp ? GRP_NUM_COMP * src->grp_num : 0;
     int col_floats = src->col ? COL_NUM_COMP * src->col_layers : 0;
 
     /* floats per vertex - stride */
     int fpv = pos_floats + nor_floats + tan_floats + tco_floats + tco2_floats +
-            grp_floats + col_floats;
+            grp_floats + col_floats + shade_tnb_floats;
 
     float *vdata_in = falloc(fpv * src->vnum);
     float *vdata_out = falloc(fpv * src->vnum);
@@ -1516,6 +1980,10 @@ int weld_submesh(struct SubmeshData *src, struct SubmeshData *dst)
     if (!status)
         return TCO2_ERR;
     offset += tco2_floats;
+    status = va_store(src->shade_tangs, vdata_in, 1, offset, fpv, src->vnum, SHADE_TNB_NUM_COMP);
+    if (!status)
+        return SHADE_TNB_ERR;
+    offset += shade_tnb_floats;
     status = va_store(src->grp, vdata_in, src->grp_num, offset, fpv, src->vnum, GRP_NUM_COMP);
     if (!status)
         return GRP_ERR;
@@ -1524,19 +1992,15 @@ int weld_submesh(struct SubmeshData *src, struct SubmeshData *dst)
     if (!status)
         return COL_ERR;
     /* store submesh in input array */
-
     assert(offset + col_floats == fpv);
-
     dst->vnum = WeldMesh(remap_table, vdata_out, vdata_in, src->vnum, fpv);
     dst->frames = src->frames;
     dst->grp_num = src->grp_num;
     dst->col_layers = src->col_layers;
     dst->inum = src->vnum;
 
-    allocate_submesh(dst, nor_floats, tan_floats, tco2_floats);
-
+    allocate_submesh(dst, nor_floats, tan_floats, tco2_floats, shade_tnb_floats);
     /* extract submesh from output array */
-
     offset = 0;
     va_extract(vdata_out, dst->pos, dst->frames, offset, fpv, dst->vnum, POS_NUM_COMP);
 
@@ -1553,16 +2017,21 @@ int weld_submesh(struct SubmeshData *src, struct SubmeshData *dst)
     va_extract(vdata_out, dst->tco2, 1, offset, fpv, dst->vnum, TCO_NUM_COMP);
 
     offset += tco2_floats;
+    va_extract(vdata_out, dst->shade_tangs, 1, offset, fpv, dst->vnum, SHADE_TNB_NUM_COMP);
+
+    offset += shade_tnb_floats;
     va_extract(vdata_out, dst->grp, dst->grp_num, offset, fpv, dst->vnum, GRP_NUM_COMP);
 
     offset += grp_floats;
     va_extract(vdata_out, dst->col, dst->col_layers, offset, fpv, dst->vnum, COL_NUM_COMP);
-    
+
     assert(offset + col_floats == fpv);
 
     /* store indices */
     for (i = 0; i < src->vnum; i++)
         dst->indices[i] = remap_table[i];
+
+    optimize_faces(dst->indices, dst->inum, dst->vnum);
 
     return 0;
 }
@@ -1586,6 +2055,7 @@ static PyObject *calc_submesh_empty(void)
     PyDict_SetItemString(result, "texcoord2", empty_buff);
     PyDict_SetItemString(result, "color", empty_buff);
     PyDict_SetItemString(result, "group", empty_buff);
+    PyDict_SetItemString(result, "shade_tangs", empty_buff);
 
     return result;
 }
@@ -1627,7 +2097,7 @@ static PyObject *calc_submesh(struct MeshData *mesh_data, int arr_to_str,
     short *nor_short = NULL;
     short *tan_short = NULL;
     unsigned short *grp_ushort = NULL;
-    unsigned short *col_ushort = NULL;
+    unsigned char *col_uchar = NULL;
 
     int i;
     int nor_needed;
@@ -1677,6 +2147,8 @@ static PyObject *calc_submesh(struct MeshData *mesh_data, int arr_to_str,
     src.tco = mesh_data->tco0;
     src.tco2 = mesh_data->tco1;
 
+    src.shade_tangs = mesh_data->shade_tangs;
+
     src.grp = mesh_data->grp;
     src.grp_num = mesh_data->groups_num;
 
@@ -1693,7 +2165,6 @@ static PyObject *calc_submesh(struct MeshData *mesh_data, int arr_to_str,
         calculate_shape_keys_delta(&src);
 
     status = weld_submesh(&src, &dst);
-
     if (status > 0)
     {
         switch(status) {
@@ -1717,6 +2188,9 @@ static PyObject *calc_submesh(struct MeshData *mesh_data, int arr_to_str,
             break;
         case COL_ERR:
             PyErr_SetString(PyExc_ValueError, "Corrupted file: Wrong vertex color values");
+            break;
+        case SHADE_TNB_ERR:
+            PyErr_SetString(PyExc_ValueError, "Corrupted file: Wrong shading tangents values");
             break;
         }
         return NULL;
@@ -1769,6 +2243,11 @@ static PyObject *calc_submesh(struct MeshData *mesh_data, int arr_to_str,
                 length * sizeof(short));
         PyDict_SetItemString(result, "group", bytes_buff);
     }
+    if (dst.shade_tangs) {
+        bytes_buff = PyByteArray_FromStringAndSize((char *)dst.shade_tangs, 
+                dst.vnum * SHADE_TNB_NUM_COMP * sizeof(float));
+        PyDict_SetItemString(result, "shade_tangs", bytes_buff);
+    }
 
     if (dst.col) {
         if (mesh_data->need_vcol_optimization) {
@@ -1777,16 +2256,16 @@ static PyObject *calc_submesh(struct MeshData *mesh_data, int arr_to_str,
 
             length = dst.vnum * get_optimized_channels_total(
                     mesh_data->channels_presence, dst.col_layers);
-            col_ushort = (unsigned short *)shalloc(length);
-            buffer_float_to_ushort(optimized_vcols, col_ushort, length);
+            col_uchar = ucalloc(length);
+            buffer_float_to_uchar(optimized_vcols, col_uchar, length);
         } else {
             length = dst.vnum * mesh_data->col_layers_count * COL_NUM_COMP;
-            col_ushort = (unsigned short *)shalloc(length);
-            buffer_float_to_ushort(dst.col, col_ushort, length);
+            col_uchar = ucalloc(length);
+            buffer_float_to_uchar(dst.col, col_uchar, length);
         }
 
-        bytes_buff = PyByteArray_FromStringAndSize((char *)col_ushort, 
-                length * sizeof(short));
+        bytes_buff = PyByteArray_FromStringAndSize((char *)col_uchar, 
+                length * sizeof(unsigned char));
         PyDict_SetItemString(result, "color", bytes_buff);
     }
     /* cleanup */
@@ -1798,6 +2277,7 @@ static PyObject *calc_submesh(struct MeshData *mesh_data, int arr_to_str,
     free(mesh_data->grp);
     free(mesh_data->col);
     free(mesh_data->channels_presence);
+    free(mesh_data->shade_tangs);
     if (shape_keys) {
         free(mesh_data->relatives);
         free(mesh_data->vg_indices);
@@ -1819,21 +2299,169 @@ void find_max_min_bb(struct BoundingData *bdata, float x, float y, float z) {
     bdata->min_z = MIN(bdata->min_z, z);
 }
 
+float calc_canonical_mat_error(float m[])
+{
+    return sqrt(m[1] * m[1] + m[2] * m[2] + m[5] * m[5]);
+}
+
+void mat3_copy(float *matrix, float *out)
+{
+    for (int i = 0; i < 9; i++)
+        out[i] = matrix[i];
+}
+
+void mat3_identity(float *matrix)
+{
+    matrix[0] = matrix[4] = matrix[8] = 1.0;
+    matrix[1] = matrix[2] = matrix[3] = matrix[5] = matrix[6] = matrix[7] = 0.0;
+}
+
+void mat3_transpose(float m[], float *out)
+{
+    out[0] = m[0];
+    out[1] = m[3];
+    out[2] = m[6];
+    out[3] = m[1];
+    out[4] = m[4];
+    out[5] = m[7];
+    out[6] = m[2];
+    out[7] = m[5];
+    out[8] = m[8];
+}
+
+void mat3_multiply(float a[], float b[], float *out)
+{
+    float a00 = a[0], a01 = a[1], a02 = a[2],
+        a10 = a[3], a11 = a[4], a12 = a[5],
+        a20 = a[6], a21 = a[7], a22 = a[8],
+
+        b00 = b[0], b01 = b[1], b02 = b[2],
+        b10 = b[3], b11 = b[4], b12 = b[5],
+        b20 = b[6], b21 = b[7], b22 = b[8];
+
+    out[0] = b00 * a00 + b01 * a10 + b02 * a20;
+    out[1] = b00 * a01 + b01 * a11 + b02 * a21;
+    out[2] = b00 * a02 + b01 * a12 + b02 * a22;
+
+    out[3] = b10 * a00 + b11 * a10 + b12 * a20;
+    out[4] = b10 * a01 + b11 * a11 + b12 * a21;
+    out[5] = b10 * a02 + b11 * a12 + b12 * a22;
+
+    out[6] = b20 * a00 + b21 * a10 + b22 * a20;
+    out[7] = b20 * a01 + b21 * a11 + b22 * a21;
+    out[8] = b20 * a02 + b21 * a12 + b22 * a22;
+}
+
+void mat3_invert(float a[], float *out)
+{
+    float a00 = a[0], a01 = a[1], a02 = a[2],
+        a10 = a[3], a11 = a[4], a12 = a[5],
+        a20 = a[6], a21 = a[7], a22 = a[8],
+
+        b01 = a22 * a11 - a12 * a21,
+        b11 = -a22 * a10 + a12 * a20,
+        b21 = a21 * a10 - a11 * a20,
+
+
+        // Calculate the determinant
+        det = a00 * b01 + a01 * b11 + a02 * b21;
+
+    if (!det) { 
+        return; 
+    }
+    det = 1.0 / det;
+
+    out[0] = b01 * det;
+    out[1] = (-a22 * a01 + a02 * a21) * det;
+    out[2] = (a12 * a01 - a02 * a11) * det;
+    out[3] = b11 * det;
+    out[4] = (a22 * a00 - a02 * a20) * det;
+    out[5] = (-a12 * a00 + a02 * a10) * det;
+    out[6] = b21 * det;
+    out[7] = (-a21 * a00 + a01 * a20) * det;
+    out[8] = (a11 * a00 - a01 * a10) * det;
+}
+
+void find_elem_rotation_matrix(float m[], float *dest)
+{
+    float max = m[1], fi;
+    int ind = 1, i, ii, jj;
+
+    for (i = 2; i < 9; i++) {
+        if (i != 4 && i!= 8 && fabs(m[i]) > fabs(max)) {
+            max = m[i];
+            ind = i;
+        }
+    }
+    ii = ind / 3;
+    jj = ind % 3;
+    fi = 0.5 * atan(2 * max / (m[ii * 3 + ii] - m[jj * 3 + jj]));
+
+    for (i = 0; i < 9; i++)
+        if (i == 0 || i == 4 || i == 8)
+            dest[i] = 1.0;
+        else
+            dest[i] = 0.0;
+    dest[jj + ii * 3] = - sin(fi);
+    dest[ii + jj * 3] = sin(fi);
+    dest[ii + ii * 3] = cos(fi);
+    dest[jj + jj * 3] = cos(fi);
+}
+
+void find_eigenvectors(float mat[], float err, float *dest)
+{
+    int counter = 1;
+    float matrix[9], rot_matrix[9], rot_matrix_t[9], mat3_tmp[9];
+
+    mat3_copy(mat, matrix);
+    if (calc_canonical_mat_error(matrix) < err) {
+        mat3_identity(dest);
+        return;
+    }
+
+    find_elem_rotation_matrix(matrix, rot_matrix);
+    mat3_transpose(rot_matrix, rot_matrix_t);
+    mat3_multiply(matrix, rot_matrix_t, mat3_tmp);
+    mat3_multiply(rot_matrix, mat3_tmp, matrix);
+    mat3_copy(rot_matrix, dest);
+    
+    while(err < calc_canonical_mat_error(matrix) && counter < MAX_ITER_NUM) {
+        find_elem_rotation_matrix(matrix, rot_matrix);
+        mat3_transpose(rot_matrix, rot_matrix_t);
+        mat3_multiply(matrix, rot_matrix_t, mat3_tmp);
+        mat3_multiply(rot_matrix, mat3_tmp, matrix);
+        mat3_multiply(rot_matrix, dest, dest);
+        counter++;
+    }
+}
+
+void transform_vec3_by_mat3(float v[], float m[], float *out)
+{
+    float x = v[0], y = v[1], z = v[2];
+    out[0] = x * m[0] + y * m[3] + z * m[6];
+    out[1] = x * m[1] + y * m[4] + z * m[7];
+    out[2] = x * m[2] + y * m[5] + z * m[8];
+}
+
 void calc_bounding_data(struct BoundingData *bdata, Mesh *mesh, int mat_index) {
     int i,j;
-    int v1, v2, v3, v4, v;
+    int v1, v2, v3, v4, v, num_vert = 0;
     float x,y,z;
     float x_width;
     float y_width;
     float z_width;
     float scen_dist;
     float ccen_dist;
-    float scen_tmp_dist;
-    float tmp_rad;
     float g[3];
-    float tmp_scen[3];
+    float cov_matrix[9], t_mat[9], average_pos[3], mat3_tmp[9], point[3], xm, ym, zm;
+    float scale_matrix[9];
+    float max_dot_x, min_dot_x, max_dot_y, min_dot_y, max_dot_z, min_dot_z;
+    float a,b,c, max_x = 0, max_y = 0, max_z = 0, min_x = 0, min_y = 0, min_z = 0, r;
     MVert *vertices;
     MFace *mface = mesh->mface;
+
+    memset(cov_matrix, 0, 9 * sizeof(int));
+    memset(average_pos, 0, 3 * sizeof(int));
     if (mesh->totvert > 0) {
         vertices = mesh->mvert;
 
@@ -1844,10 +2472,10 @@ void calc_bounding_data(struct BoundingData *bdata, Mesh *mesh, int mat_index) {
             v1 = mface[i].v1;
             bdata->max_x = vertices[v1].co[0];
             bdata->min_x = vertices[v1].co[0];
-            bdata->max_y = vertices[v1].co[2];
-            bdata->min_y = vertices[v1].co[2];
-            bdata->max_z = -vertices[v1].co[1];
-            bdata->min_z = -vertices[v1].co[1];
+            bdata->max_y = vertices[v1].co[1];
+            bdata->min_y = vertices[v1].co[1];
+            bdata->max_z = vertices[v1].co[2];
+            bdata->min_z = vertices[v1].co[2];
             break;
         }
 
@@ -1857,14 +2485,31 @@ void calc_bounding_data(struct BoundingData *bdata, Mesh *mesh, int mat_index) {
             v1 = mface[i].v1;
             v2 = mface[i].v2;
             v3 = mface[i].v3;
-            find_max_min_bb(bdata, vertices[v1].co[0], vertices[v1].co[2], -vertices[v1].co[1]);
-            find_max_min_bb(bdata, vertices[v2].co[0], vertices[v2].co[2], -vertices[v2].co[1]);
-            find_max_min_bb(bdata, vertices[v3].co[0], vertices[v3].co[2], -vertices[v3].co[1]);
+            find_max_min_bb(bdata, vertices[v1].co[0], vertices[v1].co[1], vertices[v1].co[2]);
+            find_max_min_bb(bdata, vertices[v2].co[0], vertices[v2].co[1], vertices[v2].co[2]);
+            find_max_min_bb(bdata, vertices[v3].co[0], vertices[v3].co[1], vertices[v3].co[2]);
+
+            average_pos[0] += vertices[v1].co[0] + vertices[v2].co[0] + vertices[v3].co[0];
+            average_pos[1] += vertices[v1].co[1] + vertices[v2].co[1] + vertices[v3].co[1];
+            average_pos[2] += vertices[v1].co[2] + vertices[v2].co[2] + vertices[v3].co[2];
+            num_vert += 3;
             if (mface[i].v4) {
                 v4 = mface[i].v4;
-                find_max_min_bb(bdata, vertices[v4].co[0], vertices[v4].co[2], -vertices[v4].co[1]);
+                find_max_min_bb(bdata, vertices[v4].co[0], vertices[v4].co[1], vertices[v4].co[2]);
+                average_pos[0] += vertices[v4].co[0];
+                average_pos[1] += vertices[v4].co[1];
+                average_pos[2] += vertices[v4].co[2];
+                num_vert++;
             }
         }
+
+        if (!num_vert)
+            return;
+
+        average_pos[0] /= num_vert;
+        average_pos[1] /= num_vert;
+        average_pos[2] /= num_vert;
+
 
         x_width = bdata->max_x - bdata->min_x;
         y_width = bdata->max_y - bdata->min_y;
@@ -1878,13 +2523,11 @@ void calc_bounding_data(struct BoundingData *bdata, Mesh *mesh, int mat_index) {
         bdata->ccen_y = bdata->scen_y;
         bdata->ccen_z = bdata->scen_z;
 
-        bdata->srad = MAX(x_width, MAX(y_width, z_width)) / 2.0;;
-        bdata->crad = MAX(x_width, z_width) / 2.0;
+        bdata->srad = MAX(x_width, MAX(y_width, z_width)) / 2.0;
+        bdata->crad = MAX(x_width, y_width) / 2.0;
 
-        tmp_scen[0] = bdata->scen_x / (x_width? x_width: 1.0);
-        tmp_scen[1] = bdata->scen_y / (y_width? y_width: 1.0);
-        tmp_scen[2] = bdata->scen_z / (z_width? z_width: 1.0);
-        tmp_rad = 0.5;
+        for (j = 0; j < 9; j++)
+            cov_matrix[j] *= (1.0 / num_vert);
 
         // Enlarge and move boundings if there are some vertices out of them.
         // Taken from: Lengyel E. - Mathematics for 3D Game Programming and Computer Graphics,
@@ -1908,8 +2551,8 @@ void calc_bounding_data(struct BoundingData *bdata, Mesh *mesh, int mat_index) {
                     continue;
 
                 x = vertices[v].co[0];
-                y = vertices[v].co[2];
-                z = -vertices[v].co[1];
+                y = vertices[v].co[1];
+                z = vertices[v].co[2];
 
                 scen_dist = sqrt(pow(bdata->scen_x - x, 2)
                                + pow(bdata->scen_y - y, 2)
@@ -1933,56 +2576,204 @@ void calc_bounding_data(struct BoundingData *bdata, Mesh *mesh, int mat_index) {
                 }
 
                 ccen_dist = sqrt(pow(bdata->ccen_x - x, 2)
-                               + pow(bdata->ccen_z - z, 2));
+                               + pow(bdata->ccen_y - y, 2));
 
                 if (ccen_dist > bdata->crad) {
 
                     g[0] = bdata->ccen_x - bdata->crad * (x - bdata->ccen_x)
                                            / ccen_dist;
-                    g[2] = bdata->ccen_z - bdata->crad * (z - bdata->ccen_z)
+                    g[1] = bdata->ccen_y - bdata->crad * (y - bdata->ccen_y)
                                            / ccen_dist;
 
                     bdata->ccen_x = (g[0] + x) / 2.0;
-                    bdata->ccen_z = (g[2] + z) / 2.0;
+                    bdata->ccen_y = (g[1] + y) / 2.0;
                     bdata->crad = sqrt(pow(bdata->ccen_x - x, 2)
-                                     + pow(bdata->ccen_z - z, 2));
+                                     + pow(bdata->ccen_y - y, 2));
                 }
 
-                x /= (x_width? x_width: 1.0);
-                y /= (y_width? y_width: 1.0);
-                z /= (z_width? z_width: 1.0);
+                // calc covariance matrix
+                xm = x - average_pos[0];
+                ym = y - average_pos[1];
+                zm = z - average_pos[2];
+                cov_matrix[0] += xm * xm;
+                cov_matrix[1] += xm * ym;
+                cov_matrix[2] += xm * zm;
+                cov_matrix[4] += ym * ym;
+                cov_matrix[5] += ym * zm;
+                cov_matrix[8] += zm * zm;
+            }
+        }
+        // calc covariance matrix
+        cov_matrix[3] = cov_matrix[1];
+        cov_matrix[6] = cov_matrix[2];
+        cov_matrix[7] = cov_matrix[5];
 
-                scen_tmp_dist = sqrt(pow(tmp_scen[0] - x, 2)
-                                   + pow(tmp_scen[1] - y, 2)
-                                   + pow(tmp_scen[2] - z, 2));
+        for (j = 0; j < 9; j++)
+            cov_matrix[j] *= (1.0 / num_vert);
 
-                if (scen_tmp_dist > tmp_rad) {
+        // calc rotated bounding shapes
+        find_eigenvectors(cov_matrix, MATRIX_PRES, t_mat);
 
-                    g[0] = tmp_scen[0] - tmp_rad * (x - tmp_scen[0])
-                                        / scen_tmp_dist;
-                    g[1] = tmp_scen[1] - tmp_rad * (y - tmp_scen[1])
-                                        / scen_tmp_dist;
-                    g[2] = tmp_scen[2] - tmp_rad * (z - tmp_scen[2])
-                                        / scen_tmp_dist;
+        max_dot_x = 0.0;
+        min_dot_x = 0.0;
+        max_dot_y = 0.0;
+        min_dot_y = 0.0;
+        max_dot_z = 0.0;
+        min_dot_z = 0.0;
 
-                    tmp_scen[0] = (g[0] + x) / 2.0;
-                    tmp_scen[1] = (g[1] + y) / 2.0;
-                    tmp_scen[2] = (g[2] + z) / 2.0;
-                    tmp_rad = sqrt(pow(tmp_scen[0] - x, 2)
-                                 + pow(tmp_scen[1] - y, 2)
-                                 + pow(tmp_scen[2] - z, 2));
-                }
+        for (i = 0; i < mesh->totface; i++) {
+            if (mat_index != -1 && mface[i].mat_nr != mat_index)
+                continue;
+            point[0] = vertices[mface[i].v1].co[0];
+            point[1] = vertices[mface[i].v1].co[1];
+            point[2] = vertices[mface[i].v1].co[2];
+            transform_vec3_by_mat3(point, t_mat, point);
+
+            max_dot_x = point[0];
+            min_dot_x = max_dot_x;
+            max_dot_y = point[1];
+            min_dot_y = max_dot_y;
+            max_dot_z = point[2];
+            min_dot_z = max_dot_z;
+        }
+
+        for (i = 0; i < mesh->totface; i++) {
+            if (mat_index != -1 && mface[i].mat_nr != mat_index)
+                continue;
+
+            for (j = 0; j < 4; j++) {
+                if (j == 0)
+                    v = mface[i].v1;
+                else if (j == 1)
+                    v = mface[i].v2;
+                else if (j == 2)
+                    v = mface[i].v3;
+                else if (j == 3 && mface[i].v4)
+                    v = mface[i].v4;
+                else
+                    continue;
+
+                point[0] = vertices[v].co[0];
+                point[1] = vertices[v].co[1];
+                point[2] = vertices[v].co[2];
+                transform_vec3_by_mat3(point, t_mat, point);
+                if (point[0] > max_dot_x)
+                    max_dot_x = point[0];
+                if (point[0] < min_dot_x)
+                    min_dot_x = point[0];
+                if (point[1] > max_dot_y)
+                    max_dot_y = point[1];
+                if (point[1] < min_dot_y)
+                    min_dot_y = point[1];
+                if (point[2] > max_dot_z)
+                    max_dot_z = point[2];
+                if (point[2] < min_dot_z)
+                    min_dot_z = point[2];
+            } 
+        }
+
+        // rotated ellipsoid
+        a = max_dot_x - min_dot_x;
+        b = max_dot_y - min_dot_y;
+        c = max_dot_z - min_dot_z;
+
+        a = MAX(a, ELL_EPS);
+        b = MAX(b, ELL_EPS);
+        c = MAX(c, ELL_EPS);
+
+        mat3_identity(scale_matrix);
+        scale_matrix[0] = a != 0.0 ? 1 / a : 1 / MIN_SEMIAXIS_LEN;
+        scale_matrix[4] = b != 0.0 ? 1 / b : 1 / MIN_SEMIAXIS_LEN;
+        scale_matrix[8] = c != 0.0 ? 1 / c : 1 / MIN_SEMIAXIS_LEN;
+        mat3_transpose(t_mat, mat3_tmp);
+
+
+        for (i = 0; i < mesh->totface; i++) {
+            if (mat_index != -1 && mface[i].mat_nr != mat_index)
+                continue;
+            point[0] = vertices[mface[i].v1].co[0];
+            point[1] = vertices[mface[i].v1].co[1];
+            point[2] = vertices[mface[i].v1].co[2];
+            transform_vec3_by_mat3(point, t_mat, point);
+            transform_vec3_by_mat3(point, scale_matrix, point);
+            transform_vec3_by_mat3(point, mat3_tmp, point);
+
+            max_x = min_x = point[0];
+            max_y = min_y = point[1];
+            max_z = min_z = point[2];
+        }
+        for (i = 0; i < mesh->totface; i++) {
+            if (mat_index != -1 && mface[i].mat_nr != mat_index)
+                continue;
+            for (j = 0; j < 4; j++) {
+                if (j == 0)
+                    v = mface[i].v1;
+                else if (j == 1)
+                    v = mface[i].v2;
+                else if (j == 2)
+                    v = mface[i].v3;
+                else if (j == 3 && mface[i].v4)
+                    v = mface[i].v4;
+                else
+                    continue;
+                point[0] = vertices[v].co[0];
+                point[1] = vertices[v].co[1];
+                point[2] = vertices[v].co[2];
+                transform_vec3_by_mat3(point, t_mat, point);
+                transform_vec3_by_mat3(point, scale_matrix, point);
+                transform_vec3_by_mat3(point, mat3_tmp, point);
+
+                max_x = MAX(max_x, point[0]);
+                min_x = MIN(min_x, point[0]);
+                max_y = MAX(max_y, point[1]);
+                min_y = MIN(min_y, point[1]);
+                max_z = MAX(max_z, point[2]);
+                min_z = MIN(min_z, point[2]);
             }
         }
 
-        //scale sphere boundings to fit original size and get ellipsoid shape
-        bdata->ecen_x = x_width ? tmp_scen[0] * x_width: bdata->max_x;
-        bdata->ecen_y = y_width ? tmp_scen[1] * y_width: bdata->max_y;
-        bdata->ecen_z = z_width ? tmp_scen[2] * z_width: bdata->max_z;
+        r = sqrt((max_x - min_x) * (max_x - min_x)
+            + (max_y - min_y) * (max_y - min_y)
+            + (max_z - min_z) * (max_z - min_z)) / 2.0;
+        r = MIN(r, 1.0);
 
-        bdata->eaxis_x = tmp_rad * x_width;
-        bdata->eaxis_y = tmp_rad * y_width;
-        bdata->eaxis_z = tmp_rad * z_width;
+        average_pos[0] = (max_x + min_x) / 2.0;
+        average_pos[1] = (max_y + min_y) / 2.0;
+        average_pos[2] = (max_z + min_z) / 2.0;
+
+        mat3_identity(scale_matrix);
+        scale_matrix[0] = a;
+        scale_matrix[4] = b;
+        scale_matrix[8] = c;
+
+        transform_vec3_by_mat3(average_pos, t_mat, average_pos);
+        transform_vec3_by_mat3(average_pos, scale_matrix, average_pos);
+        transform_vec3_by_mat3(average_pos, mat3_tmp, average_pos);
+
+        bdata->ecen_x = average_pos[0];
+        bdata->ecen_y = average_pos[1];
+        bdata->ecen_z = average_pos[2];
+
+        bdata->eaxis_x = a * r;
+        bdata->eaxis_y = b * r;
+        bdata->eaxis_z = c * r;
+
+        // rotated box
+        mat3_invert(t_mat, mat3_tmp);
+        bdata->rbb_scale[0] = (max_dot_x - min_dot_x) / 2.0;
+        bdata->rbb_scale[1] = (max_dot_y - min_dot_y) / 2.0;
+        bdata->rbb_scale[2] = (max_dot_z - min_dot_z) / 2.0;
+
+        mat3_copy(t_mat, bdata->t_mat);
+
+        average_pos[0] = (max_dot_x + min_dot_x) / 2.0;
+        average_pos[1] = (max_dot_y + min_dot_y) / 2.0;
+        average_pos[2] = (max_dot_z + min_dot_z) / 2.0;
+        transform_vec3_by_mat3(average_pos, mat3_tmp, average_pos);
+
+        bdata->r_bbcen[0] = average_pos[0];
+        bdata->r_bbcen[1] = average_pos[1];
+        bdata->r_bbcen[2] = average_pos[2];
     }
 }
 
@@ -1992,6 +2783,7 @@ static PyObject *b4w_bin_export_submesh(PyObject *self, PyObject *args) {
     unsigned long long mesh_ptr, obj_ptr;
     int mat_index, disab_flat;
     int vertex_animation, edited_normals, vertex_groups, vertex_colors, shape_keys;
+    int tnb_shading;
     int is_degenerate_mesh;
     Py_buffer mask_buffer;
     PyObject *result;
@@ -2006,6 +2798,7 @@ static PyObject *b4w_bin_export_submesh(PyObject *self, PyObject *args) {
     mesh_data.col = NULL;
     mesh_data.tco0 = NULL;
     mesh_data.tco1 = NULL;
+    mesh_data.shade_tangs = NULL;
     mesh_data.origindex = NULL;
     mesh_data.base_length = 0;
     mesh_data.groups_num = 0;
@@ -2017,9 +2810,9 @@ static PyObject *b4w_bin_export_submesh(PyObject *self, PyObject *args) {
     mesh_data.relatives = NULL;
 
 
-    if (!PyArg_ParseTuple(args, "KKiiiiiiis*i", &mesh_ptr, &obj_ptr, &mat_index,
+    if (!PyArg_ParseTuple(args, "KKiiiiiiiis*i", &mesh_ptr, &obj_ptr, &mat_index,
             &disab_flat, &vertex_animation, &edited_normals, &shape_keys, 
-            &vertex_groups, &vertex_colors, &mask_buffer, &is_degenerate_mesh))
+            &tnb_shading, &vertex_groups, &vertex_colors, &mask_buffer, &is_degenerate_mesh))
         return NULL;
 
     result = PyDict_New();
@@ -2038,9 +2831,8 @@ static PyObject *b4w_bin_export_submesh(PyObject *self, PyObject *args) {
             return NULL;
         }
         combine_colors(&mesh_data, mesh, vertex_colors, &mask_buffer);
-        combine_tco(&mesh_data, mesh, mat_index);
-        triangulate_mesh(&mesh_data, mesh, mat_index, disab_flat, edited_normals);
-        
+        combine_tco(&mesh_data, mesh, obj, mat_index, false);
+        triangulate_mesh(&mesh_data, mesh, mat_index, disab_flat, edited_normals, tnb_shading);
         result = calc_submesh(&mesh_data, 1, 0, shape_keys);
     }
     return result;
@@ -2058,6 +2850,9 @@ static PyObject *b4w_bin_calc_bounding_data(PyObject *self, PyObject *args) {
     bdata.min_x = 0;
     bdata.min_y = 0;
     bdata.min_z = 0;
+    bdata.t_mat = falloc(9);
+    bdata.r_bbcen = falloc(3);
+    bdata.rbb_scale = falloc(3);
     bdata.srad = 0;
     bdata.scen_x = 0;
     bdata.scen_y = 0;
@@ -2073,12 +2868,17 @@ static PyObject *b4w_bin_calc_bounding_data(PyObject *self, PyObject *args) {
     bdata.ecen_y = 0;
     bdata.ecen_z = 0;
 
+    memset(bdata.t_mat, 0, 9 * sizeof(int));
+    memset(bdata.r_bbcen, 0, 3 * sizeof(int));
+    memset(bdata.rbb_scale, 0, 3 * sizeof(int));
+
     int mat_index;
 
     if (!PyArg_ParseTuple(args, "Ki", &mesh_ptr, &mat_index))
         return NULL;
 
     result = PyDict_New();
+    PyObject *bytes_buff;
     mesh = (Mesh *)mesh_ptr;
 
     calc_bounding_data(&bdata, mesh, mat_index);
@@ -2103,6 +2903,17 @@ static PyObject *b4w_bin_calc_bounding_data(PyObject *self, PyObject *args) {
     PyDict_SetItemString(result, "ecen_x", PyFloat_FromDouble(bdata.ecen_x));
     PyDict_SetItemString(result, "ecen_y", PyFloat_FromDouble(bdata.ecen_y));
     PyDict_SetItemString(result, "ecen_z", PyFloat_FromDouble(bdata.ecen_z));
+
+    bytes_buff = PyByteArray_FromStringAndSize((char *)bdata.t_mat, 9 * sizeof(float));
+    PyDict_SetItemString(result, "eigenvectors", bytes_buff);
+    bytes_buff = PyByteArray_FromStringAndSize((char *)bdata.r_bbcen, 3 * sizeof(float));
+    PyDict_SetItemString(result, "bbrcen", bytes_buff);
+    bytes_buff = PyByteArray_FromStringAndSize((char *)bdata.rbb_scale, 3 * sizeof(float));
+    PyDict_SetItemString(result, "bbrscale", bytes_buff);
+
+    free(bdata.t_mat);
+    free(bdata.r_bbcen);
+    free(bdata.rbb_scale);
 
     return result;
 }

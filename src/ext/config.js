@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -47,11 +46,17 @@
  * instead.
  * <dt>animation_framerate
  * <dd>Number, animation framerate.
+ * <dt> anisotropic_filtering
+ * <dd>Boolean, enable anisotropic filtering
  * <dt>antialiasing
  * <dd>Boolean, enable postprocess-based anti-aliasing (use the CUSTOM profile
  * in order to change this parameter).
+ * <dt>assets_path
+ * <dd>String, path to assets directory (for get_std_assets_path()).
  * <dt>assets_dds_available
- * <dd>Boolean, allow the engine to use compressed DDS textures. The compressed
+ * <dd>Boolean, allow the engine to use compressed DDS textures.
+ * <dt>assets_pvr_available
+ * <dd>Boolean, allow the engine to use compressed PVRST textures.
  * textures should be present near the source textures in order to be picked up.
  * <dt>assets_min50_available
  * <dd>Boolean, allow the engine to use halved textures. The halved
@@ -59,7 +64,7 @@
  * <dt>audio
  * <dd>Boolean, enable Web Audio.
  * <dt>background_color
- * <dd>Float32Array, RGBA values to use as a background color for the WebGL
+ * <dd>Array, RGBA values to use as a background color for the WebGL
  * canvas.
  * <dt>built_in_module_name
  * <dd>String, name of the module which stores exported data (HTML export only).
@@ -67,12 +72,26 @@
  * <dd>Boolean, set the resolution factor for the canvas.
  * <dt>console_verbose
  * <dd>Boolean, print more debug info in the browser console.
+ * <dt>dof
+ * <dd>Boolean, enable DOF
+ * <dt>god_rays
+ * <dd>Boolean, enable god rays
+ * <dt>bloom
+ * <dd>Boolean, enable bloom
+ * <dt>motion_blur
+ * <dd>Boolean, enable motion_blur
  * <dt>do_not_load_resources
  * <dd>Boolean, disable loading of assets (textures and sounds).
  * <dt>enable_selectable
  * <dd>Boolean, enable selecting of objects.
  * <dt>enable_outlining
  * <dd>Boolean, enable outlining of object.
+ * <dt>is_mobile_device
+ * <dd>Boolean, check mobile device.
+ * <dt>max_fps
+ * <dd>Number, maximum FPS limit
+ * <dt>max_fps_physics
+ * <dd>Number, maximum physics FPS limit
  * <dt>media_auto_activation
  * <dd>Boolean, activate media data context on mobile devices using popup dialog.
  * <dt>outlining_overview_mode
@@ -97,10 +116,16 @@
  * <dt>quality
  * <dd>Number, preferred rendering quality profile (one of P_LOW, P_HIGH,
  * P_ULTRA, P_CUSTOM enums).
+ * <dt>reflections
+ * <dd>Boolean, enable reflections
+ * <dt>refractions
+ * <dd>Boolean, enable refractions
  * <dt>sfx_mix_mode
  * <dd>Boolean, enable the mixer mode in the SFX subsystem.
- * <dt>shaders_dir
+ * <dt>shaders_path
  * <dd>String, path to the shaders directory (developer version only).
+ * <dt>shadows
+ * <dd>Boolean, enable shadows
  * <dt>show_hud_debug_info
  * <dd>Boolean, show HUD with debug information.
  * <dt>smaa
@@ -112,10 +137,14 @@
  * <dt>smaa_area_texture_path
  * <dd>String, path to the SMAA "area" texture. If not specified, search in the
  * directory with the engine's sources.
+ * <dt>ssao
+ * <dd>Boolean, enable SSAO
  * <dt>stereo
  * <dd>String, stereoscopic mode: "ANAGLYPH", "HMD" or "NONE".
  * <dt>debug_view
  * <dd>Boolean, enable debug view mode.
+ * <dt>use_min50
+ * <dd>Boolean, enable min50 textures.
  * <dt>gl_debug
  * <dd>Boolean, enable gl errors check. Very slow.
  * </dl>
@@ -123,29 +152,35 @@
  * @local QualityProfile
  * @cc_externs allow_cors allow_hidpi alpha alpha_sort
  * @cc_externs alpha_sort_threshold anaglyph_use animation_framerate
- * @cc_externs antialiasing assets_dds_available assets_min50_available audio
+ * @cc_externs antialiasing assets_path assets_dds_available assets_min50_available audio
  * @cc_externs background_color built_in_module_name canvas_resolution_factor
  * @cc_externs console_verbose do_not_load_resources enable_selectable
  * @cc_externs enable_outlining media_auto_activation outlining_overview_mode
  * @cc_externs physics_enabled physics_uranium_path physics_calc_fps physics_use_workers
  * @cc_externs precision prevent_caching quality
- * @cc_externs sfx_mix_mode shaders_dir show_hud_debug_info
+ * @cc_externs sfx_mix_mode shaders_path show_hud_debug_info
  * @cc_externs smaa smaa_search_texture_path smaa_area_texture_path
- * @cc_externs debug_view url_params stereo gl_debug
+ * @cc_externs debug_view url_params stereo gl_debug max_fps max_fps_physics
+ * @cc_externs use_min50 anisotropic_filtering shadows reflections refractions
+ * @cc_externs ssao dof god_rays bloom motion_blur is_mobile_device
  */
 b4w.module["config"] = function(exports, require) {
 
-var m_cfg = require("__config");
+var m_cfg    = require("__config");
+var m_compat = require("__compat");
+var m_debug  = require("__debug");
+var m_data   = require("__data");
+var m_print  = require("__print");
 
 
 /**
- * Quality profile enum. One of P_*.
+ * Quality profile enum. One of {@link module:config.P_LOW|P_LOW}, {@link module:config.P_HIGH|P_HIGH}, {@link module:config.P_ULTRA|P_ULTRA}, {@link module:config.P_CUSTOM|P_CUSTOM}.
  * @typedef QualityProfile
  * @type {Number}
  */
 
 /**
- * Low quality profile: maximize engine performance.
+ * Low quality profile: maximize engine performance, minimize memory consumption.
  * @const {QualityProfile} module:config.P_LOW
  */
 exports.P_LOW = m_cfg.P_LOW;
@@ -167,6 +202,13 @@ exports.P_ULTRA = m_cfg.P_ULTRA;
  * @const {QualityProfile} module:config.P_CUSTOM
  */
 exports.P_CUSTOM = m_cfg.P_CUSTOM;
+
+/**
+ * Auto quality profile: cannot be used directly, only for quality
+ * auto configurators.
+ * @const {QualityProfile} module:config.P_AUTO
+ */
+exports.P_AUTO = m_cfg.P_AUTO;
 
 /**
  * Set the value of the config property of the engine.
@@ -191,11 +233,36 @@ exports.get = m_cfg.get;
 exports.reset = m_cfg.reset;
 
 /**
+ * Reset context limit properties to minimum.
+ * @method module:config.reset_limits
+ */
+exports.reset_limits = m_cfg.reset_limits;
+/**
  * Get the path to the assets directory. Can be used when an application
  * is developed inside the SDK.
  * @method module:config.get_std_assets_path
  * @returns {String} Path to assets
  */
 exports.get_std_assets_path = m_cfg.get_std_assets_path;
+
+/**
+ * Set the engine's quality profile.
+ * @method module:config.apply_quality
+ * @param {QualityProfile} quality Quality profile
+ */
+exports.apply_quality = function(quality) {
+    if (m_data.is_primary_loaded()) {
+        m_print.error("Cannot change quality profile after a scene is loaded.");
+        return;
+    }
+
+    m_cfg.set("quality", quality);
+    var gl = m_debug.get_gl();
+    // initialized
+    if (gl) {
+        m_cfg.apply_quality();
+        m_compat.set_hardware_defaults(m_debug.get_gl(), false);
+    }
+}
 
 }

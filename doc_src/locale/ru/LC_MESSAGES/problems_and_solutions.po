@@ -1,21 +1,20 @@
-# SOME DESCRIPTIVE TITLE.
+# Blend4Web User Manual Russian Translation: Problems And Solutions
 # Copyright (C) 2014-2016, Triumph
-# This file is distributed under the same license as the Blend4Web. User
-# Manual package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2016.
+# This file is distributed under the same license as Blend4Web.
+# Blend4Web Team <info [at] blend4web.com>, 2014.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: B4W 14.02.28\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-31 11:28+0300\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Project-Id-Version: Blend4Web 16.08\n"
+"Report-Msgid-Bugs-To: https://www.blend4web.com/en/forums/forum/17/\n"
+"POT-Creation-Date: 2016-10-27 15:59+0300\n"
+"PO-Revision-Date: 2015-08-28 10:55+0300\n"
+"Last-Translator: Blend4Web Team <info [at] blend4web.com>\n"
+"Language-Team: Russian <info [at] blend4web.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.2.0\n"
+"Generated-By: Babel 2.3.4\n"
 
 #: ../problems_and_solutions.rst:5
 msgid "Problems and Solutions"
@@ -254,8 +253,8 @@ msgstr ""
 "производителе, модели и других параметрах вашей видеокарты."
 
 #: ../problems_and_solutions.rst:115
-msgid "For MacOS X, you can check System Report."
-msgstr "В MacOS X вам следует ознакомиться с System Report."
+msgid "For macOS, you can check System Report."
+msgstr "В macOS вам следует ознакомиться с System Report."
 
 #: ../problems_and_solutions.rst:119
 msgid "Select ``About This Mac`` from the ``Apple`` menu."
@@ -364,7 +363,7 @@ msgstr "Проблемы с обновлением старых версий а�
 #: ../problems_and_solutions.rst:176
 msgid ""
 "It’s strongly advised to restart Blender after installing a newer version"
-" of Addon/SDK."
+" of Add-on/SDK."
 msgstr "Рекомендуется перезагрузка Blender после обновления SDK или аддона."
 
 #: ../problems_and_solutions.rst:178
@@ -396,13 +395,13 @@ msgstr ""
 
 #: ../problems_and_solutions.rst:186
 msgid ""
-"For the local development server to work on Apple OS X and Blender 2.76, "
-"you may need to install `Python 3.4 "
-"<https://www.python.org/downloads/release/python-343/>`. This is due to a"
-" bug in Blender https://developer.blender.org/T46623. This bug has been "
+"For the local development server to work on Apple macOS and Blender 2.76,"
+" you may need to install `Python 3.4 "
+"<https://www.python.org/downloads/release/python-343/>`_. This is due to "
+"a bug in Blender https://developer.blender.org/T46623. This bug has been "
 "fixed in Blender 2.76b, so updating it is advised."
 msgstr ""
-"На системах Apple OS X и Blender 2.76 для работы локального сервера "
+"На системах Apple macOS и Blender 2.76 для работы локального сервера "
 "разработки может потребоваться установка `Python 3.4 "
 "<https://www.python.org/downloads/release/python-343/>`_. Это связано с "
 "ошибкой Blender https://developer.blender.org/T46623. В Blender 2.76b эта"
@@ -456,8 +455,8 @@ msgstr ""
 "340-х."
 
 #: ../problems_and_solutions.rst:198
-msgid "WebAudio issues."
-msgstr "Проблемы WebAudio."
+msgid "Audio issues."
+msgstr "Проблемы со звуком."
 
 #: ../problems_and_solutions.rst:200
 msgid ""
@@ -484,17 +483,73 @@ msgstr ""
 "аудиоконтекст."
 
 #: ../problems_and_solutions.rst:204
+msgid ""
+"Pausing the audio may not work on such mobile devices as Nexus 6 and "
+"Nexus 9 in Google Chrome 50-52 versions. It should work again in Chrome "
+"53. More info here: "
+"`https://bugs.chromium.org/p/chromium/issues/detail?id=616772 "
+"<https://bugs.chromium.org/p/chromium/issues/detail?id=616772>`_."
+msgstr ""
+"На некоторых мобильных устройствах (в частности, Nexus 6 и Nexus 9) в "
+"браузере Google Chrome версий 50-52 может не работать пауза. В версиях "
+"Chrome начиная с 53 проблем быть не должно. Более подробная информация: "
+"`https://bugs.chromium.org/p/chromium/issues/detail?id=616772 "
+"<https://bugs.chromium.org/p/chromium/issues/detail?id=616772>`_."
+
+#: ../problems_and_solutions.rst:206
 msgid "QQ Browser doesn't support WebGL at the moment."
 msgstr "QQ Browser на данный момент не поддерживает WebGL."
 
-#: ../problems_and_solutions.rst:206
+#: ../problems_and_solutions.rst:208
 msgid ""
 "WebGL is unstable and sometimes crashes on Mesa 11.x drivers in "
 "Linux/Chrome with Intel GPUs. Downgrading to Mesa 10.x drivers can help."
 msgstr ""
-"WebGL может работать нестабильно и давать сбои при использовании драйверов "
-"Mesa 11.x в Linux/Chrome на видеокартах Intel. Понижение версии драйверов до "
-"10.х может решить проблему."
+"WebGL может работать нестабильно и давать сбои при использовании "
+"драйверов Mesa 11.x в Linux/Chrome на видеокартах Intel. Понижение версии"
+" драйверов до 10.х может решить проблему."
+
+#: ../problems_and_solutions.rst:210
+msgid ""
+"Information about moving fingers on GearVR touch sensor in VR-mode is not"
+" available."
+msgstr ""
+"При использовании тач-сенсора GearVR в VR-режиме недоступна информация о "
+"движениях пальцев."
+
+#: ../problems_and_solutions.rst:212
+msgid ""
+"Samsung Internet browser doesn't fire any events about moving fingers on "
+"touch sensor in VR-mode."
+msgstr ""
+"Samsung Internet Browser не регистрирует события, связанные с движением "
+"пальцев на тач-сенсоре в режиме VR."
+
+#: ../problems_and_solutions.rst:214
+msgid ""
+"Particles emitted by particle systems placed on inactive (hidden) layers "
+"can have their positions set to zero as inactive layers are not updated "
+"by Blender."
+msgstr ""
+"Частицы, испускаемые системами частиц, находящимися на неактивных "
+"(скрытых) слоях, могут иметь нулевые координаты, т.к. неактивные слои не "
+"обновляются Blender'ом."
+
+#: ../problems_and_solutions.rst:216
+msgid ""
+"This problem can be solved by activating layers before exporting a scene "
+"or by simply clicking the layers to make Blender update them."
+msgstr ""
+"Проблема может быть решена с помощью активации слоёв перед экспортом или "
+"выбора необходимых слоёв вручную (в этом случае Blender их обновит)."
+
+#: ../problems_and_solutions.rst:218
+msgid ""
+"Alpha blending objects are rendered incorrect on the Mali 400 series GPU "
+"by Google Chrome browser."
+msgstr ""
+"Оъекты с типом прозрачности Alpha Blending некорректно отображаются в "
+"браузере Google Chrome на устройствах с GPU Mali серии 400."
 
 #~ msgid ""
 #~ msgstr ""

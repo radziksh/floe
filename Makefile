@@ -3,7 +3,35 @@ DOCSRCDIR = doc_src
 APPDIR = apps_dev
 APIDOCRESDIR = doc_src/api_doc/jsdoc_resources
 SCRIPTSDIR = scripts
-TUTORIALS_DIR = deploy/tutorials
+
+PROJECTS = \
+	capri \
+	code_snippets \
+	dairy_plant \
+	dairy_plant_vr \
+	debugger \
+	farm \
+	fashion \
+	flight \
+	new_year \
+	petigors_tale \
+	space_disaster \
+	victory_day_2015 \
+	viewer \
+	webplayer \
+	website \
+	tutorials/cartoon_interior \
+	tutorials/firstperson \
+	tutorials/interactive_web_application \
+	tutorials/making_a_game_p1-3 \
+	tutorials/making_a_game_p4 \
+	tutorials/making_a_game_p5-6 \
+	tutorials/making_a_game_p7-12 \
+	tutorials/web_page_integration
+
+DISTFILESDIR = distfiles
+DISTS_SDK = dist_ce dist_pro dist_ce_lite dist_pro_lite
+DISTS_SDK_FORCE = dist_force_ce dist_force_pro dist_force_ce_lite dist_force_pro_lite
 
 # exec "VERPREFIX=_new_prefix make -e" to override
 VERPREFIX=_pre
@@ -13,20 +41,21 @@ VERSION=`sed -e 's/ *[^ ]\+ *//' -e 's/ \+.*/'$(VERPREFIX)'/' VERSION`
 all: build
 
 .PHONY: build
-build: convert_resources compile reexport doc_clean doc doc_pdf api_doc
+build: convert_resources compile reexport doc_clean doc
+
 
 .PHONY: compile
-compile: compile_shaders compile_b4w compile_apps build_tutorials
+compile: compile_shaders compile_b4w build_projects
 
 .PHONY: compile_shaders
 compile_shaders:
 	@echo "Compiling b4w shaders"
-	@`which node || which nodejs` tools/glsl/compiler/compile_shader_texts.js --obf --rem_braces --opt_decl
+	@`which node || which nodejs` tools/glsl/compiler/compile_shader_texts.js --obf --rem_braces
 
 .PHONY: verify_shaders
 verify_shaders:
 	@echo "Verifying b4w shaders"
-	@`which node || which nodejs` tools/glsl/compiler/compile_shader_texts.js --dry --obf --rem_braces --opt_decl
+	@`which node || which nodejs` tools/glsl/compiler/compile_shader_texts.js --dry --obf --rem_braces
 
 .PHONY: compile_b4w
 compile_b4w:
@@ -35,34 +64,14 @@ compile_b4w:
 	@$(SH) ./scripts/compile_b4w.py -o simple
 	@$(SH) ./scripts/compile_b4w.py -o advanced
 
-.PHONY: compile_apps
-compile_apps:
-	@echo "Compiling applications"
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/capri compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/code_snippets compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/dairy_plant compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/debugger compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/fashion compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/firstperson compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/flight compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/new_year compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/petigors_tale compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/space_disaster compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/victory_day_2015 compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/viewer compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/webplayer compile -v $(VERSION)
-	@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/website compile -v $(VERSION)
 
-.PHONY: build_tutorials
-build_tutorials:
-	@$(SH) ./$(APPDIR)/project.py -p $(TUTORIALS_DIR)/examples/cartoon_interior/ compile -t update
-	@$(SH) ./$(APPDIR)/project.py -p $(TUTORIALS_DIR)/examples/firstperson/ compile -t update
-	@$(SH) ./$(APPDIR)/project.py -p $(TUTORIALS_DIR)/examples/interactive_web_application/ compile -t update
-	@$(SH) ./$(APPDIR)/project.py -p $(TUTORIALS_DIR)/examples/making_a_game_p1-3/ compile -t update
-	@$(SH) ./$(APPDIR)/project.py -p $(TUTORIALS_DIR)/examples/making_a_game_p4/ compile -t update
-	@$(SH) ./$(APPDIR)/project.py -p $(TUTORIALS_DIR)/examples/making_a_game_p5-6/ compile -t update
-	@$(SH) ./$(APPDIR)/project.py -p $(TUTORIALS_DIR)/examples/making_a_game_p7-12/ compile -t update
-	@$(SH) ./$(APPDIR)/project.py -p $(TUTORIALS_DIR)/examples/web_page_integration/ compile -t update
+.PHONY: build_projects $(PROJECTS)
+
+build_projects: $(PROJECTS)
+
+$(PROJECTS):
+	-@$(SH) ./$(APPDIR)/project.py -p $(APPDIR)/$@ build -v $(VERSION)
+
 
 .PHONY: convert_resources
 convert_resources:
@@ -72,16 +81,19 @@ convert_resources:
 	@$(SH) ./$(SCRIPTSDIR)/converter.py convert_media
 
 .PHONY: doc
-doc:
-	$(MAKE) -C $(DOCSRCDIR)
+doc: doc_html doc_pdf api_doc
+
+.PHONY: doc_html
+doc_html:
+	-$(MAKE) -C $(DOCSRCDIR)
 
 .PHONY: doc_pdf
 doc_pdf:
-	$(MAKE) -C $(DOCSRCDIR) latexpdf
+	-$(MAKE) -C $(DOCSRCDIR) latexpdf
 
 .PHONY: doc_clean
 doc_clean:
-	$(MAKE) -C $(DOCSRCDIR) clean
+	-$(MAKE) -C $(DOCSRCDIR) clean
 
 .PHONY: api_doc
 api_doc:
@@ -115,22 +127,28 @@ reexport_conv_html:
 report_broken_exports:
 	@$(SH) ./$(SCRIPTSDIR)/process_blend.py -jh report
 
-.PHONY: dist
-dist:
-	@echo "Creating $(VERSION) family of distributions"
-	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -v $(VERSION) $(SCRIPTSDIR)/blend4web.lst
-	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -v $(VERSION) $(SCRIPTSDIR)/blend4web_sdk_free.lst
-	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -v $(VERSION) $(SCRIPTSDIR)/blend4web_sdk_pro.lst
 
-.PHONY: dist_force
-dist_force:
-	@echo "Creating $(VERSION) family of distributions (overwrite mode)"
-	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -f -v $(VERSION) $(SCRIPTSDIR)/blend4web.lst
-	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -f -v $(VERSION) $(SCRIPTSDIR)/blend4web_sdk_free.lst
-	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -f -v $(VERSION) $(SCRIPTSDIR)/blend4web_sdk_pro.lst
+.PHONY: dist dist_addon $(DISTS_SDK) dist_force dist_force_addon $(DISTS_SDK_FORCE)
 
-dist_addon_force:
-	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -f -v $(VERSION) $(SCRIPTSDIR)/blend4web.lst
+dist: dist_addon $(DISTS_SDK)
+
+dist_addon:
+	@echo "Creating blend4web $(subst dist_,,$@) $(VERSION) distribution"
+	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -r blend4web -v $(VERSION) $(DISTFILESDIR)/blend4web_addon.lst
+
+$(DISTS_SDK):
+	@echo "Creating blend4web $(subst dist_,,$@) $(VERSION) distribution"
+	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -v $(VERSION) $(DISTFILESDIR)/$(subst dist,blend4web,$@).lst
+
+dist_force: dist_force_addon $(DISTS_SDK_FORCE)
+
+dist_force_addon:
+	@echo "Creating blend4web $(subst dist_force_,,$@) $(VERSION) distribution (overwrite mode)"
+	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -f -r blend4web -v $(VERSION) $(DISTFILESDIR)/blend4web_addon.lst
+
+$(DISTS_SDK_FORCE):
+	@echo "Creating blend4web $(subst dist_force_,,$@) $(VERSION) distribution (overwrite mode)"
+	@$(SH) ./$(SCRIPTSDIR)/make_dist.py -f -v $(VERSION) $(DISTFILESDIR)/$(subst dist_force,blend4web,$@).lst
 
 resave:
 	@$(SH) ./$(SCRIPTSDIR)/process_blend.py -jh resave

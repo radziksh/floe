@@ -87,7 +87,7 @@ Performed in the ``Object Data`` tab when a lamp object is selected.
     Attenuation type. The value is exported but the engine always uses ``Inverse Square``. It is applicable to the ``Point`` and ``Spot`` light source types. The default value is ``Inverse Square``.
 
 *Distance*
-    Attenuation parameter. It is applicable to the ``Point`` and ``Spot`` light source types. The default value is 25.0.
+    Attenuation parameter. It is applicable to the ``Point`` and ``Spot`` light source types. The default value is 30.0.
 
 *Specular*
     Create specular highlights. Enabled by default.
@@ -106,6 +106,12 @@ Performed in the ``Object Data`` tab when a lamp object is selected.
 
 *Shadow > Shadow*
     Use this light source for shadow calculation. Should be used when multiple light sources are present. Disabled by default.
+
+*Shadow > Clip Start*
+    This parameter specifies a distance from the light source, below which objects do not generate shadows. Default value is 1.001.
+
+*Shadow > Clip End*
+    This parameter specifies a distance from the light source, beyond which objects do not generate shadows. Default value is 30.002.
 
 
 .. _environment_lighting:
@@ -208,8 +214,17 @@ The following additional settings are located on the ``Shadows`` panel of the ``
    :align: center
    :width: 100%
 
+*Render Shadows*
+    Enables and disables shadow rendering. Can be set to ``ON``, ``OFF`` and ``AUTO``. Set to ``AUTO`` by default.
+
+*Soft Shadows*
+    This option enables smoothing of the shadow maps. Enabled by default.
+
 *Resolution*
-    Shadow map resolution. The default value is 2048x2048px.
+    Shadow map resolution. The default value is 2048 x 2048px.
+
+*Blur Samples*
+    The number of the samples used for smoothing shadow maps. Available values are 4x, 8x and 16x, with the latter being the default value.
 
 *Self-Shadow Polygon Offset*
     Coefficient for shifting polygons relative to light source orientation. The default value is 1.

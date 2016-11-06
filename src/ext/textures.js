@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -34,41 +33,6 @@ var m_assets   = require("__assets");
  * Texture changing finish callback.
  * @callback TexChangingFinishCallback
  */
-
-
-/**
- * Returns canvas texture context.
- * @method module:textures.get_canvas_texture_context
- * @param {String} id Canvas texture name
- * @param {Number} [data_id=0] ID of loaded data
- * @returns {CanvasRenderingContext2D} Canvas texture context
- * @deprecated use {@link module:textures.get_canvas_ctx|textures.get_canvas_ctx} instead.
- */
-exports.get_canvas_texture_context = function(id, data_id) {
-    m_print.error_deprecated("get_canvas_texture_context", "get_canvas_ctx");
-    if (!data_id)
-        data_id = 0;
-    var canvas_context = m_textures.get_canvas_context(id, data_id);
-    if (canvas_context)
-        return canvas_context;
-    else
-        m_print.error("Canvas texture with ID \"" + id + "\" not found!");
-}
-
-/**
- * Update canvas texture context.
- * @method module:textures.update_canvas_texture_context
- * @param {String} id Canvas texture name
- * @param {Number} [data_id=0] ID of loaded data
- * @deprecated use {@link module:textures.update_canvas_ctx|textures.update_canvas_ctx} instead.
- */
-exports.update_canvas_texture_context = function(id, data_id) {
-    m_print.error_deprecated("update_canvas_texture_context", "update_canvas_ctx");
-    if (!data_id)
-        data_id = 0;
-    if (!m_textures.update_canvas_context(id, data_id))
-        m_print.error("Canvas texture with ID \"" + id + "\" not found!");
-}
 
 /**
  * Play video.
@@ -195,6 +159,18 @@ exports.change_image = function(obj, text_name, image_path, callback) {
                 m_print.error("Couldn't find texture with this name: " + text_name);
     }
     m_assets.enqueue([asset], asset_cb, null, null);
+}
+/**
+ * Get texture names.
+ * @method module:textures.get_texture_names
+ * @param {Object3D} obj Object 3D
+ * @returns {Array} Texture names array
+ */
+exports.get_texture_names = function(obj) {
+    if (!m_obj_util.is_mesh(obj))
+        m_print.error("Object must be type of mesh.");
+    else
+        return m_textures.get_texture_names(obj);
 }
 
 }

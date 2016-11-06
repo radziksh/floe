@@ -7,7 +7,7 @@ Textures
 ********
 
 .. contents:: Table of Contents
-    :depth: 3
+    :depth: 2
     :backlinks: entry
 
 Textures are hand-made or procedurally generated images that can be applied to the model surfaces to add more detail. As a rule, the image pixels are assigned to the 3D surface points using texture mapping. For this reason they are sometimes referred to as maps.
@@ -64,6 +64,9 @@ Generic Settings
 
 *Mapping > Coordinates*
     Texture coordinates type. Supported types are ``UV`` (use UV map), ``Normal`` (use direction at the camera; available only for diffuse maps; used for the creation of **material capture**, **matcap**) and ``Generated``. The default value is ``Generated``.
+ 
+    .. note::
+        Blend4Web engine currently supports no more than two UV maps per material. If the material has more than two UV maps, additional maps will be ignored during the export.
 
 *Mapping > Size*
     Scaling the UV map along respective axes. The default values are 1.0.
@@ -74,7 +77,7 @@ Generic Settings
 .. _texture_disable_compression:
 
 *Export Options > Disable Compression*
-    Disable texture compression for this texture. Used in cases when :ref:`texture compression <dds>` deteriorates the image quality. For example it's recommended to disable compression for mask textures used to mix different parts of materials.
+    Disable texture compression (using ``DDS`` texture format) for this texture. Used in cases when :ref:`texture compression <dds>` deteriorates the image quality. For example it's recommended to disable compression for mask textures used to mix different parts of materials.
 
 *Export Options > Shore Distance Map*
     Used in :ref:`outdoor rendering <outdoor_rendering>`.
@@ -151,6 +154,8 @@ A normal map is used for specifying the distribution of surface normals (perpend
 
 Activation
 ----------
+
+Set the ``Image > Color Space`` parameter to ``Non-Color``.
 
 Enable the ``Geometry > Normal`` checkbox on the ``Textures > Influence`` panel.
 
@@ -464,18 +469,21 @@ On the ``Textures > Export Options`` panel, you can set up properties for these 
 
 .. _render_to_texture_scene:
 
-3D scene
---------
+Render-To-Texture
+-----------------
 
-A 3D scene's real-time rendered image can be used as a texture by an object from another scene ("main" scene).
+An image of a 3D scene rendered in real time also can be used as a texture for an object in another scene ("main" scene). This technique is known as `render-to-texture` (RTT) and can be activated by following these steps:
 
-#. Create an additional source scene.
-#. Rename it for convenience.
-#. Create a ``World``.
-#. Add the objects you need.
-#. Setup the camera view.
-#. Create a UV map for the target object in the main scene.
-#. Set the ``None`` type for a texture of the target object.
+#. Create an additional scene that will be rendered to the texture.
+#. For convenience, give this scene a unique name.
+#. Create a ``World`` setting for this scene.
+#. Add the objects you need to the scene.
+#. Add a camera to the scene and set it up.
+#. Then, switch to the main scene.
+#. Select the target object and create a UV map for it.
+#. Create a texture that will act as the rendering target.
+#. Set the ``None`` type for this texture.
+#. Set the ``UV`` value for the ``Coordinates`` parameter under the ``Mapping`` tab.
 #. Select the ``Scene`` type in the ``Export Options > Source Type`` menu.
 #. Specify the name of the source scene in the ``Export Options > Source ID`` field.
 #. Set the texture size in the ``Export Options > Source Size`` field (in pixels).

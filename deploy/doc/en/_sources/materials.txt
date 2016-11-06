@@ -57,6 +57,15 @@ Lighting Parameters
 *Shading > Shadeless*
     When enabled, a material doesn’t react to light. Disabled by default.
 
+*Shading > Tangent Shading*
+    When this parameter is enabled, the engine will use the material's tangent vector (instead of normal vector) for calculating the object's color. This can be used for creating anisotropic shading effects.
+
+    .. figure:: src_images/materials/materials_tangent_shading_comparison.png
+       :align: center
+       :width: 100%
+ 
+    **On the left:** standard shading model; **on the right:** tangent shading model.
+
 *Shading > Double-Sided Lighting*
     Enables the double-sided lighting mode. This option is useful for non-transparent objects with a single-layered mesh.
 
@@ -145,6 +154,9 @@ Dynamic Reflection
 
 A surface reflects the selected objects in their current position. The engine supports planar and spherical reflections.
 
+.. note::
+    If you are using :ref:`node materials <node_materials>`, dynamic reflection will only work if a ``Material`` or ``Extended Material`` node is present in the node tree.
+
 Activation
 ..........
 
@@ -202,7 +214,7 @@ Settings
 Fresnel effect can be set up both for static and dynamic reflection.
 
 *Material > Mirror > Fresnel*
-Fresnel power for reflection. This is the N exponent in the Schlick’s formula. In Blender it is limited to values from 0 to 5. If this parameter is equal to zero the Fresnel effect is not observed and the *full* reflection at all angles occurs. If this parameter is greater than zero, the material is less reflective when viewing surfaces at angles which are close to the right angle. The bigger this parameter is the bigger is the angle deviation from the right angle for which the Fresnel effect is observed.
+    Fresnel power for reflection. This is the N exponent in the Schlick’s formula. In Blender it is limited to values from 0 to 5. If this parameter is equal to zero the Fresnel effect is not observed and the *full* reflection at all angles occurs. If this parameter is greater than zero, the material is less reflective when viewing surfaces at angles which are close to the right angle. The bigger this parameter is the bigger is the angle deviation from the right angle for which the Fresnel effect is observed.
 
 *Material > Mirror > Blend*
     Fresnel factor for reflection. It is reduced to R\ :sub:`0` in the Schlick’s formula by the following expression: R\ :sub:`0` = 1 - ``Blend`` / 5. In Blender it is limited to values from 0 to 5. This parameter defines the Fresnel effect intensity: the bigger the ``Blend`` factor is, the more is the Fresnel effect influence. If it is equal to zero the Fresnel effect is not observed.
@@ -215,6 +227,8 @@ Fresnel power for reflection. This is the N exponent in the Schlick’s formula.
 
 
 .. index:: materials; rendering properties
+
+.. _rendering_properties:
 
 Rendering Properties
 ====================
@@ -233,6 +247,9 @@ Rendering Properties
     Water wetting effect is activated for the material.
 
     .. seealso:: :ref:`water`
+
+*Material > Rendering Options > Lens Flare*
+    Enabling this parameter activates Lens Flare effect for the material.
 
 *Material > Rendering Options > Render Above All*
     Material is rendered on top of all scene objects. Transparency type with a gradient is required (``Add``, Alpha Blend`` or ``Alpha Sort``).

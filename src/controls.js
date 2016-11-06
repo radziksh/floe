@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -36,7 +35,6 @@ var m_time  = require("__time");
 var m_tsr   = require("__tsr");
 var m_util  = require("__util");
 var m_vec3  = require("__vec3");
-var m_vec4  = require("__vec4");
 
 var cfg_ctl = m_cfg.controls;
 var cfg_dft = m_cfg.defaults;
@@ -103,7 +101,15 @@ var SENSOR_SMOOTH_PERIOD = 0.3;
 
 var KEY_SHIFT = 16;
 
+var MAX_COUNT_FINGERS = 10;
+
 exports.update = function(timeline, elapsed) {
+    // prepare sensor accumulators
+    for (var i = 0; i < _accumulators_cache.length; i++) {
+        var accum = _accumulators_cache[i];
+        prepare_accumulator(accum);
+    }
+
     for (var i = 0; i < _sensors_cache.length; i++) {
         var sensor = _sensors_cache[i];
         update_sensor(sensor, timeline, elapsed);
@@ -225,7 +231,7 @@ function init_sensor(type, element) {
         repeat: false,
 
         // for ST_SELECTION
-        auto_release: false,
+        enable_toggle_switch: false,
 
         // for ST_GAMEPAD_BTNS
         gamepad_id: 0,
@@ -235,6 +241,26 @@ function init_sensor(type, element) {
     };
 
     return sensor;
+}
+
+function prepare_accumulator(accum) {
+    if (!accum.mouse_select_data.is_updated) {
+        accum.mouse_select_data.obj = m_obj.pick_object(
+                accum.mouse_select_data.coord[0],
+                accum.mouse_select_data.coord[1]);
+        accum.mouse_select_data.is_updated = true;
+        accum.global_selected_obj = accum.mouse_select_data.obj;
+    }
+
+    for (var i = 0; i < MAX_COUNT_FINGERS; ++i) {
+        var touch_data = accum.touch_select_dlist[i];
+        if (!touch_data.is_updated) {
+            touch_data.obj = m_obj.pick_object(
+                    touch_data.coord[0], touch_data.coord[1]);
+            touch_data.is_updated = true;
+            accum.global_selected_obj = touch_data.obj;
+        }
+    }
 }
 
 function update_accumulator(accum) {
@@ -303,7 +329,9 @@ function get_accumulator(element) {
         wheel_delta: 0,
 
         // for ST_SELECTION sensor
-        selected_obj: null,
+        global_selected_obj: null,
+        mouse_select_data: create_input_point(),
+        touch_select_dlist: new Array(MAX_COUNT_FINGERS),
 
         // for ST_GYRO_QUAT sensor
         is_updated_gyro_quat: false,
@@ -326,7 +354,8 @@ function get_accumulator(element) {
         mouse_wheel_cb: null,
         mouse_down_which_cb: null,
         mouse_select_cb: null,
-        touch_select_cb: null,
+        touch_select_start_cb: null,
+        touch_select_end_cb: null,
         mouse_up_which_cb: null,
         mouse_location_cb: null,
         keyboard_downed_keys_cb: null,
@@ -336,6 +365,20 @@ function get_accumulator(element) {
 
         registered_accum_values: {},
     };
+    for (var i = 0; i < MAX_COUNT_FINGERS; ++i)
+        accumulator.touch_select_dlist[i] = create_input_point();
+
+    function create_input_point() {
+        return {
+            coord: new Float32Array(2),
+            is_updated: true,
+            obj: null,
+
+            // use for touch
+            identifier: -1,
+            is_released: true
+        };
+    }
 
     accumulator.orientation_quat_cb = function(angles) {
         // calculate gyro_quat only one time per frame
@@ -380,14 +423,58 @@ function get_accumulator(element) {
                 accumulator.element);
         var loc = m_input.get_vector_param(device, m_input.MOUSE_LOCATION, _vec2_tmp);
         var canvas_xy = m_cont.client_to_canvas_coords(loc[0], loc[1], _vec2_tmp);
-        accumulator.selected_obj = m_obj.pick_object(canvas_xy[0], canvas_xy[1]);
+        accumulator.mouse_select_data.is_updated = false;
+        accumulator.mouse_select_data.coord[0] = canvas_xy[0];
+        accumulator.mouse_select_data.coord[1] = canvas_xy[1];
     }
 
-    accumulator.touch_select_cb = function(touches) {
-        if (touches.length == 1) {
-            var canvas_xy = m_cont.client_to_canvas_coords(
-                    touches[0].clientX, touches[0].clientY, _vec2_tmp);
-            accumulator.selected_obj = m_obj.pick_object(canvas_xy[0], canvas_xy[1]);
+    accumulator.touch_select_start_cb = function(touches) {
+        for (var i = 0; i < touches.length; ++i) {
+            var touch = touches[i];
+            var rel_touch = null;
+            var cur_touch = null;
+            for (var j = 0; j < accumulator.touch_select_dlist.length; j++) {
+                var t = accumulator.touch_select_dlist[j];
+                if (t.identifier == touch.identifier) {
+                    if (t.is_released)
+                        cur_touch = t;
+                    break;
+                } else if (!rel_touch && t.is_released) {
+                    rel_touch = t;
+                    rel_touch.identifier = touch.identifier;
+                }
+            }
+
+            var result_touch = cur_touch || rel_touch;
+            if (result_touch) {
+                var canvas_xy = m_cont.client_to_canvas_coords(
+                        touches[i].clientX, touches[i].clientY, _vec2_tmp);
+
+                result_touch.is_updated = false;
+                result_touch.is_released = false;
+                result_touch.coord[0] = canvas_xy[0];
+                result_touch.coord[1] = canvas_xy[1];
+            }
+        }
+    }
+
+    accumulator.touch_select_end_cb = function(touches) {
+        for (var i = 0; i < accumulator.touch_select_dlist.length; ++i) {
+            var touch_select = accumulator.touch_select_dlist[i];
+            var found = false;
+            for (var j = 0; j < touches.length; ++j) {
+                var touch = touches[j];
+                if (touch.identifier == touch_select.identifier) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                touch_select.is_updated = true;
+                touch_select.is_released = true;
+                touch_select.obj = null;
+            }
         }
     }
 
@@ -407,6 +494,14 @@ function get_accumulator(element) {
             accumulator.downed_keys[key] = 1;
             accumulator.is_updated_keyboard = false;
         }
+    }
+
+    accumulator.keyboard_down_mod_keys_cb = function(key) {
+        for(var i = 0; i < accumulator.downed_keys.length; i++)
+            if (accumulator.downed_keys[i] != 0) {
+                accumulator.downed_keys[i] = 3;
+                accumulator.is_updated_keyboard = false;
+            }
     }
 
     accumulator.keyboard_up_keys_cb = function(key) {
@@ -518,9 +613,12 @@ function register_accum_value(accum, value_name) {
     case "touch_select":
         var device = m_input.get_device_by_type_element(m_input.DEVICE_TOUCH,
                 accum.element);
-        if (device)
+        if (device) {
             m_input.attach_param_cb(device, m_input.TOUCH_START,
-                    accum.touch_select_cb);
+                    accum.touch_select_start_cb);
+            m_input.attach_param_cb(device, m_input.TOUCH_END,
+                    accum.touch_select_end_cb);
+        }
         break;
     case "mouse_up_which":
         var device = m_input.get_device_by_type_element(m_input.DEVICE_MOUSE,
@@ -542,6 +640,8 @@ function register_accum_value(accum, value_name) {
         if (device) {
             m_input.attach_param_cb(device, m_input.KEYBOARD_DOWN,
                     accum.keyboard_down_keys_cb);
+            m_input.attach_param_cb(device, m_input.KEYBOARD_DOWN_MODIFIED,
+                    accum.keyboard_down_mod_keys_cb);
             m_input.attach_param_cb(device, m_input.KEYBOARD_UP,
                     accum.keyboard_up_keys_cb);
         }
@@ -618,9 +718,12 @@ function unregister_accum_value(accum, value_name) {
     case "touch_select":
         var device = m_input.get_device_by_type_element(m_input.DEVICE_TOUCH,
                 accum.element);
-        if (device)
+        if (device) {
             m_input.detach_param_cb(device, m_input.TOUCH_START,
-                    accum.touch_select_cb);
+                    accum.touch_select_start_cb);
+            m_input.detach_param_cb(device, m_input.TOUCH_END,
+                    accum.touch_select_end_cb);
+        }
         break;
     case "mouse_up_which":
         var device = m_input.get_device_by_type_element(m_input.DEVICE_MOUSE,
@@ -642,6 +745,8 @@ function unregister_accum_value(accum, value_name) {
         if (device) {
             m_input.detach_param_cb(device, m_input.KEYBOARD_DOWN,
                     accum.keyboard_down_keys_cb);
+            m_input.detach_param_cb(device, m_input.KEYBOARD_DOWN_MODIFIED,
+                    accum.keyboard_down_mod_keys_cb);
             m_input.detach_param_cb(device, m_input.KEYBOARD_UP,
                     accum.keyboard_up_keys_cb);
         }
@@ -798,6 +903,7 @@ exports.create_ray_sensor = function(obj_src, from, to, collision_id,
 exports.create_mouse_click_sensor = function(element) {
     var sensor = init_sensor(ST_MOUSE_CLICK, element);
     sensor.do_activation = true;
+    sensor.payload = {coords: new Float32Array(2), which: null};
     return sensor;
 }
 
@@ -810,7 +916,7 @@ exports.create_mouse_wheel_sensor = function(element) {
 exports.create_mouse_move_sensor = function(axis, element) {
     var sensor = init_sensor(ST_MOUSE_MOVE, element);
     sensor.axis = axis || "XY";
-    sensor.payload = (sensor.axis == "XY") ? new Float32Array(2) : 0;
+    sensor.payload = {coords: new Float32Array(2)};
     sensor.do_activation = true;
     return sensor;
 }
@@ -818,7 +924,7 @@ exports.create_mouse_move_sensor = function(axis, element) {
 exports.create_touch_move_sensor = function(axis, element) {
     var sensor = init_sensor(ST_TOUCH_MOVE, element);
     sensor.axis = axis || "XY";
-    sensor.payload = 0;
+    sensor.payload = {coords: new Float32Array(2), gesture: 0};
     sensor.do_activation = true;
     return sensor;
 }
@@ -839,7 +945,7 @@ exports.create_touch_rotate_sensor = function(element) {
 
 exports.create_touch_click_sensor = function(element) {
     var sensor = init_sensor(ST_TOUCH_CLICK, element);
-    sensor.payload = 0;
+    sensor.payload = {coords: new Float32Array(2)};
     sensor.do_activation = true;
     return sensor;
 }
@@ -1002,10 +1108,10 @@ exports.create_timeline_sensor = function() {
     return sensor;
 }
 
-exports.create_selection_sensor = function(obj, auto_release) {
+exports.create_selection_sensor = function(obj, enable_toggle_switch) {
     var sensor = init_sensor(ST_SELECTION);
     sensor.source_object = obj;
-    sensor.auto_release = auto_release;
+    sensor.enable_toggle_switch = enable_toggle_switch;
     sensor.do_activation = true;
     return sensor;
 }
@@ -1071,6 +1177,9 @@ exports.get_sensor_payload = function(obj, manifold_id, num) {
     return sensor.payload;
 }
 
+/**
+ * uses _vec2_tmp _vec2_tmp2 _vec3_tmp _quat_tmp
+ */
 function update_sensor(sensor, timeline, elapsed) {
     if (!elapsed)
         return;
@@ -1079,8 +1188,8 @@ function update_sensor(sensor, timeline, elapsed) {
     case ST_MOTION:
         var obj = sensor.source_object;
 
-        var trans = m_tsr.get_trans_view(obj.render.world_tsr);
-        var quat = m_tsr.get_quat_view(obj.render.world_tsr);
+        var trans = m_tsr.get_trans(obj.render.world_tsr, _vec3_tmp);
+        var quat = m_tsr.get_quat(obj.render.world_tsr, _quat_tmp);
 
         var dist = m_vec3.dist(sensor.trans_last, trans);
 
@@ -1115,7 +1224,7 @@ function update_sensor(sensor, timeline, elapsed) {
 
     case ST_V_VELOCITY:
         var obj = sensor.source_object;
-        var trans = m_tsr.get_trans_view(obj.render.world_tsr);
+        var trans = m_tsr.get_trans(obj.render.world_tsr, _vec3_tmp);
 
         var vel = Math.abs(trans[1] - sensor.trans_last[1]) / elapsed;
         sensor.avg_vertical_vel = m_util.smooth(vel, sensor.avg_vertical_vel,
@@ -1208,20 +1317,18 @@ function update_sensor(sensor, timeline, elapsed) {
             var delta_x = accum.mouse_curr_x - accum.mouse_last_x;
             var delta_y = accum.mouse_curr_y - accum.mouse_last_y;
 
+            sensor.payload.coords[0] = accum.mouse_curr_x;
+            sensor.payload.coords[1] = accum.mouse_curr_y;
             switch (sensor.axis) {
             case "X":
                 sensor_set_value(sensor, delta_x);
-                sensor.payload = accum.mouse_curr_x;
                 break;
             case "Y":
                 sensor_set_value(sensor, delta_y);
-                sensor.payload = accum.mouse_curr_y;
                 break;
             case "XY":
                 var delta = Math.sqrt(delta_x*delta_x + delta_y*delta_y);
                 sensor_set_value(sensor, delta);
-                sensor.payload[0] = accum.mouse_curr_x;
-                sensor.payload[1] = accum.mouse_curr_y;
                 break;
             }
         }
@@ -1229,15 +1336,29 @@ function update_sensor(sensor, timeline, elapsed) {
     case ST_MOUSE_CLICK:
         var accum = get_accumulator(sensor.element);
         sensor_set_value(sensor, accum.is_mouse_downed);
-        sensor.payload = accum.which;
+        sensor.payload.which = accum.which;
+        sensor.payload.coords[0] = accum.mouse_curr_x;
+        sensor.payload.coords[1] = accum.mouse_curr_y;
         break;
     case ST_SELECTION:
         var accum = get_accumulator(sensor.element);
-        if (sensor.auto_release && !accum.is_mouse_downed && accum.is_touch_ended ||
-                accum.selected_obj != sensor.source_object)
-            sensor_set_value(sensor, 0);
-        else
-            sensor_set_value(sensor, 1);
+        sensor_set_value(sensor, 0);
+        if (!sensor.enable_toggle_switch) {
+            if (accum.is_mouse_downed &&
+                    accum.mouse_select_data.obj == sensor.source_object)
+                sensor_set_value(sensor, 1);
+            else if (!accum.is_touch_ended) {
+                for (var i = 0; i < MAX_COUNT_FINGERS; ++i) {
+                    var touch_data = accum.touch_select_dlist[i];
+                    if (touch_data.obj == sensor.source_object) {
+                        sensor_set_value(sensor, 1);
+                        break;
+                    }
+                }
+            }
+        } else
+            if (accum.global_selected_obj == sensor.source_object)
+                sensor_set_value(sensor, 1);
         break;
     case ST_KEYBOARD:
         var accum = get_accumulator(sensor.element);
@@ -1274,7 +1395,7 @@ function update_sensor(sensor, timeline, elapsed) {
                 }
             }
 
-            sensor.payload = exports.PL_SINGLE_TOUCH_MOVE;
+            sensor.payload.gesture = exports.PL_SINGLE_TOUCH_MOVE;
         } else {
             var cur_center = _vec2_tmp;
             cur_center[0] = (accum.touches_curr_x[0] + accum.touches_curr_x[1]) / 2;
@@ -1288,9 +1409,10 @@ function update_sensor(sensor, timeline, elapsed) {
             var delta_y = (cur_center[1] - last_center[1]);
             var delta = Math.sqrt(delta_x * delta_x + delta_y * delta_y);
 
-            sensor.payload = exports.PL_MULTITOUCH_MOVE_PAN;
+            sensor.payload.gesture = exports.PL_MULTITOUCH_MOVE_PAN;
         }
-
+        sensor.payload.coords[0] = accum.touches_curr_x[0];
+        sensor.payload.coords[1] = accum.touches_curr_y[0];
         switch(sensor.axis) {
         case "X":
             sensor_set_value(sensor, delta_x);
@@ -1322,6 +1444,8 @@ function update_sensor(sensor, timeline, elapsed) {
         break;
     case ST_TOUCH_CLICK:
         var accum = get_accumulator(sensor.element);
+        sensor.payload.coords[0] = accum.touches_curr_x[0];
+        sensor.payload.coords[1] = accum.touches_curr_y[0];
         if (accum.is_touch_ended)
             sensor_set_value(sensor, 0);
         else

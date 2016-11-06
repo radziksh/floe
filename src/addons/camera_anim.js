@@ -14,7 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 "use strict";
 
 /**
@@ -530,9 +529,9 @@ exports.move_camera_to_point = function(cam_obj, point_obj, cam_lin_speed, cam_a
     var move_time = distance / cam_lin_speed;
 
     var current_cam_dir = m_util.quat_to_dir(m_tsr.get_quat_view(cam_tsr),
-                                             m_util.AXIS_MY, _vec3_tmp);
+                                             m_util.AXIS_MZ, _vec3_tmp);
     var target_cam_dir  = m_util.quat_to_dir(m_tsr.get_quat_view(point_tsr),
-                                             m_util.AXIS_MY, _vec3_tmp2);
+                                             m_util.AXIS_MZ, _vec3_tmp2);
 
     var vec_dot     = Math.min(Math.abs(m_vec3.dot(current_cam_dir,
                                                    target_cam_dir)), 1);
@@ -563,7 +562,7 @@ exports.move_camera_to_point = function(cam_obj, point_obj, cam_lin_speed, cam_a
             if (cb)
                 cb();
         }
-    })
+    });
 }
 
 /**
