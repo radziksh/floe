@@ -7,16 +7,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Blend4Web 16.08\n"
 "Report-Msgid-Bugs-To: https://www.blend4web.com/en/forums/forum/17/\n"
-"POT-Creation-Date: 2016-09-01 16:56+0300\n"
-"PO-Revision-Date: 2016-10-04 20:18+0800\n"
+"POT-Creation-Date: 2016-11-23 15:38+0300\n"
+"PO-Revision-Date: 2016-12-23 18:07+0800\n"
 "Last-Translator: Blend4Web Team <info [at] blend4web.com>\n"
 "Language-Team: Chinese <info [at] blend4web.com>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
-"Language: zh_CN\n"
-"X-Generator: Poedit 1.8.9\n"
+"Language: zh\n"
+"X-Generator: Poedit 1.8.11\n"
 
 #: ../particles.rst:7
 msgid "Particle System. Fluids"
@@ -231,8 +231,8 @@ msgid ""
 "Emission source type. The following types are supported: ``Verts`` (emit from "
 "vertices), ``Faces`` (emit from polygons). The default is ``Faces``."
 msgstr ""
-"发射源类型。支持以下类型︰ ``Verts`` （从顶点发出），``Faces`` （从多边形发出）。"
-"默认值为 ``Faces``."
+"发射源类型。支持以下类型︰ ``Verts`` （从顶点发出），``Faces`` （从多边形发"
+"出）。默认值为 ``Faces``."
 
 #: ../particles.rst:103
 msgid "*Emission > Cyclic emission*"
@@ -248,26 +248,23 @@ msgstr ""
 "``Emission > Start`` 的值为零。默认为禁用。"
 
 #: ../particles.rst:106
-msgid "*Emission > Random Delay*"
-msgstr "*Emission > Random Delay*"
+msgid "*Emission > Allow NLA*"
+msgstr "*Emission > Allow NLA*"
 
 #: ../particles.rst:106
 msgid ""
-"The option enables a random emission time for particles. Disabled by default."
-msgstr "该选项允许启用粒子随机发射时间。默认情况下禁用。"
+"Activating this option allows particle emission to be controlled by NLA. "
+"Enabled by default."
+msgstr "激活此选项将允许粒子发射由NLA进行控制。默认情况下启用。"
 
 #: ../particles.rst:110
-msgid "*Emission > Emit From > Distribution*"
-msgstr "*Emission > Emit From > Distribution*"
+msgid "*Emission > Random Delay*"
+msgstr "*Emission > Random Delay*"
 
 #: ../particles.rst:109
 msgid ""
-"Emission distribution settings: ``Jittered``, ``Random``, ``Grid``. Ignored by "
-"the engine. Internally the engine always uses ``Random`` distribution. The "
-"default is ``Jittered``."
-msgstr ""
-"发射分布设置：``Jittered``，``Random``，``Grid``。由引擎忽略。在内部，引擎始终"
-"使用 ``Random`` 分布。默认值是 ``Jittered`` 。"
+"The option enables a random emission time for particles. Disabled by default."
+msgstr "该选项允许启用粒子随机发射时间。默认情况下禁用。"
 
 #: ../particles.rst:113
 msgid "Direction Settings"
@@ -611,3 +608,14 @@ msgstr "粒子系统"
 #: ../particles.rst:3
 msgid "fluids"
 msgstr "流体"
+
+#~ msgid "*Emission > Emit From > Distribution*"
+#~ msgstr "*Emission > Emit From > Distribution*"
+
+#~ msgid ""
+#~ "Emission distribution settings: ``Jittered``, ``Random``, ``Grid``. Ignored "
+#~ "by the engine. Internally the engine always uses ``Random`` distribution. "
+#~ "The default is ``Jittered``."
+#~ msgstr ""
+#~ "发射分布设置：``Jittered``，``Random``，``Grid``。由引擎忽略。在内部，引擎始"
+#~ "终使用 ``Random`` 分布。默认值是 ``Jittered`` 。"

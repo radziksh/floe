@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>场景设置 &mdash; Blend4Web 16.10 用户手册</title>
+  <title>场景设置 &mdash; Blend4Web 17.02.1 用户手册</title>
   
 
   
@@ -32,7 +32,7 @@
   
         <link rel="author" title="关于这些文档"
               href="about.html"/>
-    <link rel="top" title="Blend4Web 16.10 用户手册" href="index.html"/>
+    <link rel="top" title="Blend4Web 17.02.1 用户手册" href="index.html"/>
         <link rel="next" title="物体" href="objects.html"/>
         <link rel="prev" title="插件" href="addon.html"/> 
 
@@ -61,7 +61,7 @@
           
           
             <div class="version">
-              v16.10
+              v17.02.1
             </div>
           
         
@@ -118,7 +118,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#nla">NLA 片段</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#meta-tags">Meta标签</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#physics">物理</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#cluster-batching">簇批量</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#objects-clustering">物体聚类</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#objects-selection">选择物体</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#anchors">锚</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#export-options">导出选项</a></li>
@@ -233,7 +233,7 @@
 <li><a class="reference internal" href="#nla" id="id26">NLA 片段</a></li>
 <li><a class="reference internal" href="#meta-tags" id="id27">Meta标签</a></li>
 <li><a class="reference internal" href="#physics" id="id28">物理</a></li>
-<li><a class="reference internal" href="#cluster-batching" id="id29">簇批量</a></li>
+<li><a class="reference internal" href="#objects-clustering" id="id29">物体聚类</a></li>
 <li><a class="reference internal" href="#objects-selection" id="id30">选择物体</a></li>
 <li><a class="reference internal" href="#anchors" id="id31">锚</a></li>
 <li><a class="reference internal" href="#export-options" id="id32">导出选项</a></li>
@@ -297,7 +297,7 @@
 <a class="reference internal image-reference" href="_images/render_reflections_and_refractions.png"><img alt="_images/render_reflections_and_refractions.png" class="align-center" src="_images/render_reflections_and_refractions.png" style="width: 100%;" /></a>
 <dl class="docutils">
 <dt><em>反射</em></dt>
-<dd><p class="first last">反射效果设置。可设置 <code class="docutils literal"><span class="pre">ON</span></code>，<code class="docutils literal"><span class="pre">OFF</span></code> 或 <code class="docutils literal"><span class="pre">AUTO</span></code>。默认设置为``ON``。</p>
+<dd><p class="first last">反射效果设置。可设置 <code class="docutils literal"><span class="pre">ON</span></code>，<code class="docutils literal"><span class="pre">OFF</span></code> 或 <code class="docutils literal"><span class="pre">AUTO</span></code>。默认设置为 <code class="docutils literal"><span class="pre">ON</span></code>。</p>
 </dd>
 <dt><em>折射</em></dt>
 <dd><p class="first last">折射效果设置。可设置 <code class="docutils literal"><span class="pre">ON</span></code>，<code class="docutils literal"><span class="pre">OFF</span></code> 或 <code class="docutils literal"><span class="pre">AUTO</span></code>。默认设置为 <code class="docutils literal"><span class="pre">AUTO</span></code> 。</p>
@@ -316,6 +316,10 @@
 <span id="render-glow-materials"></span><h3><a class="toc-backref" href="#id11">晕光材质</a><a class="headerlink" href="#glow-materials" title="永久链接至标题">¶</a></h3>
 <p>晕光材质效果设置。  详尽的描述在 <a class="reference internal" href="colors.html#color-correction"><span>自己的章节</span></a>.</p>
 <a class="reference internal image-reference" href="_images/render_glow_materials.png"><img alt="_images/render_glow_materials.png" class="align-center" src="_images/render_glow_materials.png" style="width: 100%;" /></a>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p class="last">For dynamically loaded objects, <code class="docutils literal"><span class="pre">AUTO</span></code> setting is interpreted as <code class="docutils literal"><span class="pre">OFF</span></code>, if no materials with glow are present in the scene. If you are using dynamic loading, you should set this parameter to <code class="docutils literal"><span class="pre">ON</span></code>.</p>
+</div>
 </div>
 <div class="section" id="anti-aliasing">
 <span id="render-anti-aliasing"></span><h3><a class="toc-backref" href="#id12">抗锯齿</a><a class="headerlink" href="#anti-aliasing" title="永久链接至标题">¶</a></h3>
@@ -487,17 +491,16 @@
 </dd>
 </dl>
 </div>
-<div class="section" id="cluster-batching">
-<span id="scene-batching"></span><h3><a class="toc-backref" href="#id29">簇批量</a><a class="headerlink" href="#cluster-batching" title="永久链接至标题">¶</a></h3>
-<p>该参数允许使用簇批量。它可用于优化目的。这是默认情况下禁用。</p>
-<div class="admonition note">
-<p class="first admonition-title">注解</p>
-<p class="last">如果禁用此参数，引擎将尝试将所有静态对象合二为一。</p>
-</div>
-<a class="reference internal image-reference" href="_images/scene_cluster_batching.png"><img alt="_images/scene_cluster_batching.png" class="align-center" src="_images/scene_cluster_batching.png" style="width: 100%;" /></a>
+<div class="section" id="objects-clustering">
+<span id="scene-batching"></span><h3><a class="toc-backref" href="#id29">物体聚类</a><a class="headerlink" href="#objects-clustering" title="永久链接至标题">¶</a></h3>
+<p>物体集群的设置。它可用于优化目的。</p>
+<a class="reference internal image-reference" href="_images/scene_object_clustering.png"><img alt="_images/scene_object_clustering.png" class="align-center" src="_images/scene_object_clustering.png" style="width: 100%;" /></a>
 <dl class="docutils">
 <dt><em>簇大小</em></dt>
-<dd><p class="first last">簇的用于批量（米）的尺寸。默认设置为30。如果该参数被设置为零，对象将不会被合并。</p>
+<dd><p class="first last">簇的用于批量（尺寸：米）的处理。如果该参数被设置为零，引擎将场景中所有物体合并。默认设置为零。</p>
+</dd>
+<dt><em>LOD簇大小乘数</em></dt>
+<dd><p class="first last">该参数用于细分簇（基于每个物体指定的LOD距离）到较小的部分使得不同情况的层次细节切换不被引起注意。小簇的大小是由物体的LOD距离乘以这个参数的值定义。较高的值导致更大的簇，提高性能但使得过渡比较明显，而较低的值让转换不被引起注意但是以性能降低为代价。默认设置为0.5。</p>
 </dd>
 </dl>
 </div>
@@ -574,8 +577,9 @@
 <dt><em>只渲染反射</em></dt>
 <dd><p class="first last">在渲染的反射时 <em>只</em> 渲染天空。</p>
 </dd>
-<dt><em>World Background</em></dt>
-<dd>Enables and disables <code class="docutils literal"><span class="pre">World</span> <span class="pre">Background</span></code> option (located under the <code class="docutils literal"><span class="pre">Display</span></code> tab of the <code class="docutils literal"><span class="pre">3D</span> <span class="pre">View</span></code> panel). When this option is activated, background colors are rendered in the viewport window the same way they would be in the engine itself.</dd>
+<dt><em>世界背景</em></dt>
+<dd><p class="first last">启用和禁用  <code class="docutils literal"><span class="pre">世界背景</span></code> （位于   <code class="docutils literal"><span class="pre">3D</span> <span class="pre">View</span></code> 面板下的 <code class="docutils literal"><span class="pre">Display</span></code> 选项卡）。当激活此选项，则背景颜色在视区窗口中渲染的方式跟在引擎里面渲染是一样的。</p>
+</dd>
 </dl>
 </div>
 <div class="section" id="environment-lighting">
@@ -673,7 +677,7 @@
   <div role="contentinfo">
     <p>
         &copy; 版权所有 2014-2016, Triumph.
-      最后更新于 2016-10-27.
+      最后更新于 2017-03-07.
 
     </p>
   </div>
@@ -729,7 +733,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'v16.10',
+            VERSION:'v17.02.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

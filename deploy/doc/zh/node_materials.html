@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>节点材质 &mdash; Blend4Web 16.10 用户手册</title>
+  <title>节点材质 &mdash; Blend4Web 17.02.1 用户手册</title>
   
 
   
@@ -32,7 +32,7 @@
   
         <link rel="author" title="关于这些文档"
               href="about.html"/>
-    <link rel="top" title="Blend4Web 16.10 用户手册" href="index.html"/>
+    <link rel="top" title="Blend4Web 17.02.1 用户手册" href="index.html"/>
         <link rel="next" title="逻辑编辑器" href="logic_editor.html"/>
         <link rel="prev" title="材质库" href="material_library.html"/> 
 
@@ -61,7 +61,7 @@
           
           
             <div class="version">
-              v16.10
+              v17.02.1
             </div>
           
         
@@ -127,37 +127,37 @@
 <li class="toctree-l3"><a class="reference internal" href="#refraction-b4w-refraction">折射（B4W_REFRACTION）</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id10">输入参数</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#id11">输出参数</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id12">输出参数</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#replace-b4w-replace">替换（B4W_REPLACE）</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id13">输入参数</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id14">输出参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id12">输入参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id13">输出参数</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#smoothstep-b4w-smoothstep">平滑步进（B4W_SMOOTHSTEP）</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id15">输入参数</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id16">输出参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id14">输入参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id15">输出参数</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#time-b4w-time">时间（B4W_TIME）</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id17">输入参数</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id18">输出参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id16">输入参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id17">输出参数</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#translucency-b4w-translucency">半透明（B4W_TRANSLUCENCY）</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id19">输入参数</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id20">输出参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id18">输入参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id19">输出参数</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#vector-view-b4w-vector-view">矢量视图（B4W_VECTOR_VIEW）</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id21">输入参数</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id22">输出参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id20">输入参数</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id21">输出参数</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#linear-to-srgb-and-srgb-to-linear-deprecated">线性到 SRGB和SRGB线性（已取消）</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#cycles-nodes">Cycles 节点</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="logic_editor.html">逻辑编辑器</a></li>
@@ -240,6 +240,7 @@
 <li><a class="reference internal" href="#linear-to-srgb-and-srgb-to-linear-deprecated" id="id37">线性到 SRGB和SRGB线性（已取消）</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#cycles-nodes" id="id38">Cycles 节点</a></li>
 </ul>
 </li>
 </ul>
@@ -249,7 +250,7 @@
 <div class="section" id="standard-nodes">
 <span id="generic-node-materials"></span><h2><a class="toc-backref" href="#id24">标准节点</a><a class="headerlink" href="#standard-nodes" title="永久链接至标题">¶</a></h2>
 <p id="index-1">Blend4Web支持所有标准的Blender节点，但他们中的一些工作的不够快，因此不建议在实时应用程序中使用。创建非常复杂的材质，尤其是使用大量的 <code class="docutils literal"><span class="pre">Geometry</span></code> 和 <code class="docutils literal"><span class="pre">Texture</span></code> 节点，也不推荐。</p>
-<p>Cycles节点仅部分支持：在大多数情况下，他们在Blend4Web工作的方式跟他们在Blender的方式也不同。他们也可能不会完全工作，甚至导致使用它们的材质无法正常工作。然而，使用Cycles的节点不会在应用程序工作流中导致不稳定。</p>
+<p>引擎能部分支持某些Cycles节点。本内容的更详尽描述在  <a class="reference internal" href="#cycles-nodes"><span>相应章节</span></a>.</p>
 <p id="node-performance">标准节点的性能和支持度在表中说明。</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -404,8 +405,8 @@
 <td><p class="first last">高</p>
 </td>
 </tr>
-<tr class="row-odd"><td>Normal
-Map <a class="footnote-reference" href="#f1" id="id2">[1]</a></td>
+<tr class="row-odd"><td><p class="first last">法线贴图 <a class="footnote-reference" href="#f1" id="id2">[1]</a></p>
+</td>
 <td><p class="first last">用来插入法线贴图</p>
 </td>
 <td><p class="first last">全部</p>
@@ -520,8 +521,8 @@ Map <a class="footnote-reference" href="#f1" id="id2">[1]</a></td>
 <td><p class="first last">高</p>
 </td>
 </tr>
-<tr class="row-even"><td>Vector
-Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
+<tr class="row-even"><td><p class="first last">矢量变换 <a class="footnote-reference" href="#f2" id="id3">[2]</a></p>
+</td>
 <td><p class="first last">在世界，相机和物体坐标空间中转换矢量，点或法线。</p>
 </td>
 <td><p class="first last">全部</p>
@@ -708,22 +709,14 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
 <p class="last"><a class="reference internal" href="materials.html#alpha-blend"><span>透明</span></a></p>
 </div>
 </div>
-<div class="section" id="id12">
-<h4>输出参数<a class="headerlink" href="#id12" title="永久链接至标题">¶</a></h4>
-<dl class="docutils">
-<dt><em>Color</em></dt>
-<dd><p class="first last">输出颜色。</p>
-</dd>
-</dl>
-</div>
 </div>
 <div class="section" id="replace-b4w-replace">
 <span id="node-replace"></span><h3><a class="toc-backref" href="#id32">替换（B4W_REPLACE）</a><a class="headerlink" href="#replace-b4w-replace" title="永久链接至标题">¶</a></h3>
 <p>节点替换取决于工作环境（即Blender视口或Blend4Web）的输入。在Blender工作时，<code class="docutils literal"><span class="pre">Color1</span></code> 输入被连接到``Color`` 输出和 <code class="docutils literal"><span class="pre">Color2</span></code> 输入被忽略。相反在引擎中输入被替换时（这时 <code class="docutils literal"><span class="pre">Color1</span></code> 被忽略，<code class="docutils literal"><span class="pre">Color2</span></code> 被连接到输出）。节点意欲在视口中显示的一个节点的结构和其他 - 在引擎中。</p>
 <a class="reference internal image-reference" href="_images/node_materials_replace.png"><img alt="_images/node_materials_replace.png" class="align-center" src="_images/node_materials_replace.png" style="width: 100%;" /></a>
 <p>作为一项规则是用于法线贴图。 Blender的节点材质不支持坐标的切线空间。因此，唯一可能的在视口中来显示法线贴图正确的方法是在 <code class="docutils literal"><span class="pre">Material</span></code> 节点内的使用。</p>
-<div class="section" id="id13">
-<h4>输入参数<a class="headerlink" href="#id13" title="永久链接至标题">¶</a></h4>
+<div class="section" id="id12">
+<h4>输入参数<a class="headerlink" href="#id12" title="永久链接至标题">¶</a></h4>
 <dl class="docutils">
 <dt><em>Color1</em></dt>
 <dd><p class="first last">节点的设置，这将是在Blender视口中可见。</p>
@@ -733,8 +726,8 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
 </dd>
 </dl>
 </div>
-<div class="section" id="id14">
-<h4>输出参数<a class="headerlink" href="#id14" title="永久链接至标题">¶</a></h4>
+<div class="section" id="id13">
+<h4>输出参数<a class="headerlink" href="#id13" title="永久链接至标题">¶</a></h4>
 <dl class="docutils">
 <dt><em>Color</em></dt>
 <dd><p class="first last">应连接到 <code class="docutils literal"><span class="pre">Material</span></code> 或 <code class="docutils literal"><span class="pre">扩展Material</span></code> 节点的 <code class="docutils literal"><span class="pre">Color</span></code> 插座。</p>
@@ -746,8 +739,8 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
 <span id="node-smoothstep"></span><h3><a class="toc-backref" href="#id33">平滑步进（B4W_SMOOTHSTEP）</a><a class="headerlink" href="#smoothstep-b4w-smoothstep" title="永久链接至标题">¶</a></h3>
 <p>进行基于第一值的两个输入值之间的平滑内插。</p>
 <a class="reference internal image-reference" href="_images/node_materials_smoothstep.png"><img alt="_images/node_materials_smoothstep.png" class="align-center" src="_images/node_materials_smoothstep.png" style="width: 100%;" /></a>
-<div class="section" id="id15">
-<h4>输入参数<a class="headerlink" href="#id15" title="永久链接至标题">¶</a></h4>
+<div class="section" id="id14">
+<h4>输入参数<a class="headerlink" href="#id14" title="永久链接至标题">¶</a></h4>
 <dl class="docutils">
 <dt><em>值</em></dt>
 <dd><p class="first last">决定插值的平滑度的值。</p>
@@ -760,8 +753,8 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
 </dd>
 </dl>
 </div>
-<div class="section" id="id16">
-<h4>输出参数<a class="headerlink" href="#id16" title="永久链接至标题">¶</a></h4>
+<div class="section" id="id15">
+<h4>输出参数<a class="headerlink" href="#id15" title="永久链接至标题">¶</a></h4>
 <dl class="docutils">
 <dt><em>值</em></dt>
 <dd><p class="first last">插值。</p>
@@ -769,7 +762,7 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
 </dl>
 <div class="admonition note">
 <p class="first admonition-title">注解</p>
-<p class="last">对于正确的插值，输入``Value`` 必须在 <code class="docutils literal"><span class="pre">Edge0</span></code> 和 <code class="docutils literal"><span class="pre">Edge1</span></code> 之间。</p>
+<p class="last">对于正确的插值，输入 <code class="docutils literal"><span class="pre">Value</span></code> 必须在 <code class="docutils literal"><span class="pre">Edge0</span></code> 和 <code class="docutils literal"><span class="pre">Edge1</span></code> 之间。</p>
 </div>
 </div>
 </div>
@@ -777,12 +770,12 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
 <span id="node-time"></span><h3><a class="toc-backref" href="#id34">时间（B4W_TIME）</a><a class="headerlink" href="#time-b4w-time" title="永久链接至标题">¶</a></h3>
 <p>提供时间表，从引擎起动计数（以秒计）。可用于在节点的材质，如UV坐标动画任何参数，混合的因子，透明度等。</p>
 <img alt="_images/node_time.png" class="align-center" src="_images/node_time.png" />
-<div class="section" id="id17">
-<h4>输入参数<a class="headerlink" href="#id17" title="永久链接至标题">¶</a></h4>
+<div class="section" id="id16">
+<h4>输入参数<a class="headerlink" href="#id16" title="永久链接至标题">¶</a></h4>
 <p>无</p>
 </div>
-<div class="section" id="id18">
-<h4>输出参数<a class="headerlink" href="#id18" title="永久链接至标题">¶</a></h4>
+<div class="section" id="id17">
+<h4>输出参数<a class="headerlink" href="#id17" title="永久链接至标题">¶</a></h4>
 <dl class="docutils">
 <dt><em>值</em></dt>
 <dd><p class="first last">从引擎起动开始经过的时间（秒）。</p>
@@ -798,8 +791,8 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
 <span id="node-translucency"></span><h3><a class="toc-backref" href="#id35">半透明（B4W_TRANSLUCENCY）</a><a class="headerlink" href="#translucency-b4w-translucency" title="永久链接至标题">¶</a></h3>
 <p>节点实现了一个半透明效果（只对于光源）的薄的物体，如布，树叶，纸张等的效果，由两部分组成：1）物体侧的增亮这是相对的光源和2）光点就在光源处的外观。</p>
 <a class="reference internal image-reference" href="_images/node_materials_translucency.png"><img alt="_images/node_materials_translucency.png" class="align-center" src="_images/node_materials_translucency.png" style="width: 100%;" /></a>
-<div class="section" id="id19">
-<h4>输入参数<a class="headerlink" href="#id19" title="永久链接至标题">¶</a></h4>
+<div class="section" id="id18">
+<h4>输入参数<a class="headerlink" href="#id18" title="永久链接至标题">¶</a></h4>
 <dl class="docutils">
 <dt><em>Color</em></dt>
 <dd><p class="first last">它定义了材质异质性单通道纹理 - 白色表示最大的半透明效果，而黑色代表不存在。白色默认情况下使用。</p>
@@ -834,8 +827,8 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
 </dd>
 </dl>
 </div>
-<div class="section" id="id20">
-<h4>输出参数<a class="headerlink" href="#id20" title="永久链接至标题">¶</a></h4>
+<div class="section" id="id19">
+<h4>输出参数<a class="headerlink" href="#id19" title="永久链接至标题">¶</a></h4>
 <dl class="docutils">
 <dt><em>半透明</em></dt>
 <dd><p class="first last">输出应被连接到 <code class="docutils literal"><span class="pre">扩展Material</span></code> 节点的 <code class="docutils literal"><span class="pre">Translucency</span></code> 输入。</p>
@@ -851,16 +844,16 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
 <span id="node-vector-view"></span><h3><a class="toc-backref" href="#id36">矢量视图（B4W_VECTOR_VIEW）</a><a class="headerlink" href="#vector-view-b4w-vector-view" title="永久链接至标题">¶</a></h3>
 <p>该节点将一个向量坐标转换到相机的空间。转换是必要的，因为引擎定义矢量坐标系在世界空间。如果正常矢量是由该节点转变它应该只对影响，不用于连接到 <code class="docutils literal"><span class="pre">Material</span></code> 或 <code class="docutils literal"><span class="pre">扩展Material</span></code> 节点的输出。</p>
 <a class="reference internal image-reference" href="_images/node_materials_vector_view.png"><img alt="_images/node_materials_vector_view.png" class="align-center" src="_images/node_materials_vector_view.png" style="width: 100%;" /></a>
-<div class="section" id="id21">
-<h4>输入参数<a class="headerlink" href="#id21" title="永久链接至标题">¶</a></h4>
+<div class="section" id="id20">
+<h4>输入参数<a class="headerlink" href="#id20" title="永久链接至标题">¶</a></h4>
 <dl class="docutils">
 <dt><em>矢量</em></dt>
 <dd><p class="first last">向量的坐标在世界空间。</p>
 </dd>
 </dl>
 </div>
-<div class="section" id="id22">
-<h4>输出参数<a class="headerlink" href="#id22" title="永久链接至标题">¶</a></h4>
+<div class="section" id="id21">
+<h4>输出参数<a class="headerlink" href="#id21" title="永久链接至标题">¶</a></h4>
 <dl class="docutils">
 <dt><em>矢量</em></dt>
 <dd><p class="first last">矢量坐标在摄像机空间。</p>
@@ -877,6 +870,41 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
 <p class="last"><a class="reference internal" href="colors.html#gamma-node-materials"><span>伽马在节点材质中</span></a></p>
 </div>
 </div>
+</div>
+<div class="section" id="cycles-nodes">
+<span id="id22"></span><h2><a class="toc-backref" href="#id38">Cycles 节点</a><a class="headerlink" href="#cycles-nodes" title="永久链接至标题">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p>Cycles节点的支持是不建议在生产中使用环境的实验性功能。</p>
+<p class="last">It should also be noted that using Cycles nodes in Blend4Web will produce images similar, but not identical to the ones created using Cycles renderer itself.</p>
+</div>
+<p>引擎支持以下 <code class="docutils literal"><span class="pre">Cycles</span></code> 节点︰</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">Material</span> <span class="pre">Output</span></code> (only <code class="docutils literal"><span class="pre">Surface</span></code> and <code class="docutils literal"><span class="pre">Displacement</span></code> inputs are supported);</li>
+<li><code class="docutils literal"><span class="pre">BSDF</span> <span class="pre">Diffuse</span></code>;</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">BSDF</span> <span class="pre">Glossy</span></code> (只支持 <code class="docutils literal"><span class="pre">GGX</span></code> 分布;  <code class="docutils literal"><span class="pre">Roughness</span></code> 参数不影响反射);</p>
+</li>
+<li><code class="docutils literal"><span class="pre">Transparent</span> <span class="pre">BSDF</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Mix</span> <span class="pre">Shader</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Fresnel</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Layer</span> <span class="pre">Weight</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Image</span> <span class="pre">Texture</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Environment</span> <span class="pre">Texture</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Object</span> <span class="pre">Info</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Bump</span></code>.</li>
+</ul>
+<p>部分支持以下节点︰</p>
+<ul class="simple">
+<li><p class="first"><code class="docutils literal"><span class="pre">Texture</span> <span class="pre">Coordinates</span></code> (<code class="docutils literal"><span class="pre">From</span> <span class="pre">Dupli</span></code> 参数不支持);</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">UV</span> <span class="pre">Map</span></code> (<code class="docutils literal"><span class="pre">From</span> <span class="pre">Dupli</span></code> 参数不支持);</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">Geometry</span></code> (  <code class="docutils literal"><span class="pre">Pointness</span></code> 和 <code class="docutils literal"><span class="pre">Parametric</span></code> 参数不支持).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">Emission</span></code> (不会影响场景中的打灯效果).</p>
+</li>
+</ul>
+<p>其他 <code class="docutils literal"><span class="pre">Cycles</span></code> 节点在大多数情况下在不会在Blend4Web中跟他们在Blender中一样良好工作。他们不会工作也可能引起材质的不正常显示和工作。但是，使用这些节点不会在应用程序工作流中导致不稳定。</p>
 </div>
 </div>
 
@@ -900,7 +928,7 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
   <div role="contentinfo">
     <p>
         &copy; 版权所有 2014-2016, Triumph.
-      最后更新于 2016-10-27.
+      最后更新于 2017-03-07.
 
     </p>
   </div>
@@ -956,7 +984,7 @@ Transform <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'v16.10',
+            VERSION:'v17.02.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

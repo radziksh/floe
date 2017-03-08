@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2016 Triumph LLC
+ * Copyright (C) 2014-2017 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,20 +33,12 @@ var m_vec4   = require("__vec4");
 
 var cfg_def = m_cfg.defaults;
 
-var _vec4_tmp   = new Float32Array(4);
-var _quat4_tmp  = new Float32Array(4);
-var _quat4_tmp2 = new Float32Array(4);
-var _tsr_tmp    = m_tsr.create();
-var _tsr_tmp2   = m_tsr.create();
-
-var DEBUG_DISABLE_STATIC_OBJS = false;
-
 var LOD_DIST_MAX_INFINITY = -1;
 exports.LOD_DIST_MAX_INFINITY = LOD_DIST_MAX_INFINITY;
 
 /**
  * Create abstract render
- * @param {String} type "DYNAMIC", "STATIC", "CAMERA", "EMPTY", "NONE"
+ * @param {string} type "DYNAMIC", "STATIC", "CAMERA", "EMPTY", "NONE"
  */
 exports.create_render = create_render;
 function create_render(type) {
@@ -54,14 +46,13 @@ function create_render(type) {
     var render = {
         // common properties
         type: type,
-        id: 0,
         data_id: 0,
         world_tsr: m_tsr.create_ext(),
         world_tsr_inv: m_tsr.create_ext(),
         pivot: new Float32Array(3),
         hover_pivot: new Float32Array(3),
         init_dist: 0,
-        init_top: 0,
+        init_fov: 0,
         is_copied: false,
         is_copied_deep: false,
 
@@ -89,8 +80,6 @@ function create_render(type) {
         dof_foreground_blur : false,
         dof_object: null,
 
-        underwater: false,
-
         horizontal_limits: null,
         vertical_limits: null,
         distance_limits: null,
@@ -115,6 +104,9 @@ function create_render(type) {
         // game/physics/lod properties
         friction: 0,
         elasticity: 0,
+        is_lod: false,
+        lod_center: new Float32Array(3),
+        lod_radius: 0,
         lod_dist_max: LOD_DIST_MAX_INFINITY,
         lod_dist_min: 0,
         lod_transition_ratio: 0,
@@ -128,14 +120,10 @@ function create_render(type) {
         reflexible_only: false,
         reflective: false,
         reflection_type: "",
-        caustics: false,
         wind_bending: false,
-        disable_fogging: false,
         dynamic_geometry: false,
         dynamic_grass: false,
-        do_not_cull: false,
         hide: false,
-        last_lod: false,
         selectable: false,
         origin_selectable: false,
         outlining: false,
@@ -153,8 +141,13 @@ function create_render(type) {
         detail_bending_amp: 0,
         branch_bending_amp: 0,
         main_bend_col: "",
-        detail_bend_col: null,
+        detail_bend_col: {
+            leaves_stiffness: "",
+            leaves_phase: "",
+            overall_stiffness: ""
+        },
         bend_center_only: false,
+        center_pos: new Float32Array(3),
 
         // billboarding properties
         billboard: false,
@@ -164,7 +157,6 @@ function create_render(type) {
 
         // animation properties
         frame_factor: 0,
-        time: 0,
         va_frame: 0,
         va_frame_factor: 0,
         max_bones: 0,
@@ -206,7 +198,9 @@ function create_render(type) {
         bcon_local: null,
 
         use_batches_boundings: true,
-        use_be: false
+        use_be: false,
+
+        pass_index: 0
     }
 
     // setting default values
@@ -215,18 +209,18 @@ function create_render(type) {
     return render;
 }
 
-exports.clone_render = function(render) {
+exports.clone_render = clone_render;
+function clone_render(render) {
     var out = create_render(render.type);
 
     // common properties
-    out.id = render.id;
     out.data_id = render.data_id;
     m_tsr.copy(render.world_tsr, out.world_tsr);
     m_tsr.copy(render.world_tsr_inv, out.world_tsr_inv);
     m_vec3.copy(render.pivot, out.pivot);
     m_vec3.copy(render.hover_pivot, out.hover_pivot);
     out.init_dist = render.init_dist;
-    out.init_top = render.init_top;
+    out.init_fov = render.init_fov;
     out.is_copied = render.is_copied;
     out.is_copied_deep = render.is_copied_deep;
 
@@ -275,6 +269,9 @@ exports.clone_render = function(render) {
 
     out.friction = render.friction;
     out.elasticity = render.elasticity;
+    out.is_lod = render.is_lod;
+    m_vec3.copy(render.lod_center, out.lod_center);
+    out.lod_radius = render.lod_radius;
     out.lod_dist_max = render.lod_dist_max;
     out.lod_dist_min = render.lod_dist_min;
     out.lod_transition_ratio = render.lod_transition_ratio;
@@ -287,14 +284,10 @@ exports.clone_render = function(render) {
     out.reflexible_only = render.reflexible_only;
     out.reflective = render.reflective;
     out.reflection_type = render.reflection_type;
-    out.caustics = render.caustics;
     out.wind_bending = render.wind_bending;
-    out.disable_fogging = render.disable_fogging;
     out.dynamic_geometry = render.dynamic_geometry;
     out.dynamic_grass = render.dynamic_grass;
-    out.do_not_cull = render.do_not_cull;
     out.hide = render.hide;
-    out.last_lod = render.last_lod;
     out.selectable = render.selectable;
     out.origin_selectable = render.origin_selectable;
     out.outlining = render.outlining;
@@ -311,8 +304,10 @@ exports.clone_render = function(render) {
     out.detail_bending_amp = render.detail_bending_amp;
     out.branch_bending_amp = render.branch_bending_amp;
     out.main_bend_col = render.main_bend_col;
+    // by link, doesn't matter
     out.detail_bend_col = render.detail_bend_col;
     out.bend_center_only = render.bend_center_only;
+    m_vec3.copy(render.center_pos, out.center_pos);
 
     out.billboard = render.billboard;
     out.billboard_pres_glob_orientation = render.billboard_pres_glob_orientation;
@@ -320,7 +315,6 @@ exports.clone_render = function(render) {
     out.billboard_spherical = render.billboard_spherical;
 
     out.frame_factor = render.frame_factor;
-    out.time = render.time;
     out.va_frame = render.va_frame;
     out.va_frame_factor = render.va_frame_factor;
     out.max_bones = render.max_bones;
@@ -359,6 +353,9 @@ exports.clone_render = function(render) {
     out.bcon_local = m_util.clone_object_r(render.bcon_local);
 
     out.use_batches_boundings = render.use_batches_boundings;
+    out.use_be = render.use_be;
+
+    out.pass_index = render.pass_index;
 
     return out;
 }
@@ -380,9 +377,22 @@ function create_object(name, type, origin_name) {
 
         bpy_origin: false,
 
+        // material inheritance requires bpy object for batching
+        _bpy_obj: null, 
+
+        mat_inheritance_data: {
+            // to keep the original mat names after inheritance
+            original_mat_names: [],
+            // needed for inheritance on copied objects, that reference the same bpy object
+            bpy_materials: [],
+            // to prevent a material from participating in batching
+            is_disabled: []
+        },
+
         is_dynamic: false,
         is_hair_dupli: false,
         use_default_animation: false,
+        is_boundings_overridden: false,
         
         render: null,
         constraint: null,
@@ -392,6 +402,7 @@ function create_object(name, type, origin_name) {
         anchor: null,
         field: null,
         metatags: null,
+        custom_prop: null,
 
         scenes_data: [],
         vertex_anim: [],
@@ -505,6 +516,7 @@ function copy_object_props_by_value(obj) {
 
     var textures = null;
     var texture_names = null;
+    var bpy_tex_names = null;
     var shape_keys = null;
     var shader = null;
     var vaos = null;
@@ -516,6 +528,10 @@ function copy_object_props_by_value(obj) {
     if (obj.texture_names) {
         texture_names = obj.texture_names;
         obj.texture_names = null;
+    }
+    if (obj.bpy_tex_names) {
+        bpy_tex_names = obj.bpy_tex_names;
+        obj.bpy_tex_names = null;
     }
     if (obj.shape_keys) {
         shape_keys = obj.shape_keys;
@@ -579,6 +595,10 @@ function copy_object_props_by_value(obj) {
     if (texture_names) {
         obj_clone.texture_names = texture_names;
         obj.texture_names = texture_names;
+    }
+    if (bpy_tex_names) {
+        obj_clone.bpy_tex_names = bpy_tex_names;
+        obj.bpy_tex_names = bpy_tex_names;
     }
     if (shape_keys) {
         obj_clone.shape_keys = shape_keys;
@@ -644,6 +664,7 @@ exports.update_refl_objects = function (objects, reflection_plane) {
     }
 }
 
+exports.init_scene_data = init_scene_data;
 function init_scene_data(scene) {
     var sc_data = {
         scene: scene,
@@ -687,6 +708,13 @@ exports.get_shadow_lamps = function(lamps, use_ssao) {
         return [];
 }
 
+exports.meta_obj_append_render = function(meta_obj, render) {
+    // NOTE: meta_obj is always STATIC and has zero world_tsr, it's especially
+    // important for physics and alpha-sorting
+    m_tsr.identity(render.world_tsr);
+    render.color_id = null;
+    meta_obj.render = render;
+}
 
 exports.check_obj_soft_particles_accessibility = function(bpy_obj, pset) {
 
@@ -712,7 +740,7 @@ exports.check_inv_zup_tsr_is_needed = function(obj) {
             var dirs = batches[j].shaders_info.directives;
             for (var k = 0; k < dirs.length; k++) {
                 var dir = dirs[k];
-                if (dir[0] == "USE_MODEL_MATRIX_INVERSE" && dir[1] == "1")
+                if (dir[0] == "USE_MODEL_TSR_INVERSE" && dir[1] == "1")
                     return true;
             }
        }

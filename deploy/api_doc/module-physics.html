@@ -165,15 +165,15 @@
         <ul>
         
             
-<li> <a href="#.append_collision_test">append_collision_test<span class="signature">(obj_src, collision_id, callback, calc_pos_norm<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></a></li>
+<li> <a href="#.append_collision_test">append_collision_test<span class="signature">(obj_src, collision_id<span class="signature-attributes">nullable</span>, callback, calc_pos_norm<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></a></li>
 
         
             
-<li> <a href="#.append_ray_test">append_ray_test<span class="signature">(obj_src<span class="signature-attributes">opt, nullable</span>, from, to, collision_id, callback, autoremove<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Number}</span></a></li>
+<li> <a href="#.append_ray_test">append_ray_test<span class="signature">(obj_src<span class="signature-attributes">nullable</span>, from, to, collision_id<span class="signature-attributes">nullable</span>, callback, autoremove<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {number}</span></a></li>
 
         
             
-<li> <a href="#.append_ray_test_ext">append_ray_test_ext<span class="signature">(obj_src<span class="signature-attributes">opt, nullable</span>, from, to, collision_id, callback, autoremove<span class="signature-attributes">opt</span>, calc_all_hits<span class="signature-attributes">opt</span>, calc_pos_norm<span class="signature-attributes">opt</span>, ign_src_rot<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Number}</span></a></li>
+<li> <a href="#.append_ray_test_ext">append_ray_test_ext<span class="signature">(obj_src<span class="signature-attributes">nullable</span>, from, to, collision_id<span class="signature-attributes">nullable</span>, callback, autoremove<span class="signature-attributes">opt</span>, calc_all_hits<span class="signature-attributes">opt</span>, calc_pos_norm<span class="signature-attributes">opt</span>, ign_src_rot<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {number}</span></a></li>
 
         
             
@@ -229,55 +229,55 @@
 
         
             
-<li> <a href="#.get_vehicle_brake">get_vehicle_brake<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Number}</span></a></li>
+<li> <a href="#.get_vehicle_brake">get_vehicle_brake<span class="signature">(obj)</span><span class="type-signature"> &rarr; {number}</span></a></li>
 
         
             
-<li> <a href="#.get_vehicle_name">get_vehicle_name<span class="signature">(obj)</span><span class="type-signature"> &rarr; (nullable) {String}</span></a></li>
+<li> <a href="#.get_vehicle_name">get_vehicle_name<span class="signature">(obj)</span><span class="type-signature"> &rarr; (nullable) {string}</span></a></li>
 
         
             
-<li> <a href="#.get_vehicle_speed">get_vehicle_speed<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Number}</span></a></li>
+<li> <a href="#.get_vehicle_speed">get_vehicle_speed<span class="signature">(obj)</span><span class="type-signature"> &rarr; {number}</span></a></li>
 
         
             
-<li> <a href="#.get_vehicle_steering">get_vehicle_steering<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Number}</span></a></li>
+<li> <a href="#.get_vehicle_steering">get_vehicle_steering<span class="signature">(obj)</span><span class="type-signature"> &rarr; {number}</span></a></li>
 
         
             
-<li> <a href="#.get_vehicle_throttle">get_vehicle_throttle<span class="signature">(obj)</span><span class="type-signature"> &rarr; (nullable) {Number}</span></a></li>
+<li> <a href="#.get_vehicle_throttle">get_vehicle_throttle<span class="signature">(obj)</span><span class="type-signature"> &rarr; (nullable) {number}</span></a></li>
 
         
             
-<li> <a href="#.has_dynamic_physics">has_dynamic_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></a></li>
+<li> <a href="#.has_dynamic_physics">has_dynamic_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></a></li>
 
         
             
-<li> <a href="#.has_physics">has_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></a></li>
+<li> <a href="#.has_physics">has_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></a></li>
 
         
             
-<li> <a href="#.has_simulated_physics">has_simulated_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></a></li>
+<li> <a href="#.has_simulated_physics">has_simulated_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></a></li>
 
         
             
-<li> <a href="#.is_character">is_character<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></a></li>
+<li> <a href="#.is_character">is_character<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></a></li>
 
         
             
-<li> <a href="#.is_vehicle_chassis">is_vehicle_chassis<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></a></li>
+<li> <a href="#.is_vehicle_chassis">is_vehicle_chassis<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></a></li>
 
         
             
-<li> <a href="#.is_vehicle_hull">is_vehicle_hull<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></a></li>
+<li> <a href="#.is_vehicle_hull">is_vehicle_hull<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></a></li>
 
         
             
-<li> <a href="#.navmesh_find_path">navmesh_find_path<span class="signature">(navmesh_obj, start_pos, dest_pos, island, allowed_distance<span class="signature-attributes">opt</span>, do_not_pull_string<span class="signature-attributes">opt</span>, distance_to_closest<span class="signature-attributes">opt</span>, distance_to_farthest<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></a></li>
+<li> <a href="#.navmesh_find_path">navmesh_find_path<span class="signature">(navmesh_obj, start_pos, dest_pos, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; (nullable) {PathInformation}</span></a></li>
 
         
             
-<li> <a href="#.navmesh_get_island">navmesh_get_island<span class="signature">(navmesh_obj, position, distance_to_closest<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Number}</span></a></li>
+<li> <a href="#.navmesh_get_island">navmesh_get_island<span class="signature">(navmesh_obj, position, distance_to_closest<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; {number}</span></a></li>
 
         
             
@@ -388,6 +388,14 @@
 
             
                 
+<li> <a href="#~NavmeshPathOptions">NavmeshPathOptions</a></li>
+
+            
+                
+<li> <a href="#~PathInformation">PathInformation</a></li>
+
+            
+                
 <li> <a href="#~RayTestCallback">RayTestCallback<span class="signature">(id, hit_fract, obj_hit<span class="signature-attributes">nullable</span>, hit_time)</span><span class="type-signature"></span></a></li>
 
             
@@ -455,7 +463,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line93">line 93</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line114">line 114</a>
     </li></ul></dd>
     
 
@@ -532,7 +540,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line98">line 98</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line119">line 119</a>
     </li></ul></dd>
     
 
@@ -609,7 +617,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line88">line 88</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line109">line 109</a>
     </li></ul></dd>
     
 
@@ -686,7 +694,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line83">line 83</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line104">line 104</a>
     </li></ul></dd>
     
 
@@ -716,7 +724,7 @@
 
     
 
-    <h4 class="name" id=".append_collision_test">append_collision_test<span class="signature">(obj_src, collision_id, callback, calc_pos_norm<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".append_collision_test">append_collision_test<span class="signature">(obj_src, collision_id<span class="signature-attributes">nullable</span>, callback, calc_pos_norm<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -805,7 +813,7 @@
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -815,6 +823,8 @@
                 <td class="attributes">
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -827,7 +837,7 @@
                 </td>
             
 
-            <td class="description last">Collision ID</td>
+            <td class="description last">Collision ID, pass "ANY" or null for any collision ID.</td>
         </tr>
 
     
@@ -875,7 +885,7 @@
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -954,7 +964,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line667">line 667</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line694">line 694</a>
     </li></ul></dd>
     
 
@@ -976,7 +986,7 @@
 
     
 
-    <h4 class="name" id=".append_ray_test">append_ray_test<span class="signature">(obj_src<span class="signature-attributes">opt, nullable</span>, from, to, collision_id, callback, autoremove<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".append_ray_test">append_ray_test<span class="signature">(obj_src<span class="signature-attributes">nullable</span>, from, to, collision_id<span class="signature-attributes">nullable</span>, callback, autoremove<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {number}</span></h4>
 
     
 
@@ -1038,8 +1048,6 @@
 
             
                 <td class="attributes">
-                
-                    &lt;optional><br>
                 
 
                 
@@ -1140,7 +1148,7 @@ in object space, e.g. from/to vectors specified in object space.</td>
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -1150,6 +1158,8 @@ in object space, e.g. from/to vectors specified in object space.</td>
                 <td class="attributes">
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -1162,7 +1172,7 @@ in object space, e.g. from/to vectors specified in object space.</td>
                 </td>
             
 
-            <td class="description last">Collision ID, "ANY" for any collision ID</td>
+            <td class="description last">Collision ID, pass "ANY" or null for any collision ID.</td>
         </tr>
 
     
@@ -1210,7 +1220,7 @@ in object space, e.g. from/to vectors specified in object space.</td>
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -1271,7 +1281,7 @@ in object space, e.g. from/to vectors specified in object space.</td>
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -1311,7 +1321,7 @@ in object space, e.g. from/to vectors specified in object space.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line726">line 726</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line756">line 756</a>
     </li></ul></dd>
     
 
@@ -1333,7 +1343,7 @@ in object space, e.g. from/to vectors specified in object space.</td>
 
     
 
-    <h4 class="name" id=".append_ray_test_ext">append_ray_test_ext<span class="signature">(obj_src<span class="signature-attributes">opt, nullable</span>, from, to, collision_id, callback, autoremove<span class="signature-attributes">opt</span>, calc_all_hits<span class="signature-attributes">opt</span>, calc_pos_norm<span class="signature-attributes">opt</span>, ign_src_rot<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".append_ray_test_ext">append_ray_test_ext<span class="signature">(obj_src<span class="signature-attributes">nullable</span>, from, to, collision_id<span class="signature-attributes">nullable</span>, callback, autoremove<span class="signature-attributes">opt</span>, calc_all_hits<span class="signature-attributes">opt</span>, calc_pos_norm<span class="signature-attributes">opt</span>, ign_src_rot<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {number}</span></h4>
 
     
 
@@ -1395,8 +1405,6 @@ in object space, e.g. from/to vectors specified in object space.</td>
 
             
                 <td class="attributes">
-                
-                    &lt;optional><br>
                 
 
                 
@@ -1497,7 +1505,7 @@ in object space, e.g. from/to vectors specified in object space</td>
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -1507,6 +1515,8 @@ in object space, e.g. from/to vectors specified in object space</td>
                 <td class="attributes">
                 
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -1519,7 +1529,7 @@ in object space, e.g. from/to vectors specified in object space</td>
                 </td>
             
 
-            <td class="description last">Collision ID, "ANY" for any collision ID</td>
+            <td class="description last">Collision ID, pass "ANY" or null for any collision ID.</td>
         </tr>
 
     
@@ -1570,7 +1580,7 @@ in object space, e.g. from/to vectors specified in object space</td>
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -1609,7 +1619,7 @@ in object space, e.g. from/to vectors specified in object space</td>
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -1649,7 +1659,7 @@ just for closest object</td>
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -1689,7 +1699,7 @@ callback</td>
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -1750,7 +1760,7 @@ callback</td>
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -1790,7 +1800,7 @@ callback</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line758">line 758</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line789">line 789</a>
     </li></ul></dd>
     
 
@@ -1948,7 +1958,7 @@ callback</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line701">line 701</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line731">line 731</a>
     </li></ul></dd>
     
 
@@ -2024,7 +2034,7 @@ callback</td>
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -2422,7 +2432,7 @@ callback</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line824">line 824</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line856">line 856</a>
     </li></ul></dd>
     
 
@@ -2518,7 +2528,7 @@ Pass zero values to remove applied force.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2541,7 +2551,7 @@ Pass zero values to remove applied force.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2564,7 +2574,7 @@ Pass zero values to remove applied force.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2627,7 +2637,7 @@ Pass zero values to remove applied force.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line226">line 226</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line247">line 247</a>
     </li></ul></dd>
     
 
@@ -2723,7 +2733,7 @@ Pass zero values to remove applied force.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2746,7 +2756,7 @@ Pass zero values to remove applied force.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2769,7 +2779,7 @@ Pass zero values to remove applied force.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2832,7 +2842,7 @@ Pass zero values to remove applied force.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line243">line 243</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line264">line 264</a>
     </li></ul></dd>
     
 
@@ -2928,7 +2938,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2951,7 +2961,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -2974,7 +2984,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3037,7 +3047,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line260">line 260</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line281">line 281</a>
     </li></ul></dd>
     
 
@@ -3132,7 +3142,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3155,7 +3165,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3178,7 +3188,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3241,7 +3251,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line196">line 196</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line217">line 217</a>
     </li></ul></dd>
     
 
@@ -3336,7 +3346,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3359,7 +3369,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3382,7 +3392,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3445,7 +3455,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line211">line 211</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line232">line 232</a>
     </li></ul></dd>
     
 
@@ -3517,7 +3527,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3626,7 +3636,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line807">line 807</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line839">line 839</a>
     </li></ul></dd>
     
 
@@ -3761,7 +3771,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line601">line 601</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line628">line 628</a>
     </li></ul></dd>
     
 
@@ -3856,7 +3866,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3879,7 +3889,7 @@ Pass zero values to remove applied torque.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -3942,7 +3952,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line613">line 613</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line640">line 640</a>
     </li></ul></dd>
     
 
@@ -4077,7 +4087,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line714">line 714</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line744">line 744</a>
     </li></ul></dd>
     
 
@@ -4212,7 +4222,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line116">line 116</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line137">line 137</a>
     </li></ul></dd>
     
 
@@ -4347,7 +4357,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line104">line 104</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line125">line 125</a>
     </li></ul></dd>
     
 
@@ -4369,7 +4379,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".get_vehicle_brake">get_vehicle_brake<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".get_vehicle_brake">get_vehicle_brake<span class="signature">(obj)</span><span class="type-signature"> &rarr; {number}</span></h4>
 
     
 
@@ -4464,7 +4474,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -4504,7 +4514,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line493">line 493</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line516">line 516</a>
     </li></ul></dd>
     
 
@@ -4526,7 +4536,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".get_vehicle_name">get_vehicle_name<span class="signature">(obj)</span><span class="type-signature"> &rarr; (nullable) {String}</span></h4>
+    <h4 class="name" id=".get_vehicle_name">get_vehicle_name<span class="signature">(obj)</span><span class="type-signature"> &rarr; (nullable) {string}</span></h4>
 
     
 
@@ -4621,7 +4631,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
     </dd>
@@ -4661,7 +4671,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line441">line 441</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line462">line 462</a>
     </li></ul></dd>
     
 
@@ -4683,7 +4693,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".get_vehicle_speed">get_vehicle_speed<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".get_vehicle_speed">get_vehicle_speed<span class="signature">(obj)</span><span class="type-signature"> &rarr; {number}</span></h4>
 
     
 
@@ -4778,7 +4788,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -4818,7 +4828,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line509">line 509</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line534">line 534</a>
     </li></ul></dd>
     
 
@@ -4840,7 +4850,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".get_vehicle_steering">get_vehicle_steering<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".get_vehicle_steering">get_vehicle_steering<span class="signature">(obj)</span><span class="type-signature"> &rarr; {number}</span></h4>
 
     
 
@@ -4935,7 +4945,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -4975,7 +4985,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line477">line 477</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line498">line 498</a>
     </li></ul></dd>
     
 
@@ -4997,7 +5007,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".get_vehicle_throttle">get_vehicle_throttle<span class="signature">(obj)</span><span class="type-signature"> &rarr; (nullable) {Number}</span></h4>
+    <h4 class="name" id=".get_vehicle_throttle">get_vehicle_throttle<span class="signature">(obj)</span><span class="type-signature"> &rarr; (nullable) {number}</span></h4>
 
     
 
@@ -5092,7 +5102,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -5132,7 +5142,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line459">line 459</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line480">line 480</a>
     </li></ul></dd>
     
 
@@ -5154,7 +5164,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".has_dynamic_physics">has_dynamic_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".has_dynamic_physics">has_dynamic_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
 
     
 
@@ -5249,7 +5259,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -5289,7 +5299,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line146">line 146</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line167">line 167</a>
     </li></ul></dd>
     
 
@@ -5311,7 +5321,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".has_physics">has_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".has_physics">has_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
 
     
 
@@ -5406,7 +5416,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -5446,7 +5456,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line128">line 128</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line149">line 149</a>
     </li></ul></dd>
     
 
@@ -5468,7 +5478,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".has_simulated_physics">has_simulated_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".has_simulated_physics">has_simulated_physics<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
 
     
 
@@ -5563,7 +5573,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -5603,7 +5613,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line137">line 137</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line158">line 158</a>
     </li></ul></dd>
     
 
@@ -5625,7 +5635,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".is_character">is_character<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".is_character">is_character<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
 
     
 
@@ -5720,7 +5730,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -5760,7 +5770,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line525">line 525</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line552">line 552</a>
     </li></ul></dd>
     
 
@@ -5782,7 +5792,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".is_vehicle_chassis">is_vehicle_chassis<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".is_vehicle_chassis">is_vehicle_chassis<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
 
     
 
@@ -5877,7 +5887,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -5917,7 +5927,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line423">line 423</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line444">line 444</a>
     </li></ul></dd>
     
 
@@ -5939,7 +5949,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".is_vehicle_hull">is_vehicle_hull<span class="signature">(obj)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".is_vehicle_hull">is_vehicle_hull<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
 
     
 
@@ -6034,7 +6044,7 @@ Pass zero values to remove applied torque.
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -6074,7 +6084,7 @@ Pass zero values to remove applied torque.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line432">line 432</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line453">line 453</a>
     </li></ul></dd>
     
 
@@ -6096,7 +6106,7 @@ Pass zero values to remove applied torque.
 
     
 
-    <h4 class="name" id=".navmesh_find_path">navmesh_find_path<span class="signature">(navmesh_obj, start_pos, dest_pos, island, allowed_distance<span class="signature-attributes">opt</span>, do_not_pull_string<span class="signature-attributes">opt</span>, distance_to_closest<span class="signature-attributes">opt</span>, distance_to_farthest<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+    <h4 class="name" id=".navmesh_find_path">navmesh_find_path<span class="signature">(navmesh_obj, start_pos, dest_pos, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; (nullable) {PathInformation}</span></h4>
 
     
 
@@ -6104,7 +6114,8 @@ Pass zero values to remove applied torque.
 <div class="item_description">
 
 <div class="description">
-    Find path between start_pos and dest_pos
+    Find path between start_pos and dest_pos, return flat array containing
+positions of path.
 </div>
 
 
@@ -6131,6 +6142,8 @@ Pass zero values to remove applied torque.
         <th>Attributes</th>
         
 
+        
+        <th>Default</th>
         
 
         <th class="last">Description</th>
@@ -6165,6 +6178,10 @@ Pass zero values to remove applied torque.
             
 
             
+                <td class="default">
+                
+                </td>
+            
 
             <td class="description last">Navigation mesh object</td>
         </tr>
@@ -6195,6 +6212,10 @@ Pass zero values to remove applied torque.
                 </td>
             
 
+            
+                <td class="default">
+                
+                </td>
             
 
             <td class="description last">Start position</td>
@@ -6227,6 +6248,10 @@ Pass zero values to remove applied torque.
             
 
             
+                <td class="default">
+                
+                </td>
+            
 
             <td class="description last">Target position</td>
         </tr>
@@ -6235,44 +6260,13 @@ Pass zero values to remove applied torque.
 
         <tr>
             
-                <td class="name"><code>island</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">ID; see physics.nav_mesh_get_island</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>allowed_distance</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
+<span class="param-type"><a href="module-physics.html#~NavmeshPathOptions">NavmeshPathOptions</a></span>
 
 
             
@@ -6291,109 +6285,14 @@ Pass zero values to remove applied torque.
             
 
             
-
-            <td class="description last">Distance limit from start/target position to navmesh</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>do_not_pull_string</code></td>
-            
-
-            <td class="type">
-            
+                <td class="default">
                 
-<span class="param-type">Boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
+                    {}
                 
                 </td>
             
 
-            
-
-            <td class="description last">returns centroids path instead of pulled string</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>distance_to_closest</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">NavmeshDistanceCallback</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Callback for distance
-calculation to determine closest node</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>distance_to_farthest</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">NavmeshDistanceCallback</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Callback for distance
-calculation to determine farthest node</td>
+            <td class="description last">Configurable options of navmesh path</td>
         </tr>
 
     
@@ -6417,7 +6316,7 @@ calculation to determine farthest node</td>
 
         
 <div class="param-desc">
-    Path - array of Vec3-type elements
+    Path information or null if path does not exist
 </div>
 
 
@@ -6428,7 +6327,7 @@ calculation to determine farthest node</td>
     </dt>
     <dd>
         
-<span class="param-type">Array</span>
+<span class="param-type">PathInformation</span>
 
 
     </dd>
@@ -6468,7 +6367,7 @@ calculation to determine farthest node</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line929">line 929</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line979">line 979</a>
     </li></ul></dd>
     
 
@@ -6481,6 +6380,19 @@ calculation to determine farthest node</td>
 
 
 
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>var m_phys = require("physics");
+var m_scenes = require("scenes");
+
+var start_point = new Float32Array([5, 2, -7]);
+var end_point = new Float32Array([-2, 0, 3]);
+var navmesh_obj = m_scenes.get_object_by_name("navmesh");
+
+var island_id = m_phys.navmesh_get_island(navmesh_obj, start_point);
+var path = m_phys.navmesh_find_path(navmesh_obj, start_point, end_point, { island: island_id });</code></pre>
+
+
 </div>
 </div>
         
@@ -6490,7 +6402,7 @@ calculation to determine farthest node</td>
 
     
 
-    <h4 class="name" id=".navmesh_get_island">navmesh_get_island<span class="signature">(navmesh_obj, position, distance_to_closest<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".navmesh_get_island">navmesh_get_island<span class="signature">(navmesh_obj, position, distance_to_closest<span class="signature-attributes">nullable</span>)</span><span class="type-signature"> &rarr; {number}</span></h4>
 
     
 
@@ -6498,7 +6410,7 @@ calculation to determine farthest node</td>
 <div class="item_description">
 
 <div class="description">
-    Get id of closest island(group) of navmesh
+    Get the id of a closest navmesh island(group)
 </div>
 
 
@@ -6591,7 +6503,7 @@ calculation to determine farthest node</td>
 
             
 
-            <td class="description last">Start position</td>
+            <td class="description last">Path start position</td>
         </tr>
 
     
@@ -6604,7 +6516,7 @@ calculation to determine farthest node</td>
             <td class="type">
             
                 
-<span class="param-type">NavmeshDistanceCallback</span>
+<span class="param-type"><a href="module-physics.html#~NavmeshDistanceCallback">NavmeshDistanceCallback</a></span>
 
 
             
@@ -6613,9 +6525,9 @@ calculation to determine farthest node</td>
             
                 <td class="attributes">
                 
-                    &lt;optional><br>
-                
 
+                
+                    &lt;nullable><br>
                 
 
                 
@@ -6625,7 +6537,8 @@ calculation to determine farthest node</td>
             
 
             <td class="description last">Callback for distance
-calculation to determine closest node</td>
+calculation to determine the closest node. If null then the default function will 
+be used. It calculates the distance from a point to a triangle in the 3D space.</td>
         </tr>
 
     
@@ -6660,7 +6573,7 @@ calculation to determine closest node</td>
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -6700,7 +6613,7 @@ calculation to determine closest node</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line907">line 907</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line939">line 939</a>
     </li></ul></dd>
     
 
@@ -6711,6 +6624,19 @@ calculation to determine closest node</td>
     
 </dl>
 
+
+
+    <h5>Example</h5>
+    
+    <pre class="prettyprint"><code>var m_phys = require("physics");
+var m_scenes = require("scenes");
+
+var start_point = new Float32Array([5, 2, -7]);
+var end_point = new Float32Array([-2, 0, 3]);
+var navmesh_obj = m_scenes.get_object_by_name("navmesh");
+
+var island_id = m_phys.navmesh_get_island(navmesh_obj, start_point);
+var path = m_phys.navmesh_find_path(navmesh_obj, start_point, end_point, { island: island_id });</code></pre>
 
 
 </div>
@@ -6950,7 +6876,7 @@ calculation to determine closest node</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line863">line 863</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line895">line 895</a>
     </li></ul></dd>
     
 
@@ -7055,7 +6981,7 @@ calculation to determine closest node</td>
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">string</span>
 
 
             
@@ -7075,7 +7001,7 @@ calculation to determine closest node</td>
 
             
 
-            <td class="description last">Collision ID.</td>
+            <td class="description last">Collision ID, pass "ANY" or null for any collision ID.</td>
         </tr>
 
     
@@ -7159,7 +7085,7 @@ calculation to determine closest node</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line684">line 684</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line714">line 714</a>
     </li></ul></dd>
     
 
@@ -7295,7 +7221,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line849">line 849</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line881">line 881</a>
     </li></ul></dd>
     
 
@@ -7367,7 +7293,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -7430,7 +7356,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line793">line 793</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line825">line 825</a>
     </li></ul></dd>
     
 
@@ -7525,7 +7451,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -7588,7 +7514,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line588">line 588</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line615">line 615</a>
     </li></ul></dd>
     
 
@@ -7683,7 +7609,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -7706,7 +7632,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -7769,7 +7695,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line534">line 534</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line561">line 561</a>
     </li></ul></dd>
     
 
@@ -7927,7 +7853,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line548">line 548</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line575">line 575</a>
     </li></ul></dd>
     
 
@@ -8022,7 +7948,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8045,7 +7971,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8108,7 +8034,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line627">line 627</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line654">line 654</a>
     </li></ul></dd>
     
 
@@ -8203,7 +8129,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8266,7 +8192,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line654">line 654</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line681">line 681</a>
     </li></ul></dd>
     
 
@@ -8361,7 +8287,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8424,7 +8350,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line641">line 641</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line668">line 668</a>
     </li></ul></dd>
     
 
@@ -8519,7 +8445,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8582,7 +8508,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line575">line 575</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line602">line 602</a>
     </li></ul></dd>
     
 
@@ -8677,7 +8603,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8740,7 +8666,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line562">line 562</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line589">line 589</a>
     </li></ul></dd>
     
 
@@ -8835,7 +8761,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8898,7 +8824,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line155">line 155</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line176">line 176</a>
     </li></ul></dd>
     
 
@@ -9079,7 +9005,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line168">line 168</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line189">line 189</a>
     </li></ul></dd>
     
 
@@ -9214,7 +9140,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line183">line 183</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line204">line 204</a>
     </li></ul></dd>
     
 
@@ -9309,7 +9235,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9372,7 +9298,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line382">line 382</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line403">line 403</a>
     </li></ul></dd>
     
 
@@ -9467,7 +9393,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9530,7 +9456,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line399">line 399</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line420">line 420</a>
     </li></ul></dd>
     
 
@@ -9625,7 +9551,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9688,7 +9614,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line329">line 329</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line350">line 350</a>
     </li></ul></dd>
     
 
@@ -9783,7 +9709,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9806,7 +9732,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9869,7 +9795,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line346">line 346</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line367">line 367</a>
     </li></ul></dd>
     
 
@@ -9964,7 +9890,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -10027,7 +9953,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line276">line 276</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line297">line 297</a>
     </li></ul></dd>
     
 
@@ -10122,7 +10048,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -10145,7 +10071,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -10208,7 +10134,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line293">line 293</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line314">line 314</a>
     </li></ul></dd>
     
 
@@ -10249,7 +10175,7 @@ constraint identified by object A from apply_constraint function
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -10288,7 +10214,7 @@ constraint identified by object A from apply_constraint function
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line77">line 77</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line99">line 99</a>
     </li></ul></dd>
     
 
@@ -10365,7 +10291,7 @@ constraint identified by object A from apply_constraint function
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -10497,7 +10423,7 @@ is represented by collision material).</td>
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -10571,7 +10497,7 @@ objects.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line36">line 36</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line32">line 32</a>
     </li></ul></dd>
     
 
@@ -10643,7 +10569,7 @@ objects.</td>
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -10706,7 +10632,7 @@ objects.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line49">line 49</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line45">line 45</a>
     </li></ul></dd>
     
 
@@ -10870,7 +10796,7 @@ objects.</td>
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -10933,7 +10859,7 @@ objects.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line15">line 15</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line17">line 17</a>
     </li></ul></dd>
     
 
@@ -10948,6 +10874,507 @@ objects.</td>
 
 </div>
 </div>
+            
+                
+<div class="item_container">
+<div class="item_name">
+<h4 class="name" id="~NavmeshPathOptions">NavmeshPathOptions</h4>
+
+</div>
+
+<div class="item_description">
+
+<div class="description">
+    Configurable options of navmesh path.
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>island</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    0
+                
+                </td>
+            
+
+            <td class="description last">ID; see <a href="module-physics.html#.navmesh_get_island">physics.navmesh_get_island</a></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>allowed_distance</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    Number.MAX_VALUE
+                
+                </td>
+            
+
+            <td class="description last">Distance limit from
+start/target position to navmesh</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>do_not_pull_string</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last">Returns centroids path instead of pulled string</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>return_normals</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    false
+                
+                </td>
+            
+
+            <td class="description last">Return path normals in PathInformation.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>distance_to_closest</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-physics.html#~NavmeshDistanceCallback">NavmeshDistanceCallback</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">Callback for distance
+calculation to determine closest node</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>distance_to_farthest</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-physics.html#~NavmeshDistanceCallback">NavmeshDistanceCallback</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">Callback for distance
+calculation to determine farthest node</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line73">line 73</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+</div>
+</div>
+
+            
+                
+<div class="item_container">
+<div class="item_name">
+<h4 class="name" id="~PathInformation">PathInformation</h4>
+
+</div>
+
+<div class="item_description">
+
+<div class="description">
+    Navmesh path information.
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type">Object</span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    
+
+<table class="props">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>positions</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Float32Array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Positions of path points - plane array of 
+Vec3-type positions</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>normals</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Float32Array</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+                    &lt;nullable><br>
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Normals of path points - plane array of 
+Vec3-type normals</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line89">line 89</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+</div>
+</div>
+
             
                 
 <div class="item_container">
@@ -11007,7 +11434,7 @@ objects.</td>
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -11038,7 +11465,7 @@ objects.</td>
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -11103,7 +11530,7 @@ or -1 if there is no hit anymore</td>
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -11174,7 +11601,7 @@ or -1 if there is no hit anymore</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line55">line 55</a>
+        <a href="ext_physics.js.html">ext/physics.js</a>, <a href="ext_physics.js.html#line51">line 51</a>
     </li></ul></dd>
     
 
@@ -11203,13 +11630,13 @@ or -1 if there is no hit anymore</td>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gp_conf.html">gp_conf</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hmd_conf.html">hmd_conf</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-input.html">input</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-logic_nodes.html">logic_nodes</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-math.html">math</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-fps.html">fps</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gp_conf.html">gp_conf</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hmd_conf.html">hmd_conf</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-input.html">input</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-logic_nodes.html">logic_nodes</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-math.html">math</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screen.html">screen</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Blend4Web API Reference (generated by JSDoc 3.4.0 on Thu Oct 27 2016 16:42:35 GMT+0300 (MSK))
+    Blend4Web API Reference (generated by JSDoc 3.4.0 on Tue Mar 07 2017 11:35:19 GMT+0300 (MSK))
     <a href="https://www.blend4web.com">www.blend4web.com</a>
   <!-- Yandex.Metrika counter -->
   <script type="text/javascript">

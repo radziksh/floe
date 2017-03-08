@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2016 Triumph LLC
+ * Copyright (C) 2014-2017 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 b4w.module["__nla"] = function(exports, require) {
 
 var m_anim      = require("__animation");
-var m_cfg       = require("__config");
 var m_obj       = require("__objects");
 var m_obj_util  = require("__obj_util");
 var m_print     = require("__print");
@@ -34,8 +33,6 @@ var m_sfx       = require("__sfx");
 var m_tex       = require("__textures");
 var m_time      = require("__time");
 var m_util      = require("__util");
-
-var cfg_def = m_cfg.defaults;
 
 var _nla_arr = [];
 var _start_time = -1;
@@ -187,10 +184,12 @@ exports.update_scene = function(scene, is_cyclic, data_id) {
     for (var i = 0; i < objs.length; i++) {
         var obj = objs[i];
         if (obj.nla_events.length) {
+            if (!nla.objects[data_id])
+                nla.objects[data_id] = [];
             for (var j = 0; j < obj.scenes_data.length; j++) {
                 var sd = obj.scenes_data[j];
                 if (sd.scene == scene && sd.obj_has_nla_on_scene)
-                    nla.objects.push(obj);
+                    nla.objects[data_id].push(obj);
             }
             
             remove_inconsistent_nla(obj.nla_events, nla, obj.name);
@@ -456,54 +455,59 @@ function nla_range_end_rewind(nla, timeline) {
 }
 
 function process_nla_objects(nla, curr_frame, elapsed) {
-    for (var i = 0; i < nla.objects.length; i++) {
-        var obj = nla.objects[i];
-        var nla_events = obj.nla_events;
+    for (var k = 0; k < nla.objects.length; k++) {
+        var objs = nla.objects[k];
+        if (!objs)
+            continue;
+        for (var i = 0; i < objs.length; i++) {
+            var obj = objs[i];
+            var nla_events = obj.nla_events;
 
-        // NOTE: allow single-strip speakers to play again
-        for (var j = 0; j < nla_events.length; j++) {
-            var ev = nla_events[j];
-            if (ev.type == "SOUND" 
-                    && curr_frame < (nla.last_frame - CF_FREEZE_EPSILON))
-                ev.scheduled = false;
-        }
+            // NOTE: allow single-strip speakers to play again
+            for (var j = 0; j < nla_events.length; j++) {
+                var ev = nla_events[j];
+                if (ev.type == "SOUND" 
+                        && curr_frame < (nla.last_frame - CF_FREEZE_EPSILON))
+                    ev.scheduled = false;
+            }
 
-        for (var j = 0; j < nla_events.length; j++) {
-            var ev = nla_events[j];
+            for (var j = 0; j < nla_events.length; j++) {
+                var ev = nla_events[j];
 
-            switch (ev.type) {
-            case "CLIP":
-                if (ev.ext_frame_start <= curr_frame && curr_frame < ev.ext_frame_end)
-                    if (!ev.scheduled) {
-                        process_clip_event_start(obj, ev, curr_frame, elapsed);
+                switch (ev.type) {
+                case "CLIP":
+                    if (ev.ext_frame_start <= curr_frame && curr_frame < ev.ext_frame_end)
+                        if (!ev.scheduled) {
+                            process_clip_event_start(obj, ev, curr_frame, elapsed);
 
-                        for (var k = 0; k < nla_events.length; k++)
-                            if (nla_events[k] != ev &&
-                                    nla_events[k].anim_slot == ev.anim_slot)
-                                nla_events[k].scheduled = false;
+                            for (var k = 0; k < nla_events.length; k++)
+                                if (nla_events[k] != ev &&
+                                        nla_events[k].anim_slot == ev.anim_slot)
+                                    nla_events[k].scheduled = false;
 
-                        ev.scheduled = true;
-                    }
+                            ev.scheduled = true;
+                        }
 
-                if (ev.scheduled)
-                    process_clip_event(obj, ev, curr_frame, elapsed);
-
-                break;
-            case "SOUND":
-                if ((curr_frame < (nla.last_frame - CF_FREEZE_EPSILON) || 
-                        nla.last_frame < ev.frame_start) &&
-                        ev.frame_start <= curr_frame && curr_frame < ev.frame_end)
-                    if (!ev.scheduled) {
-                        process_sound_event(obj, ev, curr_frame);
-                        ev.scheduled = true;
-                    }
-
-                if (nla.last_frame < ev.frame_end && ev.frame_end <= curr_frame)
                     if (ev.scheduled)
-                        ev.scheduled = false;
-                break;
-            default:
-                break;
+                        process_clip_event(obj, ev, curr_frame, elapsed);
+
+                    break;
+                case "SOUND":
+                    if ((curr_frame < (nla.last_frame - CF_FREEZE_EPSILON) || 
+                            nla.last_frame < ev.frame_start) &&
+                            ev.frame_start <= curr_frame && curr_frame < ev.frame_end)
+                        if (!ev.scheduled) {
+                            process_sound_event(obj, ev, curr_frame);
+                            ev.scheduled = true;
+                        }
+
+                    if (nla.last_frame < ev.frame_end && ev.frame_end <= curr_frame)
+                        if (ev.scheduled)
+                            ev.scheduled = false;
+                    break;
+                default:
+                    break;
+                }
             }
         }
     }
@@ -545,7 +549,7 @@ function process_nla_video_textures(timeline, nla, nla_frame) {
 
             // play/pause video
             if (need_play && !is_played)
-                m_tex.play_video(tex.name, tex.vtex_data_id);
+                m_tex.play_video(tex);
             else if (need_play && is_played)
                 need_update = true;
             else if (!need_play && is_played) {
@@ -554,12 +558,12 @@ function process_nla_video_textures(timeline, nla, nla_frame) {
                 if (tex.video_file && video_frame_native < video_frame_clamped)
                     need_update = true;
                 else
-                    m_tex.pause_video(tex.name, tex.vtex_data_id);
+                    m_tex.pause_video(tex);
             }
         }
 
         if (need_set_frame) {
-            m_tex.set_frame_video(tex.name, video_frame_clamped, tex.vtex_data_id);
+            m_tex.set_frame_video(tex, video_frame_clamped);
             if (tex.seq_video)
                 tex.seq_last_discrete_mark = m_tex.seq_video_get_discrete_timemark(tex, timeline);
         } else if (need_update && m_tex.video_update_is_available(tex)) {
@@ -617,33 +621,36 @@ function frame_need_play_video(cf, vtex) {
 /**
  * NOTE: unused
  */
-function pause_scheduled_objects(objects) {
-    for (var i = 0; i < objects.length; i++) {
-        var obj = objects[i];
-        var nla_events = obj.nla_events;
-        for (var j = 0; j < nla_events.length; j++) {
-            var ev = nla_events[j];
-            if (ev.scheduled && !ev.paused) {
-                process_event_pause(obj);
-                ev.paused = true;
-            }
-        }
-    }
-}
+// function pause_scheduled_objects(objects) {
+//     for (var i = 0; i < objects.length; i++) {
+//         var obj = objects[i];
+//         var nla_events = obj.nla_events;
+//         for (var j = 0; j < nla_events.length; j++) {
+//             var ev = nla_events[j];
+//             if (ev.scheduled && !ev.paused) {
+//                 process_event_pause(obj);
+//                 ev.paused = true;
+//             }
+//         }
+//     }
+// }
 
-function resume_scheduled_objects(objects) {
-    for (var i = 0; i < objects.length; i++) {
-        var obj = objects[i];
-        var nla_events = obj.nla_events;
-        for (var j = 0; j < nla_events.length; j++) {
-            var ev = nla_events[j];
-            if (ev.paused) {
-                process_event_resume(obj);
-                ev.paused = false;
-            }
-        }
-    }
-}
+/**
+ * NOTE: unused
+ */
+// function resume_scheduled_objects(objects) {
+//     for (var i = 0; i < objects.length; i++) {
+//         var obj = objects[i];
+//         var nla_events = obj.nla_events;
+//         for (var j = 0; j < nla_events.length; j++) {
+//             var ev = nla_events[j];
+//             if (ev.paused) {
+//                 process_event_resume(obj);
+//                 ev.paused = false;
+//             }
+//         }
+//     }
+// }
 
 function calc_curr_frame_scene(nla, timeline) {
 
@@ -709,9 +716,13 @@ function process_sound_event(obj, ev, frame) {
     m_sfx.play(obj, when, duration);
 }
 
-exports.cleanup = function() {
-    _nla_arr.length = 0;
-    _start_time = -1;
+exports.cleanup = function(data_id) {
+    if (data_id == 0) {
+        _nla_arr.length = 0;
+        _start_time = -1;
+    } else
+        for (var i = 0; i < _nla_arr.length; i++)
+            _nla_arr[i].objects[data_id] = null;
 }
 
 /**
@@ -845,7 +856,7 @@ function stop_nla() {
 
         for (var i = 0; i < vtexs.length; i++) {
             var vtex = vtexs[i];
-            m_tex.pause_video(vtex.name, vtex.vtex_data_id);
+            m_tex.pause_video(vtex);
         }
     }
 }

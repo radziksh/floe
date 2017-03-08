@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>物理 &mdash; Blend4Web 16.10 用户手册</title>
+  <title>物理 &mdash; Blend4Web 17.02.1 用户手册</title>
   
 
   
@@ -32,7 +32,7 @@
   
         <link rel="author" title="关于这些文档"
               href="about.html"/>
-    <link rel="top" title="Blend4Web 16.10 用户手册" href="index.html"/>
+    <link rel="top" title="Blend4Web 17.02.1 用户手册" href="index.html"/>
         <link rel="next" title="对应用程序开发人员" href="developers.html"/>
         <link rel="prev" title="音频" href="audio.html"/> 
 
@@ -61,7 +61,7 @@
           
           
             <div class="version">
-              v16.10
+              v17.02.1
             </div>
           
         
@@ -130,6 +130,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#characters">角色</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#character-settings">角色设置</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#basic-character">基本角色</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#navigation-meshes">导航网格</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#creating-navigation-meshes">创建导航网格</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#using-navigation-meshes">使用导航网格</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#use-in-applications">在应用程序中的使用</a></li>
@@ -208,7 +213,12 @@
 <li><a class="reference internal" href="#basic-character" id="id19">基本角色</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#use-in-applications" id="id20">在应用程序中的使用</a></li>
+<li><a class="reference internal" href="#navigation-meshes" id="id20">导航网格</a><ul>
+<li><a class="reference internal" href="#creating-navigation-meshes" id="id21">创建导航网格</a></li>
+<li><a class="reference internal" href="#using-navigation-meshes" id="id22">使用导航网格</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#use-in-applications" id="id23">在应用程序中的使用</a></li>
 </ul>
 </li>
 </ul>
@@ -268,7 +278,7 @@
 <div class="line-block">
 <div class="line"><br /></div>
 </div>
-<p>向物体添加物理约束 (<code class="docutils literal"><span class="pre">Rigid</span> <span class="pre">Body</span> <span class="pre">Joint</span></code>) 可以在 <code class="docutils literal"><span class="pre">Object</span> <span class="pre">Constraints</span></code> 面板上执行 。受支持的类型 (<code class="docutils literal"><span class="pre">Pivot</span> <span class="pre">Type</span></code>) 是:<code class="docutils literal"><span class="pre">Ball</span></code>, <code class="docutils literal"><span class="pre">Hinge</span></code>, <code class="docutils literal"><span class="pre">Cone</span> <span class="pre">Twist</span></code>, <code class="docutils literal"><span class="pre">Generic</span> <span class="pre">6</span> <span class="pre">DoF</span></code>. 物理约束可以添加到两个相互作用的物体之一，而另一个物体作为 <code class="docutils literal"><span class="pre">Target</span></code> 。这两个物体可以有静态和/或动态的物理类型。在约束 （除外``Ball``) ，可以设置的平移和旋转的限制。</p>
+<p>向物体添加物理约束 (<code class="docutils literal"><span class="pre">Rigid</span> <span class="pre">Body</span> <span class="pre">Joint</span></code>) 可以在 <code class="docutils literal"><span class="pre">Object</span> <span class="pre">Constraints</span></code> 面板上执行 。受支持的类型 (<code class="docutils literal"><span class="pre">Pivot</span> <span class="pre">Type</span></code>) 是: <code class="docutils literal"><span class="pre">Ball</span></code>, <code class="docutils literal"><span class="pre">Hinge</span></code>, <code class="docutils literal"><span class="pre">Cone</span> <span class="pre">Twist</span></code>, <code class="docutils literal"><span class="pre">Generic</span> <span class="pre">6</span> <span class="pre">DoF</span></code>. 物理约束可以添加到两个相互作用的物体之一，而另一个物体作为 <code class="docutils literal"><span class="pre">Target</span></code> 。这两个物体可以有静态和/或动态的物理类型。在约束 （除外 <code class="docutils literal"><span class="pre">Ball</span></code>) ，可以设置的平移和旋转的限制。</p>
 <a class="reference internal image-reference" href="_images/physics_constraints_panel.png"><img alt="_images/physics_constraints_panel.png" class="align-center" src="_images/physics_constraints_panel.png" style="width: 100%;" /></a>
 <div class="line-block">
 <div class="line"><br /></div>
@@ -431,8 +441,93 @@
 </div>
 </div>
 </div>
+<div class="section" id="navigation-meshes">
+<h2><a class="toc-backref" href="#id20">导航网格</a><a class="headerlink" href="#navigation-meshes" title="永久链接至标题">¶</a></h2>
+<p>导航网格 (通常缩写 <em>navmeshes</em>) 是用来消除需要额外计算比如碰撞等使寻路更加简便的网格物体。</p>
+<a class="reference internal image-reference" href="_images/physics_pathfinding_example.png"><img alt="_images/physics_pathfinding_example.png" class="align-center" src="_images/physics_pathfinding_example.png" style="width: 100%;" /></a>
+<p>在此示例中 （取自代码片段），导航网格用于生成通过迷宫的路径。</p>
+<div class="section" id="creating-navigation-meshes">
+<h3><a class="toc-backref" href="#id21">创建导航网格</a><a class="headerlink" href="#creating-navigation-meshes" title="永久链接至标题">¶</a></h3>
+<p>若要将物体生成 navmesh，打开 <code class="docutils literal"><span class="pre">Physics</span></code> 面板的 <code class="docutils literal"><span class="pre">Object</span> <span class="pre">Physics</span></code> 参数 ，从 <code class="docutils literal"><span class="pre">Physics</span> <span class="pre">Type</span></code> 列表中选择 <code class="docutils literal"><span class="pre">Navigation</span> <span class="pre">Mesh</span></code> 。</p>
+<a class="reference internal image-reference" href="_images/physics_navmesh.png"><img alt="_images/physics_navmesh.png" class="align-center" src="_images/physics_navmesh.png" style="width: 100%;" /></a>
+<p>导航网格也可以使用特定的工具手动创建或生成自动。</p>
+<a class="reference internal image-reference" href="_images/physics_navmesh_generator.png"><img alt="_images/physics_navmesh_generator.png" class="align-center" src="_images/physics_navmesh_generator.png" style="width: 100%;" /></a>
+<div class="admonition note">
+<p class="first admonition-title">注解</p>
+<p class="last">此工具是原产于Blender并不是 Blend4Web 引擎的一部分。</p>
+</div>
+<p>此导航网格生成接口可以发现专用面板下的 <code class="docutils literal"><span class="pre">Scene</span></code> 选项卡上，但此功能是为了实时应用程序，它仅音引擎类型设置为  <code class="docutils literal"><span class="pre">Blend4Web</span></code> 或  <code class="docutils literal"><span class="pre">Blender</span> <span class="pre">Game</span></code> 才显示（Blender内部、 Cycles 或任何其他渲染引擎不会有显示）。</p>
+<p>在此面板上的主要工具是  <code class="docutils literal"><span class="pre">Build</span> <span class="pre">Navigation</span> <span class="pre">Mesh</span></code> 按钮。正如标题所暗示的它用来建设基于当前选定对象的导航网格。Navmesh 是作为一个单独的物体放置在所选的物体上面，因此保留该物体创建的。</p>
+<p>除了此按钮  <code class="docutils literal"><span class="pre">Navigation</span> <span class="pre">Mesh</span></code> 面板为用户提供了几组参数将生成 navmesh 进行微调。</p>
+<p><code class="docutils literal"><span class="pre">Rasterization</span></code> （栅格化）组的参数︰</p>
+<dl class="docutils">
+<dt><em>Cell Size</em></dt>
+<dd><p class="first last">栅格化单元格大小。更大的值会导致更大的 navmesh 多边形。最高的可能值是 1.0。默认值为 0.3。</p>
+</dd>
+<dt><em>Cell Height</em></dt>
+<dd><p class="first last">栅格单元格高度 （navmesh 和生成它的对象之间的距离）。默认值为 0.2。</p>
+</dd>
+</dl>
+<p><code class="docutils literal"><span class="pre">Agent</span></code> 组的参数︰</p>
+<dl class="docutils">
+<dt><em>Height</em></dt>
+<dd><p class="first last">最小高度，代理还能走路。默认值为 2.0。</p>
+</dd>
+<dt><em>Radius</em></dt>
+<dd><p class="first last">代理的半径。默认值为 0.6。</p>
+</dd>
+<dt><em>Max Slope</em></dt>
+<dd><p class="first last">代理能够行走的坡度的最大角度。以度为单位。默认值为 45。</p>
+</dd>
+<dt><em>Max Climb</em></dt>
+<dd><p class="first last">网格单元格之间的最大高度，代理可以爬上。默认值为 0.9。</p>
+</dd>
+</dl>
+<p><code class="docutils literal"><span class="pre">Region</span></code> 组的参数︰</p>
+<dl class="docutils">
+<dt><em>Min Region Size</em></dt>
+<dd><p class="first last">一个区域的最小大小 （较小的区域将被删除）。默认值为 8.0 级。</p>
+</dd>
+<dt><em>Merged Region Size</em></dt>
+<dd><p class="first last">一个区域的最小大小 （较小的地区，将合并）。默认值为 20.0。</p>
+</dd>
+<dt><em>Partitioning</em></dt>
+<dd><p class="first">用于分区导航网格的方法。受支持的方法是︰</p>
+<p><code class="docutils literal"><span class="pre">Monotone</span></code> 是最快的方法。使用它可以生成细细长长的多边形。</p>
+<p><code class="docutils literal"><span class="pre">Layers</span></code> —  速度较慢，但仍然相当快的方法，可产生更好的三角剖分比单调（Monotone ）分区。</p>
+<p class="last"><code class="docutils literal"><span class="pre">Watershed</span></code> — 经典重铸生成最好的剖分分区方法。此选项是默认选中的。</p>
+</dd>
+</dl>
+<p><code class="docutils literal"><span class="pre">Polygonization</span></code> 组的参数︰</p>
+<dl class="docutils">
+<dt><em>Max Edge Length</em></dt>
+<dd><p class="first last">边缘轮廓最大长度。默认值为 12.0。</p>
+</dd>
+<dt><em>Max Edge Error</em></dt>
+<dd><p class="first last">从轮廓到单元格的距离最大误差。默认值为 1.3。</p>
+</dd>
+<dt><em>Verts Per Poly</em></dt>
+<dd><p class="first last">每个多边形顶点的最大数目。默认值为 6。</p>
+</dd>
+</dl>
+<p><code class="docutils literal"><span class="pre">Detail</span> <span class="pre">Mesh</span></code> 组的参数︰</p>
+<dl class="docutils">
+<dt><em>Sample Distance</em></dt>
+<dd><p class="first last">详细信息网格采样间距。默认值是 6.0。</p>
+</dd>
+<dt><em>Max Sample Error</em></dt>
+<dd><p class="first last">最大误差的网格简化算法。默认值为 1.00。</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="using-navigation-meshes">
+<h3><a class="toc-backref" href="#id22">使用导航网格</a><a class="headerlink" href="#using-navigation-meshes" title="永久链接至标题">¶</a></h3>
+<p>Navmesh 创建后，它然后可用于在应用程序中计算两个点之间的运动轨迹。这可以从  <a class="reference external" href="https://www.blend4web.com/api_doc/module-physics.html">physics</a>  模块的两种方法得到 <a class="reference external" href="https://www.blend4web.com/api_doc/module-physics.html#.navmesh_get_island">navmesh_get_island()</a> 和 <a class="reference external" href="https://www.blend4web.com/api_doc/module-physics.html#.navmesh_find_path">navmesh_find_path()</a>. 前者用来检索链接到当前的岛 （最接近独立网段的 navmesh），而后者返回以数组形式的实际路径中的坐标。</p>
+<p>使用导航网格的寻路的例子可以在 <a class="reference internal" href="developers.html#code-snippets"><span>代码摘要</span></a> (相对应的摘要名字叫 <code class="docutils literal"><span class="pre">Pathfinding</span></code>).</p>
+</div>
+</div>
 <div class="section" id="use-in-applications">
-<span id="using-physics"></span><h2><a class="toc-backref" href="#id20">在应用程序中的使用</a><a class="headerlink" href="#use-in-applications" title="永久链接至标题">¶</a></h2>
+<span id="using-physics"></span><h2><a class="toc-backref" href="#id23">在应用程序中的使用</a><a class="headerlink" href="#use-in-applications" title="永久链接至标题">¶</a></h2>
 <p>物理系统是在 <strong>uranium.js</strong> 模块中实现，并分别从引擎的主要代码加载。<strong>Uranium.js</strong> 模块本身是 <a class="reference external" href="http://bulletphysics.org/">Bullet</a> 物理引擎的修改版，移植在浏览器中工作。为了激活物理系统，这就需要将 <strong>uranium.js</strong> 和 <strong>uranium.js.mem</strong> 文件跟应用程序的源代码放在同一个目录。</p>
 <p>另一个方法是通过使用下面的 API 方法显式指定 <strong>uranium.js</strong> 模块的加载路径 ︰</p>
 <div class="highlight-javascript"><div class="highlight"><pre><span></span><span class="nx">m_config</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s2">&quot;physics_uranium_path&quot;</span><span class="p">,</span> <span class="s2">&quot;.../uranium.js&quot;</span><span class="p">);</span>
@@ -469,7 +564,7 @@
   <div role="contentinfo">
     <p>
         &copy; 版权所有 2014-2016, Triumph.
-      最后更新于 2016-10-27.
+      最后更新于 2017-03-07.
 
     </p>
   </div>
@@ -525,7 +620,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'v16.10',
+            VERSION:'v17.02.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

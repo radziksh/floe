@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2016 Triumph LLC
+ * Copyright (C) 2014-2017 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,7 +52,7 @@
  * <dd>Boolean, enable postprocess-based anti-aliasing (use the CUSTOM profile
  * in order to change this parameter).
  * <dt>assets_path
- * <dd>String, path to assets directory (for get_std_assets_path()).
+ * <dd>String, path to assets directory (for get_assets_path() and get_std_assets_path()).
  * <dt>assets_dds_available
  * <dd>Boolean, allow the engine to use compressed DDS textures.
  * <dt>assets_pvr_available
@@ -68,10 +68,14 @@
  * canvas.
  * <dt>built_in_module_name
  * <dd>String, name of the module which stores exported data (HTML export only).
+ * <dt>shadow_blur_samples
+ * <dd>String, number of shadow border blur samples. It can be '16x', '8x' or '4x'
  * <dt>canvas_resolution_factor
  * <dd>Boolean, set the resolution factor for the canvas.
  * <dt>console_verbose
  * <dd>Boolean, print more debug info in the browser console.
+ * <dt> compositing
+ * <dd>Boolean, enable compositing.
  * <dt>dof
  * <dd>Boolean, enable DOF
  * <dt>god_rays
@@ -118,6 +122,8 @@
  * P_ULTRA, P_CUSTOM enums).
  * <dt>reflections
  * <dd>Boolean, enable reflections
+ * <dt>reflection_quality
+ * <dd>String, quality of reflections. It can be 'LOW', 'MEDIUM' or 'HIGH'
  * <dt>refractions
  * <dd>Boolean, enable refractions
  * <dt>sfx_mix_mode
@@ -154,7 +160,7 @@
  * @cc_externs alpha_sort_threshold anaglyph_use animation_framerate
  * @cc_externs antialiasing assets_path assets_dds_available assets_min50_available audio
  * @cc_externs background_color built_in_module_name canvas_resolution_factor
- * @cc_externs console_verbose do_not_load_resources enable_selectable
+ * @cc_externs console_verbose compositing do_not_load_resources enable_selectable
  * @cc_externs enable_outlining media_auto_activation outlining_overview_mode
  * @cc_externs physics_enabled physics_uranium_path physics_calc_fps physics_use_workers
  * @cc_externs precision prevent_caching quality
@@ -162,7 +168,8 @@
  * @cc_externs smaa smaa_search_texture_path smaa_area_texture_path
  * @cc_externs debug_view url_params stereo gl_debug max_fps max_fps_physics
  * @cc_externs use_min50 anisotropic_filtering shadows reflections refractions
- * @cc_externs ssao dof god_rays bloom motion_blur is_mobile_device
+ * @cc_externs ssao dof god_rays bloom motion_blur is_mobile_device shadow_blur_samples
+ * @cc_externs reflection_quality
  */
 b4w.module["config"] = function(exports, require) {
 
@@ -175,8 +182,7 @@ var m_print  = require("__print");
 
 /**
  * Quality profile enum. One of {@link module:config.P_LOW|P_LOW}, {@link module:config.P_HIGH|P_HIGH}, {@link module:config.P_ULTRA|P_ULTRA}, {@link module:config.P_CUSTOM|P_CUSTOM}.
- * @typedef QualityProfile
- * @type {Number}
+ * @typedef {number} QualityProfile
  */
 
 /**
@@ -213,7 +219,7 @@ exports.P_AUTO = m_cfg.P_AUTO;
 /**
  * Set the value of the config property of the engine.
  * @method module:config.set
- * @param {String} prop Property name
+ * @param {string} prop Property name
  * @param {*} value New property value
  */
 exports.set = m_cfg.set;
@@ -221,7 +227,7 @@ exports.set = m_cfg.set;
 /**
  * Get the value of the config property of the engine.
  * @method module:config.get
- * @param {String} prop Property name
+ * @param {string} prop Property name
  * @returns {*} Value of property
  */
 exports.get = m_cfg.get;
@@ -238,12 +244,19 @@ exports.reset = m_cfg.reset;
  */
 exports.reset_limits = m_cfg.reset_limits;
 /**
- * Get the path to the assets directory. Can be used when an application
- * is developed inside the SDK.
+ * Get the path to the standard assets directory inside the SDK.
  * @method module:config.get_std_assets_path
- * @returns {String} Path to assets
+ * @returns {string} Path to assets
  */
-exports.get_std_assets_path = m_cfg.get_std_assets_path;
+exports.get_std_assets_path = m_cfg.get_assets_path;
+/**
+ * Get the path to the project's assets directory.
+ * @see https://www.blend4web.com/doc/en/developers.html#loading-application-assets
+ * @method module:config.get_assets_path
+ * @param {string} name Name of the project
+ * @returns {string} Path to assets
+ */
+exports.get_assets_path = m_cfg.get_assets_path;
 
 /**
  * Set the engine's quality profile.

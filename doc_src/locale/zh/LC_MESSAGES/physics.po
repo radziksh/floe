@@ -7,16 +7,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Blend4Web 16.08\n"
 "Report-Msgid-Bugs-To: https://www.blend4web.com/en/forums/forum/17/\n"
-"POT-Creation-Date: 2016-09-01 16:56+0300\n"
-"PO-Revision-Date: 2016-10-07 15:43+0800\n"
+"POT-Creation-Date: 2016-11-25 17:25+0300\n"
+"PO-Revision-Date: 2016-12-01 22:48+0800\n"
 "Last-Translator: Blend4Web Team <info [at] blend4web.com>\n"
 "Language-Team: Chinese <info [at] blend4web.com>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.3.4\n"
-"Language: zh_CN\n"
-"X-Generator: Poedit 1.8.9\n"
+"Language: zh\n"
+"X-Generator: Poedit 1.8.11\n"
 
 #: ../physics.rst:5
 msgid "Physics"
@@ -132,10 +132,10 @@ msgid ""
 "``Cylinder``, ``Cone``. Also, the following physics parameters can be set: "
 "``Mass``, ``Damping`` - for ``Translation`` and ``Rotation``."
 msgstr ""
-"在这样一个物体的 ``刚体`` （旋转）或 ``Dynamic`` （不旋转）的值的物理设置可以在  "
-"``Physics Type`` 选项选择。在  ``Collision Bounds``  设置碰撞体类型可以选择 - 支"
-"持的类型有：``Box``，``Capsule``，``Sphere``，``Cylinder``，``Cone`` 。同时，下"
-"面的物理参数可以设置：``Mass``，``Damping``  - 为 ``Translation`` 和 "
+"在这样一个物体的 ``刚体`` （旋转）或 ``Dynamic`` （不旋转）的值的物理设置可以"
+"在  ``Physics Type`` 选项选择。在  ``Collision Bounds``  设置碰撞体类型可以选择 "
+"- 支持的类型有：``Box``，``Capsule``，``Sphere``，``Cylinder``，``Cone`` 。同"
+"时，下面的物理参数可以设置：``Mass``，``Damping``  - 为 ``Translation`` 和 "
 "``Rotation``。"
 
 #: ../physics.rst:76
@@ -187,9 +187,9 @@ msgid ""
 "limits can be set up."
 msgstr ""
 "向物体添加物理约束 (``Rigid Body Joint``) 可以在 ``Object Constraints`` 面板上执"
-"行 。受支持的类型 (``Pivot Type``) 是:``Ball``, ``Hinge``, ``Cone Twist``, "
+"行 。受支持的类型 (``Pivot Type``) 是: ``Ball``, ``Hinge``, ``Cone Twist``, "
 "``Generic 6 DoF``. 物理约束可以添加到两个相互作用的物体之一，而另一个物体作为 "
-"``Target`` 。这两个物体可以有静态和/或动态的物理类型。在约束 （除外``Ball``) ，"
+"``Target`` 。这两个物体可以有静态和/或动态的物理类型。在约束 （除外 ``Ball``) ，"
 "可以设置的平移和旋转的限制。"
 
 #: ../physics.rst:114
@@ -228,8 +228,8 @@ msgid ""
 "value (for example, 1000 kg) in the ``Mass`` field."
 msgstr ""
 "有必要指定机箱的真实质量 （因为默认值是仅 1 公斤）。做这件事先到物理设置，选择物"
-"理类型 ``Rigid Body`` 的 ``Physics Type`` 选项并指定  ``Mass``  所需的值 （例如，"
-"1000 公斤） 字段。 "
+"理类型 ``Rigid Body`` 的 ``Physics Type`` 选项并指定  ``Mass``  所需的值 （例"
+"如，1000 公斤） 字段。 "
 
 #: ../physics.rst:129
 msgid "Chassis Settings"
@@ -608,11 +608,277 @@ msgstr ""
 "只有一个基本角色可存在于场景中。如果场景中有多个角色，该引擎将使用他们的第一个基"
 "本角色，而忽略其他。"
 
+#: ../physics.rst:294
+msgid "Navigation Meshes"
+msgstr "导航网格"
+
 #: ../physics.rst:296
+msgid ""
+"Navigation meshes (commonly abbreviated *navmeshes*) are mesh objects that are "
+"used to make pathfinding simplier by eliminating the need for additional "
+"calculations such as collisions."
+msgstr ""
+"导航网格 (通常缩写 *navmeshes*) 是用来消除需要额外计算比如碰撞等使寻路更加简便的"
+"网格物体。"
+
+#: ../physics.rst:302
+msgid ""
+"In this example (taken from Code Snippets), navigation mesh is used to build a "
+"path through the labyrinth."
+msgstr "在此示例中 （取自代码片段），导航网格用于生成通过迷宫的路径。"
+
+#: ../physics.rst:305
+msgid "Creating Navigation Meshes"
+msgstr "创建导航网格"
+
+#: ../physics.rst:307
+msgid ""
+"To make a navmesh out of an object, turn on the ``Object Physics`` parameter on "
+"the ``Physics`` panel and select ``Navigation Mesh`` from the ``Physics Type`` "
+"list."
+msgstr ""
+"若要将物体生成 navmesh，打开 ``Physics`` 面板的 ``Object Physics`` 参数 ，从 "
+"``Physics Type`` 列表中选择 ``Navigation Mesh`` 。"
+
+#: ../physics.rst:313
+msgid ""
+"Navigation meshes can either be created manually or generated automatically "
+"using a specific tool."
+msgstr "导航网格也可以使用特定的工具手动创建或生成自动。"
+
+#: ../physics.rst:320
+msgid "This tool is native to Blender and not a part of the Blend4Web engine."
+msgstr "此工具是原产于Blender并不是 Blend4Web 引擎的一部分。"
+
+#: ../physics.rst:322
+msgid ""
+"This Navigation Mesh generation interface can be found on a dedicated panel "
+"under the ``Scene`` tab, but, as this feature is intended for real-time "
+"applications, it only appears if the Engine type is set to ``Blend4Web`` or "
+"``Blender Game`` (Blender Internal, Cycles or any other rendering engine won’t "
+"do)."
+msgstr ""
+"此导航网格生成接口可以发现专用面板下的 ``Scene`` 选项卡上，但此功能是为了实时应"
+"用程序，它仅音引擎类型设置为  ``Blend4Web`` 或  ``Blender Game`` 才显示（Blender"
+"内部、 Cycles 或任何其他渲染引擎不会有显示）。"
+
+#: ../physics.rst:324
+msgid ""
+"The main tool on this panel is the ``Build Navigation Mesh`` button. As the "
+"title suggests, it is used for building navigation meshes based on the "
+"currently selected object. The navmesh is created as a separate object placed "
+"above the selected object, thus leaving that object intact."
+msgstr ""
+"在此面板上的主要工具是  ``Build Navigation Mesh`` 按钮。正如标题所暗示的它用来建"
+"设基于当前选定对象的导航网格。Navmesh 是作为一个单独的物体放置在所选的物体上面，"
+"因此保留该物体创建的。"
+
+#: ../physics.rst:326
+msgid ""
+"Aside from this button, the ``Navigation Mesh`` panel offers users several "
+"groups of parameters to fine-tune the navmesh that will be generated."
+msgstr ""
+"除了此按钮  ``Navigation Mesh`` 面板为用户提供了几组参数将生成 navmesh 进行微"
+"调。"
+
+#: ../physics.rst:328
+msgid "``Rasterization`` group of parameters:"
+msgstr "``Rasterization`` （栅格化）组的参数︰"
+
+#: ../physics.rst:331
+msgid "*Cell Size*"
+msgstr "*Cell Size*"
+
+#: ../physics.rst:331
+msgid ""
+"Rasterized cell size. Greater values lead to bigger navmesh polygons. The "
+"highest possible value is 1.0. Default value is 0.3."
+msgstr ""
+"栅格化单元格大小。更大的值会导致更大的 navmesh 多边形。最高的可能值是 1.0。默认"
+"值为 0.3。"
+
+#: ../physics.rst:334
+msgid "*Cell Height*"
+msgstr "*Cell Height*"
+
+#: ../physics.rst:334
+msgid ""
+"Rasterized cell height (the distance between the navmesh and the object from "
+"which it was generated). Default value is 0.2."
+msgstr "栅格单元格高度 （navmesh 和生成它的对象之间的距离）。默认值为 0.2。"
+
+#: ../physics.rst:336
+msgid "``Agent`` group of parameters:"
+msgstr "``Agent`` 组的参数︰"
+
+#: ../physics.rst:339
+msgid "*Height*"
+msgstr "*Height*"
+
+#: ../physics.rst:339
+msgid "Minimum height where the agent can still walk. Default value is 2.0."
+msgstr "最小高度，代理还能走路。默认值为 2.0。"
+
+#: ../physics.rst:342
+msgid "*Radius*"
+msgstr "*Radius*"
+
+#: ../physics.rst:342
+msgid "The radius of the agent. Default value is 0.6."
+msgstr "代理的半径。默认值为 0.6。"
+
+#: ../physics.rst:345
+msgid "*Max Slope*"
+msgstr "*Max Slope*"
+
+#: ../physics.rst:345
+msgid ""
+"Maximum angle of a slope agent can walk on. Measured in degrees. Default value "
+"is 45."
+msgstr "代理能够行走的坡度的最大角度。以度为单位。默认值为 45。"
+
+#: ../physics.rst:348
+msgid "*Max Climb*"
+msgstr "*Max Climb*"
+
+#: ../physics.rst:348
+msgid ""
+"The maximum height between grid cells the agent can climb. Default value is 0.9."
+msgstr "网格单元格之间的最大高度，代理可以爬上。默认值为 0.9。"
+
+#: ../physics.rst:350
+msgid "``Region`` group of parameters:"
+msgstr "``Region`` 组的参数︰"
+
+#: ../physics.rst:353
+msgid "*Min Region Size*"
+msgstr "*Min Region Size*"
+
+#: ../physics.rst:353
+msgid ""
+"The minimum size of a region (smaller regions will be deleted). Default value "
+"is 8.0."
+msgstr "一个区域的最小大小 （较小的区域将被删除）。默认值为 8.0 级。"
+
+#: ../physics.rst:356
+msgid "*Merged Region Size*"
+msgstr "*Merged Region Size*"
+
+#: ../physics.rst:356
+msgid ""
+"The minimum size of a region (smaller regions will be merged). Default value is "
+"20.0."
+msgstr "一个区域的最小大小 （较小的地区，将合并）。默认值为 20.0。"
+
+#: ../physics.rst:365
+msgid "*Partitioning*"
+msgstr "*Partitioning*"
+
+#: ../physics.rst:359
+msgid "The method used to partition the navigation mesh. Supported methods are:"
+msgstr "用于分区导航网格的方法。受支持的方法是︰"
+
+#: ../physics.rst:361
+msgid ""
+"``Monotone`` is the fastest method. Using it may generate long thin polygons."
+msgstr "``Monotone`` 是最快的方法。使用它可以生成细细长长的多边形。"
+
+#: ../physics.rst:363
+msgid ""
+"``Layers`` — a slower, but still reasonably fast method that produces better "
+"triangulations than Monotone partitioning."
+msgstr ""
+"``Layers`` —  速度较慢，但仍然相当快的方法，可产生更好的三角剖分比单调"
+"（Monotone ）分区。"
+
+#: ../physics.rst:365
+msgid ""
+"``Watershed`` — classic Recast partitioning method that generates the nicest "
+"tesselation. This option is selected by default."
+msgstr "``Watershed`` — 经典重铸生成最好的剖分分区方法。此选项是默认选中的。"
+
+#: ../physics.rst:367
+msgid "``Polygonization`` group of parameters:"
+msgstr "``Polygonization`` 组的参数︰"
+
+#: ../physics.rst:370
+msgid "*Max Edge Length*"
+msgstr "*Max Edge Length*"
+
+#: ../physics.rst:370
+msgid "The maximum length of a contour edge. Default value is 12.0."
+msgstr "边缘轮廓最大长度。默认值为 12.0。"
+
+#: ../physics.rst:373
+msgid "*Max Edge Error*"
+msgstr "*Max Edge Error*"
+
+#: ../physics.rst:373
+msgid ""
+"The maximum error of the distance from the contour to the cells. Default value "
+"is 1.3."
+msgstr "从轮廓到单元格的距离最大误差。默认值为 1.3。"
+
+#: ../physics.rst:376
+msgid "*Verts Per Poly*"
+msgstr "*Verts Per Poly*"
+
+#: ../physics.rst:376
+msgid "The maximum number of vertices per polygon. Default value is 6."
+msgstr "每个多边形顶点的最大数目。默认值为 6。"
+
+#: ../physics.rst:378
+msgid "``Detail Mesh`` group of parameters:"
+msgstr "``Detail Mesh`` 组的参数︰"
+
+#: ../physics.rst:381
+msgid "*Sample Distance*"
+msgstr "*Sample Distance*"
+
+#: ../physics.rst:381
+msgid "Detail mesh sample spacing. Default value is 6.0."
+msgstr "详细信息网格采样间距。默认值是 6.0。"
+
+#: ../physics.rst:384
+msgid "*Max Sample Error*"
+msgstr "*Max Sample Error*"
+
+#: ../physics.rst:384
+msgid "Maximum error of the mesh simplification. Default value is 1.00."
+msgstr "最大误差的网格简化算法。默认值为 1.00。"
+
+#: ../physics.rst:387
+msgid "Using Navigation Meshes"
+msgstr "使用导航网格"
+
+#: ../physics.rst:389
+msgid ""
+"After a navmesh is created, it then can be used in the application for "
+"calculating trajectories between two points. This can be done using two methods "
+"from the :b4wmod:`physics` module, :b4wref:`physics.navmesh_get_island()` and :"
+"b4wref:`physics.navmesh_find_path()`. The former is used to retrieve a link to "
+"the current island (closest independent segment of the navmesh), while the "
+"latter returns the actual path in the form of an array of coordinates."
+msgstr ""
+"Navmesh 创建后，它然后可用于在应用程序中计算两个点之间的运动轨迹。这可以从  :"
+"b4wmod:`physics`  模块的两种方法得到 :b4wref:`physics.navmesh_get_island()` 和 :"
+"b4wref:`physics.navmesh_find_path()`. 前者用来检索链接到当前的岛 （最接近独立网"
+"段的 navmesh），而后者返回以数组形式的实际路径中的坐标。"
+
+#: ../physics.rst:391
+msgid ""
+"An example of using navigation meshes for pathfinding can be viewed in the :ref:"
+"`Code Snippets <code_snippets>` (the corresponding snippet is named "
+"``Pathfinding``)."
+msgstr ""
+"使用导航网格的寻路的例子可以在 :ref:`代码摘要 <code_snippets>` (相对应的摘要名字"
+"叫 ``Pathfinding``)."
+
+#: ../physics.rst:396
 msgid "Use in Applications"
 msgstr "在应用程序中的使用"
 
-#: ../physics.rst:298
+#: ../physics.rst:398
 msgid ""
 "The physics system is implemented in the **uranium.js** module and loaded "
 "separately from the engine's main code. The **uranium.js** module itself is a "
@@ -626,21 +892,21 @@ msgstr ""
 "览器中工作。为了激活物理系统，这就需要将 **uranium.js** 和 **uranium.js.mem** 文"
 "件跟应用程序的源代码放在同一个目录。"
 
-#: ../physics.rst:300
+#: ../physics.rst:400
 msgid ""
 "Another way is to explicitly specify the loading path of the **uranium.js** "
 "module by using the following API method:"
 msgstr ""
 "另一个方法是通过使用下面的 API 方法显式指定 **uranium.js** 模块的加载路径 ︰"
 
-#: ../physics.rst:308
+#: ../physics.rst:408
 msgid ""
 "When applications are developed :ref:`within the SDK <project_management>`, the "
 "path to the physics engine is detected automatically."
 msgstr ""
 "当开发应用程序 :ref:`使用了SDK <project_management>`, 自动检测到物理引擎的路径。"
 
-#: ../physics.rst:310
+#: ../physics.rst:410
 msgid ""
 "If your application does not use physics, we recommend you to turn off the "
 "``Enable Physics`` flag in the ``Physics`` panel under the scene tab in "

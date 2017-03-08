@@ -38,7 +38,11 @@
 
       * 海洋
 
+      * Mist
+
       * 风
+
+      * Wind Bending
 
       * 屏幕空间环境光遮蔽
 
@@ -94,8 +98,7 @@
    引擎建立日期和时间。在开发者版本显示的页面加载时间。
 
 **场景**
-   The name of the loaded scene. Path to the file pops-up on mouse
-   hover.
+   加载的场景的名称。鼠标悬停时文件路径弹出。
 
 **加载**
    加载进度和时间。
@@ -463,6 +466,15 @@ Shape Keys
 身相同的设置。
 
 
+Mist
+~~~~
+
+Setup for fog parameters.
+
+Scene Viewer uses standard fog rendering settings that are described
+in the dedicated chapter.
+
+
 风
 ~~
 
@@ -470,6 +482,15 @@ Shape Keys
 
 场景浏览器所使用的的和在Blender中使用的是相同的参数。参数在 相应章节
 描述。
+
+
+Wind Bending
+~~~~~~~~~~~~
+
+Setup for wind bending effect parameters.
+
+The same set of wind bending parameters is available in Blender. It is
+described in the Outdoor Rendering chapter.
 
 
 屏幕空间环境光遮蔽

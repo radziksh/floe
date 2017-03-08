@@ -421,6 +421,65 @@ Internal Parameters
 *Duration*
     Time (in seconds) that the camera will spend being moved to a new location. Set to zero by default (and in this case the camera doesn’t actually move, it simply changes its position). It can be specified manually or as a link to a variable (if the ``Variable`` parameter is enabled).
 
+.. _nla_set_camera_move_style:
+
+Set Camera Move Style
+---------------------
+
+Can be used to change the move style of the selected camera.
+
+.. image:: src_images/logic_editor/logic_editor_set_camera_move_style.png
+    :align: center
+    :width: 100%
+
+Input Parameters
+................
+
+*Previous*
+    Previous node.
+
+Output Parameters
+.................
+
+*Next*
+    Next node.
+
+Internal Parameters
+...................
+
+*Camera*
+    This parameter specifies a camera to which the changes will be applied.
+
+*New Camera Move Style*
+    This parameter specifies the new move style that the camera will use. Four options are available: ``Hover``, ``Eye``, ``Target`` and ``Static``.
+
+The following options are only available if the ``New Camera Move Style`` parameter is not set to ``Static``:
+
+*Translation*
+    Sets the camera translation velocity. This parameter is set to 1.0 by default.
+
+*Rotation*
+    Sets the camera rotation velocity. This parameter is set to 1.0 by default.
+
+*Zoom*
+    Sets the zoom velocity of the camera. Default value is 0.10. Available only if the ``New Camera Move Style`` parameter is set to either ``Hover`` or ``Target``.
+
+The following parameters are used to specify a target or a pivot point of the camera and are available only if the ``New Camera Move Style`` parameter is set to either ``Hover`` or ``Target``:
+
+*Use Object*
+    This parameter enables and disables using a scene object as camera's target or pivot point (depending on the camera type). If it is activated, a text field will appear to specify the object. This parameter is disabled by default.
+
+If the ``Use Object`` parameter is disabled, the following three options become available:
+
+*x*
+    The ``X`` component of the camera's target/pivot pint.
+
+*y*
+    The ``Y`` component of the camera's target/pivot point.
+
+*z*
+    The ``Z`` component of the camera's target/pivot point.
+
 Object
 ======
 
@@ -453,6 +512,9 @@ Internal Parameters
 *Object*
     An object to show.
 
+*Process child objects*
+    If this parameter is enabled, child objects will be shown as well.
+
 .. _nla_hide_object:
 
 Hide Object
@@ -481,6 +543,9 @@ Internal Parameters
 
 *Object*
     An object to hide.
+
+*Process child objects*
+    If this parameter is enabled, child objects will be hidden as well.
 
 Transform Object
 ----------------
@@ -797,6 +862,18 @@ Internal Parameters
     * *Multiply* multiplies the operands.
     * *Subtract* subtracts the second operand from the first.
     * *Divide* divides first operand by the second.
+    * *Sin* returns the sine of an angle (measured in radians) defined by the first operand.
+    * *Cos* returns the cosine of an angle (measured in radians) defined by the first operand
+    * *Tan* returns the tangent of an angle (measured in radians) defined by the first operand.
+    * *ArcSin* returns the arcsine value of the first operand.
+    * *ArcCos* returns the arccosine value of the first operand.
+    * *ArcTan* returns the arctangent value of the first operand.
+    * *Log* returns the logarithmic value of the first operand with the second operand used as the base.
+    * *Min* returns the lesser one of the two operands.
+    * *Max* returns the greater one of the two operands.
+    * *Round* rounds the first operator.
+    * *Mod* returns the remainder after division of the first operand by the second.
+    * *Abs* returns the absolute value of the first operand.
 
 *Operand1*
     First operand. It can be specified in the node or it can be a link to one of the variables (if the ``Variable`` parameter is enabled).
@@ -968,14 +1045,14 @@ Internal Parameters
     Specifies the variable to save the data received from the server.
 
 .. note::
-    The data received from the server should look like this:
+    The data received from the server should be in the JSON format:
 
     .. code-block:: json
 
-        {"var0": 1,
-        "var1": 10,
-        "var2": 144,
-        ...
+        {
+            "var0": 1,
+            "var1": 10,
+            "var2": 144
         }
 
 *Content-Type*
@@ -1016,8 +1093,57 @@ Internal Parameters
 *JSON Operation*
     An operation you need to perform with the JSON object specified by the ``JSON`` parameter. Can have one of two values: ``ENCODE`` to encode the JSON object and ``PARSE`` to decode it. Set to ``ENCODE`` by default.
 
-*Members*
-    A list of variables that will be used to either store the decoded data or to encode a JSON object (depending on the value of the ``JSON Operation`` parameter). The variables always have names like ``var0``, ``var1`` and so on, and their quantity can be adjusted.
+*Paths*
+    A list of paths to the variables inside the JSON object. Paths are used to define the inner structure of a JSON object. A path should consist of several identifiers (separated by dots) that serve as a path to a JSON field. If a name of a fragment of the path consists solely of numbers, this name is interpreted as an array index. Paths are created and deleted in conjunction with variables (in the ``Variables`` list), and one path always corresponds to one variable. This list can be used both to encode and to decode JSON object. By default, the list is empty.
+
+*Variables*
+    A list of variables that will be used to either store the decoded data or to encode a JSON object (depending on the value of the ``JSON Operation`` parameter). The names and the quantity of the variables can be adjusted manually. This list is also empty by default.
+
+Using JSON logic node to encode JSON object
+...........................................
+
+.. image:: src_images/logic_editor/logic_editor_json_encode_example.png
+    :align: center
+    :width: 100%
+
+The logic node setup at the picture above encodes a JSON object and stores it in the ``R1`` variable. Such a JSON object looks like this:
+
+.. code-block:: json
+    
+    {
+        "main":{
+            "part1":7,
+            "part2":12,
+            "part3":"abc"
+        }
+    }
+
+Using JSON logic node to decode JSON object
+...........................................
+
+.. image:: src_images/logic_editor/logic_editor_json_decode_example.png
+    :align: center
+    :width: 100%
+
+The picture above shows a logic node setup that recieves a JSON object from the server, stores it in the ``R1`` variable and then decodes it. Such a JSON object looks like this:
+
+.. code-block:: json
+
+    {
+        "a": {
+	    "b": 17,
+            "c": "abc" 
+        } 
+    }
+
+Decoding this JSON object with the ``JSON`` logic node results in three variables named ``var0``, ``var1`` and ``var2`` (you don't have to create the variables beforehand) that will contain various parts of the JSON object. In this example, the ``var1`` variable has the value of 17, the ``var2`` variable has the value "abc", while the ``var0`` variable contains the following fragment of the JSON object:
+
+.. code-block:: json
+
+    {
+        "b": 17,
+        "c": "abc" 
+    } 
 
 .. _nla_page_param:
 
@@ -1047,6 +1173,8 @@ Internal Parameters
 
 *Param Name*
     The name of the web page parameter.
+
+    If the parameter specified in this field is presented in the URL, then its value will be saved to a variable specified by the ``Destination`` parameter.
 
 *Destination*
     A variable that will be used to save the parameter.

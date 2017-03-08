@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2016 Triumph LLC
+ * Copyright (C) 2014-2017 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,25 +36,12 @@ var _vec3_tmp = new Float32Array(3);
 var _quat4_tmp = new Float32Array(4);
 
 /**
- * Transform in the local space
- * @const {Space} module:transform.SPACE_LOCAL
- * @deprecated Not needed anymore.
- */
-exports.SPACE_LOCAL = m_trans.SPACE_LOCAL;
-/**
- * Transform in the world space
- * @const {Space} module:transform.SPACE_WORLD
- * @deprecated Not needed anymore.
- */
-exports.SPACE_WORLD = m_trans.SPACE_WORLD;
-
-/**
  * Set the object translation.
  * @method module:transform.set_translation
  * @param {Object3D} obj Object 3D
- * @param {Number} x X coord
- * @param {Number} y Y coord
- * @param {Number} z Z coord
+ * @param {number} x X coord
+ * @param {number} y Y coord
+ * @param {number} z Z coord
  */
 exports.set_translation = function(obj, x, y, z) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -72,9 +59,9 @@ exports.set_translation = function(obj, x, y, z) {
  * Set the object translation (in the coordinate space of its parent).
  * @method module:transform.set_translation_rel
  * @param {Object3D} obj Object 3D
- * @param {Number} x X coord
- * @param {Number} y Y coord
- * @param {Number} z Z coord
+ * @param {number} x X coord
+ * @param {number} y Y coord
+ * @param {number} z Z coord
  */
 exports.set_translation_rel = function(obj, x, y, z) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -124,9 +111,9 @@ exports.set_translation_rel_v = function(obj, trans) {
  * Set the object translation relatively to another object.
  * @method module:transform.set_translation_obj_rel
  * @param {Object3D} obj Transformed object
- * @param {Number} x X coord
- * @param {Number} y Y coord
- * @param {Number} z Z coord
+ * @param {number} x X coord
+ * @param {number} y Y coord
+ * @param {number} z Z coord
  * @param {Object3D} obj_ref Reference object
  */
 exports.set_translation_obj_rel = function(obj, x, y, z, obj_ref) {
@@ -153,10 +140,19 @@ exports.set_translation_obj_rel = function(obj, x, y, z, obj_ref) {
  * @param {Object3D} obj Object 3D
  * @param {Vec3} [dest] Destination vector
  * @returns {Vec3} Destination vector
+ * @example 
+ * var m_scenes = require("scenes");
+ * var m_trans = require("transform");
+ * var m_vec3 = require("vec3");
+ * // precache 3D vector
+ * var _vec3_tmp = m_vec3.create();
+ * // ...
+ * var cube = m_scenes.get_object_by_name("Cube");
+ * var translation = m_trans.get_translation(cube, _vec3_tmp);
  */
 exports.get_translation = function(obj, dest) {
     if (!dest)
-        var dest = new Float32Array(3);
+        dest = new Float32Array(3);
 
     m_trans.get_translation(obj, dest);
     return dest;
@@ -171,7 +167,7 @@ exports.get_translation = function(obj, dest) {
  */
 exports.get_translation_rel = function(obj, dest) {
     if (!dest)
-        var dest = new Float32Array(3);
+        dest = new Float32Array(3);
 
     m_trans.get_translation_rel(obj, dest);
     return dest;
@@ -181,10 +177,10 @@ exports.get_translation_rel = function(obj, dest) {
  * Set the object's rotation quaternion.
  * @method module:transform.set_rotation
  * @param {Object3D} obj Object 3D
- * @param {Number} x X part of quaternion
- * @param {Number} y Y part of quaternion
- * @param {Number} z Z part of quaternion
- * @param {Number} w W part of quaternion
+ * @param {number} x X part of quaternion
+ * @param {number} y Y part of quaternion
+ * @param {number} z Z part of quaternion
+ * @param {number} w W part of quaternion
  */
 exports.set_rotation = function(obj, x, y, z, w) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -204,10 +200,10 @@ exports.set_rotation = function(obj, x, y, z, w) {
  * Set the object's rotation quaternion (in the coordinate space of its parent).
  * @method module:transform.set_rotation_rel
  * @param {Object3D} obj Object 3D
- * @param {Number} x X part of quaternion
- * @param {Number} y Y part of quaternion
- * @param {Number} z Z part of quaternion
- * @param {Number} w W part of quaternion
+ * @param {number} x X part of quaternion
+ * @param {number} y Y part of quaternion
+ * @param {number} z Z part of quaternion
+ * @param {number} w W part of quaternion
  */
 exports.set_rotation_rel = function(obj, x, y, z, w) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -259,10 +255,19 @@ exports.set_rotation_rel_v = function(obj, quat) {
  * @param {Object3D} obj Object 3D
  * @param {Quat} [opt_dest] Destination vector
  * @returns {Quat} Destination vector
+ * @example 
+ * var m_scenes = require("scenes");
+ * var m_trans = require("transform");
+ * var m_quat  = require("quat");
+ * // precache quaternion
+ * var _quat_tmp = m_quat.create();
+ * // ...
+ * var cube = m_scenes.get_object_by_name("Cube");
+ * var rot_quat = m_trans.get_rotation(cube, _quat_tmp);
  */
 exports.get_rotation = function(obj, opt_dest) {
     if (!opt_dest)
-        var opt_dest = new Float32Array(4);
+        opt_dest = new Float32Array(4);
 
     m_trans.get_rotation(obj, opt_dest);
     return opt_dest;
@@ -278,7 +283,7 @@ exports.get_rotation = function(obj, opt_dest) {
  */
 exports.get_rotation_rel = function(obj, opt_dest) {
     if (!opt_dest)
-        var opt_dest = new Float32Array(4);
+        opt_dest = new Float32Array(4);
 
     m_trans.get_rotation_rel(obj, opt_dest);
     return opt_dest;
@@ -289,9 +294,9 @@ exports.get_rotation_rel = function(obj, opt_dest) {
  * Using euler angles is discouraged, use quaternion instead.
  * @method module:transform.set_rotation_euler
  * @param {Object3D} obj Object 3D
- * @param {Number} x Angle X
- * @param {Number} y Angle Y
- * @param {Number} z Angle Z
+ * @param {number} x Angle X
+ * @param {number} y Angle Y
+ * @param {number} z Angle Z
  */
 exports.set_rotation_euler = function(obj, x, y, z) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -316,7 +321,7 @@ exports.set_rotation_euler = function(obj, x, y, z) {
  */
 exports.get_rotation_euler = function(obj, dest) {
     if (!dest)
-        var dest = new Float32Array(3);
+        dest = new Float32Array(3);
 
     m_trans.get_rotation_euler(obj, dest);
     return dest;
@@ -333,7 +338,7 @@ exports.get_rotation_euler = function(obj, dest) {
  */
 exports.get_rotation_euler_rel = function(obj, dest) {
     if (!dest)
-        var dest = new Float32Array(3);
+        dest = new Float32Array(3);
 
     m_trans.get_rotation_euler_rel(obj, dest);
     return dest;
@@ -345,9 +350,9 @@ exports.get_rotation_euler_rel = function(obj, dest) {
  * Using euler angles is discouraged, use quaternion instead.
  * @method module:transform.set_rotation_euler_rel
  * @param {Object3D} obj Object 3D
- * @param {Number} x Angle X
- * @param {Number} y Angle Y
- * @param {Number} z Angle Z
+ * @param {number} x Angle X
+ * @param {number} y Angle Y
+ * @param {number} z Angle Z
  */
 exports.set_rotation_euler_rel = function(obj, x, y, z) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -399,7 +404,7 @@ exports.set_rotation_euler_rel_v = function(obj, euler) {
  * Set the object scale.
  * @method module:transform.set_scale
  * @param {Object3D} obj Object 3D
- * @param {Number} scale Object scale
+ * @param {number} scale Object scale
  */
 exports.set_scale = function(obj, scale) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -414,7 +419,7 @@ exports.set_scale = function(obj, scale) {
  * (in the coordinate space of its parent).
  * @method module:transform.set_scale_rel
  * @param {Object3D} obj Object 3D
- * @param {Number} scale Object scale
+ * @param {number} scale Object scale
  */
 exports.set_scale_rel = function(obj, scale) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -428,7 +433,7 @@ exports.set_scale_rel = function(obj, scale) {
  * Get the object scale.
  * @method module:transform.get_scale
  * @param {Object3D} obj Object 3D
- * @returns {Number} scale
+ * @returns {number} scale
  */
 exports.get_scale = function(obj) {
     return m_trans.get_scale(obj);
@@ -439,7 +444,7 @@ exports.get_scale = function(obj) {
  * (in the coordinate space of its parent).
  * @method module:transform.get_scale_rel
  * @param {Object3D} obj Object 3D
- * @returns {Number} scale
+ * @returns {number} scale
  */
 exports.get_scale_rel = function(obj) {
     return m_trans.get_scale_rel(obj);
@@ -474,7 +479,7 @@ exports.empty_reset_transform = function(obj) {
  * Get object size (maximum radius, calculated from bounding box).
  * @method module:transform.get_object_size
  * @param {Object3D} obj Object 3D
- * @returns {Number} Object size
+ * @returns {number} Object size
  */
 exports.get_object_size = function(obj) {
 
@@ -490,7 +495,7 @@ exports.get_object_size = function(obj) {
  * Works for dynamic and static objects.
  * @method module:transform.get_object_center
  * @param {Object3D} obj Object 3D
- * @param {Boolean} calc_bs_center Use the object's bounding sphere to
+ * @param {boolean} calc_bs_center Use the object's bounding sphere to
  * calculate center, otherwise use the bounding box.
  * @param {Vec3} [dest] Destination vector
  * @returns {Vec3} Destination vector
@@ -503,7 +508,7 @@ exports.get_object_center = function(obj, calc_bs_center, dest) {
     }
 
     if (!dest)
-        var dest = new Float32Array(3);
+        dest = new Float32Array(3);
 
     return m_trans.get_object_center(obj, calc_bs_center, dest);
 }
@@ -512,9 +517,9 @@ exports.get_object_center = function(obj, calc_bs_center, dest) {
  * Perform incremental object translation in the local space.
  * @method module:transform.move_local
  * @param {Object3D} obj Object 3D
- * @param {Number} dx Translation offset along X axis
- * @param {Number} dy Translation offset along Y axis
- * @param {Number} dz Translation offset along Z axis
+ * @param {number} dx Translation offset along X axis
+ * @param {number} dy Translation offset along Y axis
+ * @param {number} dz Translation offset along Z axis
  */
 exports.move_local = function(obj, dx, dy, dz) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -529,7 +534,7 @@ exports.move_local = function(obj, dx, dy, dz) {
  * Perform incremental rotation around X axis in the local space.
  * @method module:transform.rotate_x_local
  * @param {Object3D} obj Object 3D
- * @param {Number} angle Angle
+ * @param {number} angle Angle
  */
 exports.rotate_x_local = function(obj, angle) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -545,7 +550,7 @@ exports.rotate_x_local = function(obj, angle) {
  * Perform incremental rotation around Y axis in the local space.
  * @method module:transform.rotate_y_local
  * @param {Object3D} obj Object 3D
- * @param {Number} angle Angle
+ * @param {number} angle Angle
  */
 exports.rotate_y_local = function(obj, angle) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -561,7 +566,7 @@ exports.rotate_y_local = function(obj, angle) {
  * Perform incremental rotation around Z axis in the local space.
  * @method module:transform.rotate_z_local
  * @param {Object3D} obj Object 3D
- * @param {Number} angle Angle
+ * @param {number} angle Angle
  */
 exports.rotate_z_local = function(obj, angle) {
     if (m_obj_util.is_dynamic(obj)) {
@@ -624,7 +629,7 @@ exports.set_tsr_rel = function(obj, tsr) {
  */
 exports.get_tsr = function(obj, dest) {
     if (!dest)
-        var dest = new Float32Array(8);
+        dest = new Float32Array(8);
 
     m_trans.get_tsr(obj, dest);
 
@@ -641,7 +646,7 @@ exports.get_tsr = function(obj, dest) {
  */
 exports.get_tsr_rel = function(obj, dest) {
     if (!dest)
-        var dest = new Float32Array(8);
+        dest = new Float32Array(8);
 
     m_trans.get_tsr_rel(obj, dest);
 
@@ -650,9 +655,10 @@ exports.get_tsr_rel = function(obj, dest) {
 
 /**
  * Get distance between the two objects.
- * @param {Object3D} obj1 Object 3D 1
- * @param {Object3D} obj2 Object 3D 2
- * @returns {Number} Distance
+ * @method module:transform.distance
+ * @param {Object3D} obj1 The first object.
+ * @param {Object3D} obj2 The second object.
+ * @returns {number} Distance
  */
 exports.distance = function(obj1, obj2) {
     return m_trans.distance(obj1, obj2);
@@ -703,7 +709,7 @@ exports.set_matrix_rel = function(obj, mat) {
  */
 exports.get_matrix = function(obj, dest) {
     if (!dest)
-        var dest = new Float32Array(16);
+        dest = new Float32Array(16);
 
     m_trans.get_tsr(obj, _tsr_tmp);
     m_tsr.to_mat4(_tsr_tmp, dest);
@@ -722,7 +728,7 @@ exports.get_matrix = function(obj, dest) {
  */
 exports.get_matrix_rel = function(obj, dest) {
     if (!dest)
-        var dest = new Float32Array(16);
+        dest = new Float32Array(16);
 
     m_trans.get_tsr_rel(obj, _tsr_tmp);
     m_tsr.to_mat4(_tsr_tmp, dest);

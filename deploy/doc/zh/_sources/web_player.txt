@@ -38,7 +38,7 @@
 用法
 ====
 
-您可以复制包含网络播放文件的目录，即 "deploy/apps/webplayer", ，从
+您可以复制包含网络播放文件的目录，即 "deploy/apps/webplayer", 从
 Blend4Web SDK分布和您的网站进行部署。您可以将导出的场景文件在您的网站
 和指定的路径给他们（绝对或相对）与 "load" 网络播放器的参数。
 
@@ -142,19 +142,21 @@ Blend4Web SDK分布和您的网站进行部署。您可以将导出的场景文�
 
 如果播放器使用不当，它会显示相应的错误。
 
-1. 在 "load" 属性指定一个错误的路径JSON文件或文件已损坏;
+1. The "load" attribute specifies a wrong path to the JSON file or
+   the file is corrupt.
 
 [图片]
 
 
 
-2. 在 "load" 属性未找到或无效的;
+2. The "load" attribute is not found or is void.
 
 [图片]
 
 
 
-3. WebGL的初始化错误。
+3. WebGL initialization error. Please, look at this page for the
+   solution.
 
 [图片]
 

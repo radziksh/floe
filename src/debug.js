@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2016 Triumph LLC
+ * Copyright (C) 2014-2017 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,9 @@ var m_compat = require("__compat");
 var m_cfg    = require("__config");
 var m_ext    = require("__extensions");
 var m_graph  = require("__graph");
+var m_obj    = require("__objects");
 var m_print  = require("__print");
+var m_scenes = require("__scenes");
 var m_subs   = require("__subscene");
 var m_tex    = require("__textures");
 var m_time   = require("__time");
@@ -71,7 +73,7 @@ exports.DV_RENDER_TIME = 7;
 
 /**
  * Setup WebGL context
- * @param ctx webgl context
+ * @param gl webgl context
  */
 exports.setup_context = function(gl) {
     // WebGLRenderingContext.cpp
@@ -84,7 +86,7 @@ exports.setup_context = function(gl) {
         "CONTEXT_LOST_WEBGL"                // 37442
     ];
 
-    for (var i in errors) {
+    for (var i = 0; i < errors.length; i++) {
         var error = errors[i];
         if (error in gl)
             ERRORS[gl[error]] = error;
@@ -149,6 +151,114 @@ exports.show_vbo_garbage_info = function() {
     }
 }
 
+exports.print_batches_stat = function() {
+    var batches_props = {};
+    
+    // properties that don't affect batching
+    var excluded_props = [
+        "bb_local", "bb_world", "be_local", "be_world", "bs_local", "bs_world", 
+        "bufs_data", "id", "attribute_setters", "num_vertices", "num_triangles",
+        "material_names", "shader", "bpy_tex_names"
+    ];
+
+    var static_count = 0;
+    var dynamic_count = 0;
+
+    var objs = m_obj.get_scene_objs(m_scenes.get_main(), "MESH", m_obj.DATA_ID_ALL);
+    for (var i = 0; i < objs.length; i++) {
+        for (var j = 0; j < objs[i].scenes_data.length; j++)
+            for (var k = 0; k < objs[i].scenes_data[j].batches.length; k++) {
+
+                var batch = m_util.clone_object_json(objs[i].scenes_data[j].batches[k]);
+                
+                var shader_pair = batch.shaders_info.vert + "/" + batch.shaders_info.frag;
+                batch["shaders_info.directives"] = batch.shaders_info.directives;
+                batch["shaders_info.node_elements"] = batch.shaders_info.node_elements;
+                delete batch.shaders_info;
+                for (var l = 0; l < excluded_props.length; l++)
+                    delete batch[excluded_props[l]];
+
+                if (objs[i].is_dynamic) {
+                    dynamic_count++;
+                    continue;
+                } else
+                    static_count++;
+
+                if (!(batch.type in batches_props))
+                    batches_props[batch.type] = {}
+
+                if (!(shader_pair in batches_props[batch.type]))
+                    batches_props[batch.type][shader_pair] = {}
+
+                for (var prop in batch) {
+                    if (!(prop in batches_props[batch.type][shader_pair]))
+                        batches_props[batch.type][shader_pair][prop] = {};
+
+                    var str_val = JSON.stringify(batch[prop]);
+
+                    if (!(str_val in batches_props[batch.type][shader_pair][prop]))
+                        batches_props[batch.type][shader_pair][prop][str_val] = 0;
+
+                    batches_props[batch.type][shader_pair][prop][str_val]++;
+                }
+            }
+    }
+
+    m_print.group("Batches statistics:");
+    m_print.log_raw("STATIC/DYNAMIC count:", static_count + "/" + dynamic_count);
+    m_print.group("STATIC batches diversity:");
+
+    for (var type in batches_props)
+        for (var shader_pair in batches_props[type])
+            print_batches_stat_props(batches_props[type][shader_pair], type, shader_pair);
+
+    m_print.groupEnd();
+    m_print.groupEnd();
+}
+
+function print_batches_stat_props(props_dict, type, shader_pair) {
+    var props_array = [];
+    for (var prop in props_dict)
+        if (m_util.get_dict_length(props_dict[prop]) > 1)
+            props_array.push([prop, props_dict[prop]])
+
+    props_array.sort(function(a, b) {
+        var a_len = m_util.get_dict_length(a[1]);
+        var b_len = m_util.get_dict_length(b[1]);
+        if (b_len != a_len)
+            return b_len - a_len;
+        return a < b ? -1 : b < a ? 1 : 0;
+    });
+
+    if (props_array.length) {
+        m_print.groupCollapsed(type + " " + shader_pair);
+        m_print.log_raw("Property different variants (>1) | Property name");
+        for (var i = 0; i < props_array.length; i++) {
+            m_print.groupCollapsed(m_util.get_dict_length(props_array[i][1]), props_array[i][0]);
+            print_batches_stat_props_values(props_array[i][1]);
+        }
+        m_print.groupEnd();
+    }
+}
+
+function print_batches_stat_props_values(values_dict) {
+    m_print.log_raw("Batches count for this property value | Property value");
+
+    var values_array = [];
+    for (var value in values_dict)
+        values_array.push([value, values_dict[value]]);
+
+    values_array.sort(function(a, b) {
+        if (b[1] != a[1])
+            return b[1] - a[1];
+        return a[0] < b[0] ? -1 : b[0] < a[0] ? 1 : 0;
+    });
+
+    for (var j = 0; j < values_array.length; j++)
+        m_print.log_raw(values_array[j][1], values_array[j][0]);
+    m_print.groupEnd();
+}
+
 /**
  * Get GL error, throw exception if any.
  */
@@ -168,7 +278,7 @@ exports.check_gl = function(msg) {
 /**
  * Check status of currently bounded framebuffer object,
  * Print error if framebuffer is incomplete.
- * @returns {Boolean} true if framebuffer complete
+ * @returns {boolean} true if framebuffer complete
  */
 exports.check_bound_fb = function() {
 
@@ -211,7 +321,7 @@ exports.check_depth_only_issue = function() {
     var framebuffer = _gl.createFramebuffer();
     _gl.bindFramebuffer(_gl.FRAMEBUFFER, framebuffer);
 
-    var texture = m_tex.create_texture("DEBUG", m_tex.TT_DEPTH);
+    var texture = m_tex.create_texture(m_tex.TT_DEPTH, false);
     m_tex.resize(texture, 1, 1);
 
     var w_tex = texture.w_texture;
@@ -285,8 +395,8 @@ exports.check_ff_cubemap_out_of_memory = function() {
 /**
  * Prints shader text numbered lines and error.
  * @param {WebGLShader} shader Shader object
- * @param {String} shader_id Shader id
- * @param {String} shader_text Shader text
+ * @param {string} shader_id Shader id
+ * @param {string} shader_text Shader text
  */
 exports.report_shader_compiling_error = function(shader, shader_id, shader_text) {
 
@@ -312,9 +422,9 @@ function supply_line_numbers(text) {
 /**
  * Prints shader text numbered lines and error.
  * @param {WebGLProgram} program Shader program object
- * @param {String} shader_id Shader id
- * @param {String} vshader_text Vertex shader text
- * @param {String} fshader_text Fragment shader text
+ * @param {string} shader_id Shader id
+ * @param {string} vshader_text Vertex shader text
+ * @param {string} fshader_text Fragment shader text
  */
 exports.report_shader_linking_error = function(program, shader_id,
         vshader_text, fshader_text) {
@@ -351,8 +461,8 @@ function create_render_time_query() {
     var ext = m_ext.get_disjoint_timer_query();
 
     if (ext) {
-        var query = ext.createQueryEXT();
-        ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, query);
+        var query = ext.createQuery();
+        ext.beginQuery(query);
     } else
         var query = performance.now();
 
@@ -404,16 +514,17 @@ function calc_render_time(queries, prev_render_time, end_query) {
 
     if (ext) {
         if (end_query)
-            ext.endQueryEXT(ext.TIME_ELAPSED_EXT);
+            ext.endQuery();
+
         for (var i = 0; i < queries.length; i++) {
             var query = queries[i];
 
-            var available = ext.getQueryObjectEXT(query,
-                    ext.QUERY_RESULT_AVAILABLE_EXT);
-            var disjoint = _gl.getParameter(ext.GPU_DISJOINT_EXT);
+            var available = ext.getQueryAvailable(query);
+
+            var disjoint = _gl.getParameter(ext.getDisjoint());
 
             if (available && !disjoint) {
-                var elapsed = ext.getQueryObjectEXT(query, ext.QUERY_RESULT_EXT);
+                var elapsed = ext.getQueryObject(query);
                 render_time = elapsed / 1000000;
                 if (prev_render_time)
                     render_time = m_util.smooth(render_time,
@@ -435,7 +546,7 @@ function calc_render_time(queries, prev_render_time, end_query) {
 
 /**
  * Print number of executions per frame.
- * @param {String} Counter ID
+ * @param {string} counter ID
  */
 exports.exec_count = function(counter) {
     if (counter in _exec_counters)
@@ -514,7 +625,7 @@ exports.print_telemetry = function(time) {
     for (var i = 0; i < _telemetry_messages.length; i++) {
         var msg = _telemetry_messages[i];
 
-        var time = msg[0];
+        time = msg[0];
 
         if (time < start_time_ms)
             continue;
@@ -548,7 +659,7 @@ exports.plot_telemetry = function(time) {
     for (var i = 0; i < _telemetry_messages.length; i++) {
         var msg = _telemetry_messages[i];
 
-        var time = msg[0];
+        time = msg[0];
 
         if (time < start_time_ms)
             continue;
@@ -630,8 +741,8 @@ exports.assert_cons = function(value, constructor) {
 /**
  * Check whether the two objects have the same structure with proper values.
  */
-exports.assert_structure = assert_structure;
-function assert_structure(obj1, obj2) {
+exports.assert_struct = assert_struct;
+function assert_struct(obj1, obj2) {
 
     if (!is_valid(obj1))
         m_util.panic("Structure assertion failed: invalid first object value");
@@ -701,15 +812,19 @@ function cmp_type(obj1, obj2) {
 }
 
 /**
- * Assert stucture - sequential form.
+ * Assert object stucture - sequential form.
+ * There is no cleanup, so always reload the page.
  */
-exports.assert_structure_seq = function(obj) {
+exports.assert_struct_seq = function(obj) {
     if (!_assert_struct_init)
         _assert_struct_init = true;
     else
-        assert_structure(obj, _assert_struct_last_obj);
+        assert_struct(obj, _assert_struct_last_obj);
 
-    _assert_struct_last_obj = m_util.clone_object_nr(obj);
+    if (obj != null && typeof obj == "object")
+        _assert_struct_last_obj = m_util.clone_object_nr(obj);
+    else
+        _assert_struct_last_obj = obj;
 }
 
 exports.fake_load = function(stageload_cb, interval, start, end, loaded_cb) {
@@ -759,7 +874,7 @@ exports.nodegraph_to_dot = function(graph, detailed_print) {
             case "TEXTURE_COLOR":
             case "TEXTURE_NORMAL":
                 data_info = "\ntexture: " + attr.data.value.name + "\n(" 
-                        + attr.data.value.image.filepath + ")";
+                        + attr.data.value.img_filepath + ")";
                 break;
             }
 

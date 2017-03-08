@@ -76,7 +76,7 @@ def check_dependencies(dependencies):
             needed_progs["Libav or FFmpeg"] = True
         elif dep == "identify" or dep == "convert":
             needed_progs["ImageMagick"] = True
-        elif dep == "identify" or dep == "convert":
+        elif dep == "ffprobe":
             needed_progs["FFprobe"] = True
         elif dep == "nvcompress":
             needed_progs["NVIDIA Texture Tools"] = True
@@ -437,7 +437,7 @@ def media_conv(path_from, path_to, media_converter, verbose, cut_video, is_video
     if cut_video:
         args += ["-vn"]
     else:
-        if ext_to == ".ogg":
+        if ext_to == ".oga" or ext_to == ".ogv":
             args += ["-acodec", "libvorbis"]
         elif ext_to == ".mp3":
             args += ["-acodec", "mp3"]

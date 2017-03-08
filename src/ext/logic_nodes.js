@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2016 Triumph LLC
+ * Copyright (C) 2014-2017 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 "use strict";
 
 /**
- * API methods to control logic editor.
+ * API methods to control the {@link https://www.blend4web.com/doc/en/logic_editor.html|Logic Editor}.
  * @module logic_nodes
  */
 b4w.module["logic_nodes"] = function(exports, require) {
@@ -27,7 +27,7 @@ var m_logn = require("__logic_nodes");
 /**
  * Register custom callback, used in logic editor.
  * @method module:logic_nodes.append_custom_callback
- * @param {String} cb_id Callback ID.
+ * @param {string} cb_id Callback ID.
  * @param {Function} cb Callback function.
  */
 exports.append_custom_callback = function(cb_id, cb) {
@@ -37,7 +37,7 @@ exports.append_custom_callback = function(cb_id, cb) {
 /**
  * Remove registered custom callback by its ID.
  * @method module:logic_nodes.remove_custom_callback
- * @param {String} cb_id Callback ID.
+ * @param {string} cb_id Callback ID.
  */
 exports.remove_custom_callback = function(cb_id) {
     m_logn.remove_custom_cb(cb_id);
@@ -46,8 +46,8 @@ exports.remove_custom_callback = function(cb_id) {
 /**
  * Activate Entry Point node, used in logic editor.
  * @method module:logic_nodes.run_entrypoint
- * @param {String} scene_name Scene name.
- * @param {String} ep_name Entry Point node name.
+ * @param {string} scene_name Scene name.
+ * @param {string} ep_name Entry Point node name.
  */
 exports.run_entrypoint = function(scene_name, ep_name) {
     m_logn.run_ep(scene_name, ep_name);

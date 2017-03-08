@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2016 Triumph LLC
+ * Copyright (C) 2014-2017 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ exports.defaults = {
 
     alpha_sort_threshold       : 0.1,
 
-    min_format_version         : [6, 1],
+    min_format_version         : [6, 2],
 
     max_fps                    : 10000, // not accurate
 
@@ -164,8 +164,6 @@ exports.defaults = {
 
     loaded_data_version        : [0, 0],
 
-    edge_min_tex_size_hack     : false,
-
     quality_aa_method          : true,
 
     skinning_hack              : false,
@@ -175,6 +173,8 @@ exports.defaults = {
     webgl2                     : true,
 
     msaa_samples               : 4,
+
+    compared_mode_depth        : false,
 
     safari_canvas_alpha_hack   : false,
 
@@ -186,7 +186,7 @@ exports.defaults = {
 
     ie_edge_anchors_floor_hack : false,
 
-    ff_disable_anchor_vis_hack : false,
+    ie11_edge_mouseoffset_hack : false,
 
     media_auto_activation      : true,
 
@@ -204,9 +204,15 @@ exports.defaults = {
 
     compress_format            : "dds",
 
-    shadow_quality             : "16x",
+    shadow_blur_samples               : "",
 
-    srgb_type                  : "SRGB_SIMPLE"
+    reflection_quality         : "",
+
+    srgb_type                  : "SRGB_SIMPLE",
+
+    ios_copy_tex_hack          : false,
+
+    amd_depth_hack             : false
 }
 
 exports.defaults_save = m_util.clone_object_r(exports.defaults);
@@ -224,7 +230,8 @@ exports.controls = {
 exports.assets = {
     path: "",
     // relative to engine sources (default value for developer version)
-    path_default: "B4W_ASSETS_PATH=../deploy/assets/",
+    path_default: "B4W_ASSETS_PATH=__JS__/../deploy/assets/",
+    proj_path_default: "B4W_PROJ_ASSETS_PATH=__JS__/../projects/__NAME__/assets/",
     max_requests: 15,
     prevent_caching: true,
     min50_available: false,
@@ -261,6 +268,8 @@ exports.hmd_params = {
         chromatic_aberration_coefs : [-0.015, 0.02, 0.025, 0.02]
     },
     "nonwebvr": {
+        distor_scale: 0.8,
+
         inter_lens_dist: 0.064,
         base_line_dist: 0.035,
         screen_to_lens_dist: 0.039,
@@ -337,7 +346,9 @@ exports.context_limits = {
     max_cube_map_texture_size        : 1024,
     max_renderbuffer_size            : 4096,
     max_texture_size                 : 4096,
-    max_viewport_dims                : [4096, 4096]
+    max_viewport_dims                : [4096, 4096],
+
+    depth_bits                       : 24
 }
 exports.context_limits_save = m_util.clone_object_r(exports.context_limits);
 
@@ -612,6 +623,9 @@ function set(prop, value) {
     case "console_verbose":
         exports.defaults.console_verbose = value;
         break;
+    case "compositing":
+        exports.defaults.compositing = value;
+        break;
     case "dof":
         exports.defaults.dof = value;
         break;
@@ -716,6 +730,12 @@ function set(prop, value) {
     case "srgb_type":
         exports.defaults.srgb_type = value;
         break;
+    case "shadow_blur_samples":
+        exports.defaults.shadow_blur_samples = value;
+        break;
+    case "reflection_quality":
+        exports.defaults.reflection_quality = value;
+        break;
     default:
         m_print.error("Unknown config property: " + prop);
         break;
@@ -764,6 +784,8 @@ exports.get = function(prop) {
         return exports.defaults.canvas_resolution_factor;
     case "console_verbose":
         return exports.defaults.console_verbose;
+    case "compositing":
+        return exports.defaults.compositing;
     case "dof":
         return exports.defaults.dof;
     case "do_not_load_resources":
@@ -836,6 +858,10 @@ exports.get = function(prop) {
         return exports.defaults.gl_debug;
     case "srgb_type":
         return exports.defaults.srgb_type;
+    case "shadow_blur_samples":
+        return exports.defaults.shadow_blur_samples;
+    case "reflection_quality":
+        return exports.defaults.reflection_quality;
     default:
         m_print.error("Unknown config property: " + prop);
         break;
@@ -860,8 +886,11 @@ exports.reset = function() {
 }
 
 exports.reset_limits = function() {
+    // NOTE: depth_bits is too subtle/hacky to change it manually here
+    var depth_bits = exports.context_limits.depth_bits;
     for (var i in exports.context_limits_save)
         exports.context_limits[i] = exports.context_limits_save[i];
+    exports.context_limits.depth_bits = depth_bits;
 }
 
 exports.is_built_in_data = is_built_in_data;
@@ -877,10 +906,10 @@ exports.set_paths = function() {
     var cfg_phy = exports.physics;
 
     if (!is_built_in_data() && cfg_pth.shaders_path == "")
-        cfg_pth.shaders_path = js_src_dir() + cfg_pth.shaders_path_default;
+        cfg_pth.shaders_path = js_src_dir() + "/" + cfg_pth.shaders_path_default;
 
     if (cfg_phy.enabled && cfg_phy.uranium_path == "")
-        cfg_phy.uranium_path = js_src_dir() +
+        cfg_phy.uranium_path = js_src_dir() + "/" +
                 cfg_phy.uranium_path_default.replace("B4W_URANIUM_PATH=", "")
 }
 
@@ -893,6 +922,7 @@ function js_src_dir() {
     var src_path = null;
 
     var scripts = document.getElementsByTagName('script');
+
     for (var i = 0; i < scripts.length; i++) {
         var src = scripts[i].src;
 
@@ -918,31 +948,28 @@ function js_src_dir() {
     if (index >= 0)
         src_path = src_path.substring(0, index);
 
-    return src_path.substring(0, src_path.lastIndexOf("/") + 1);
+    return src_path.substring(0, src_path.lastIndexOf("/"));
 }
 
-exports.get_std_assets_path = function() {
+exports.get_assets_path = function(name) {
     var cfg_ass = exports.assets;
 
     if (cfg_ass.path)
         return cfg_ass.path;
-    else {
-        var cfg_ass_def = cfg_ass.path_default.replace("B4W_ASSETS_PATH=", "");
 
-        if (is_app_url(cfg_ass_def))
-            return cfg_ass_def;
-        else
-            return js_src_dir() + cfg_ass_def;
+    var cfg_ass_def = cfg_ass.path_default;
+    var assets_repl_pref = "B4W_ASSETS_PATH=";
+
+    if (name) {
+        cfg_ass_def = cfg_ass.proj_path_default;
+        assets_repl_pref = "B4W_PROJ_ASSETS_PATH=";
+        cfg_ass_def = cfg_ass_def.replace("__NAME__", name);
     }
-}
 
-function is_app_url(path) {
-    if (!path)
-        return false;
+    cfg_ass_def = cfg_ass_def.replace(assets_repl_pref, "");
+    cfg_ass_def = cfg_ass_def.replace("__JS__", js_src_dir());
 
-    var reg = /^(((.*?)\/\/)|(\/))/;
-
-    return reg.test(path);
+    return cfg_ass_def;
 }
 
 }

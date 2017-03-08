@@ -16,6 +16,7 @@
 #var REFLECTION_TYPE REFL_NONE
 #var SMAA_JITTER 0
 #var MAC_OS_SHADOW_HACK 0
+#var USE_POSITION_CLIP 0
 
 #var REFRACTIVE 0
 
@@ -58,11 +59,7 @@
 ==============================================================================*/
 GLSL_IN vec3 a_position;
 
-#if USE_NODE_MATERIAL_BEGIN || USE_NODE_GEOMETRY_NO || USE_NODE_NORMAL_MAP \
-        || CAUSTICS || CALC_TBN_SPACE || WIND_BEND && MAIN_BEND_COL && DETAIL_BEND \
-        || SHADOW_USAGE == SHADOW_MASK_GENERATION || CALC_TBN
 GLSL_IN vec4 a_tbn_quat;
-#endif
 
 #if USE_INSTANCED_PARTCLS
 GLSL_IN vec4 a_part_ts;
@@ -114,13 +111,9 @@ GLSL_IN vec2 a_texcoord;
 //------------------------------------------------------------------------------
 
 #if NODES && ALPHA
-//GLSL_OUT vec3 v_eye_dir;
 GLSL_OUT vec3 v_pos_world;
-
-# if USE_NODE_MATERIAL_BEGIN || USE_NODE_GEOMETRY_NO || USE_NODE_NORMAL_MAP \
-        || CAUSTICS || CALC_TBN_SPACE || WIND_BEND && MAIN_BEND_COL && DETAIL_BEND
 GLSL_OUT vec3 v_normal;
-# endif
+
 # if CALC_TBN_SPACE
 GLSL_OUT vec4 v_tangent;
 # endif
@@ -151,7 +144,7 @@ GLSL_OUT vec4 v_shadow_coord3;
 # endif
 #endif
 
-#if REFLECTION_TYPE == REFL_PLANE || USE_NODE_B4W_REFRACTION
+#if REFLECTION_TYPE == REFL_PLANE || USE_POSITION_CLIP
 GLSL_OUT vec3 v_tex_pos_clip;
 #endif
 
@@ -179,7 +172,7 @@ const mat3 u_model_tsr = mat3(0.0, 0.0, 0.0,
                               0.0, 0.0, 0.0, 1.0,
                               0.0);
 #else
-uniform mat3 u_model_tsr;
+uniform PRECISION mat3 u_model_tsr;
 #endif
 
 #if SMAA_JITTER
@@ -226,7 +219,7 @@ uniform float u_jitter_amp;
 uniform float u_jitter_freq;
 #endif
 uniform vec3 u_wind;
-uniform float u_time;
+uniform PRECISION float u_time;
 #endif
 
 #if VERTEX_ANIM
@@ -287,7 +280,9 @@ void main(void) {
 
 #if SHADOW_USAGE == SHADOW_MASK_GENERATION || CALC_TBN_SPACE || USE_NODE_MATERIAL_BEGIN \
         || USE_NODE_GEOMETRY_NO || USE_NODE_NORMAL_MAP \
-        || CAUSTICS || WIND_BEND && MAIN_BEND_COL && DETAIL_BEND
+        || CAUSTICS || WIND_BEND && MAIN_BEND_COL && DETAIL_BEND \
+        || USE_NODE_BSDF_BEGIN || USE_NODE_FRESNEL || USE_NODE_TEX_COORD_NO \
+        || USE_NODE_TEX_COORD_RE || USE_NODE_LAYER_WEIGHT || USE_NODE_BUMP
     vec3 norm_tbn = qrot(a_tbn_quat, vec3(0.0, 1.0, 0.0));
     vec3 normal = norm_tbn;
 #else
@@ -382,11 +377,11 @@ void main(void) {
     model_tsr = bend_jitter_rotate_tsr(u_wind, u_time,
             u_jitter_amp, u_jitter_freq, wcen, model_tsr);
 #  endif
-    vertex world = to_world(position - center, center, vec3(0.0), shade_tangent,
-            vec3(0.0), normal, model_tsr);
+    vertex world = to_world(position - center, center, tangent, shade_tangent,
+            binormal, normal, model_tsr);
     world.center = wcen;
 # else
-    vertex world = to_world(position, center, vec3(0.0), shade_tangent, vec3(0.0),
+    vertex world = to_world(position, center, tangent, shade_tangent, binormal,
             normal, model_tsr);
 # endif
 #endif
@@ -404,7 +399,9 @@ void main(void) {
     v_pos_world = world.position;
 
 # if USE_NODE_MATERIAL_BEGIN || USE_NODE_GEOMETRY_NO || USE_NODE_NORMAL_MAP \
-        || CAUSTICS || CALC_TBN_SPACE || WIND_BEND && MAIN_BEND_COL && DETAIL_BEND
+        || CAUSTICS || CALC_TBN_SPACE || WIND_BEND && MAIN_BEND_COL && DETAIL_BEND \
+        || USE_NODE_TEX_COORD_NO || USE_NODE_BSDF_BEGIN || USE_NODE_FRESNEL \
+        || USE_NODE_TEX_COORD_RE || USE_NODE_LAYER_WEIGHT || USE_NODE_BUMP
     v_normal = world.normal;
 # endif
 # if CALC_TBN_SPACE
@@ -427,7 +424,7 @@ void main(void) {
 #endif
 
 #if NODES && ALPHA
-# if REFLECTION_TYPE == REFL_PLANE || USE_NODE_B4W_REFRACTION
+# if REFLECTION_TYPE == REFL_PLANE || USE_POSITION_CLIP
     v_tex_pos_clip = clip_to_tex(pos_clip);
 # endif
 

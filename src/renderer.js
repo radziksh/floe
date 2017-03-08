@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2016 Triumph LLC
+ * Copyright (C) 2014-2017 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,13 +38,10 @@ var m_textures = require("__textures");
 var m_tsr      = require("__tsr");
 var m_util     = require("__util");
 var m_ver      = require("__version");
-var m_geom     = require("__geometry");
 
 var m_vec3     = require("__vec3");
 
 var USE_BACKFACE_CULLING = true;
-
-var DEBUG_DISABLE_RENDER_LOCK = false;
 
 // special backgroud color for shadow map
 var SHADOW_BG_COLOR = [1, 1, 1, 1];
@@ -81,7 +78,6 @@ var _vec3_tmp  = new Float32Array(3);
 var _quat_tmp  = m_quat.create();
 var _ivec4_tmp = new Uint8Array(4);
 
-var cfg_ctx = m_cfg.context;
 var cfg_def = m_cfg.defaults;
 
 /**
@@ -119,7 +115,7 @@ exports.setup_context = function(gl) {
  */
 exports.draw = function(subscene) {
 
-    if (!subscene.do_render)
+    if (!subscene.do_render || subscene.force_do_not_render)
         return;
 
     if (subscene.type == m_subs.RESOLVE) {
@@ -156,7 +152,6 @@ function draw_cube_reflection_subs(subscene) {
     var camera           = subscene.camera;
     var color_attachment = camera.color_attachment;
     var w_tex            = color_attachment.w_texture;
-    var v_matrs          = subscene.cube_view_matrices;
 
     // cube reflections are rendered in 6 directions
     for (var i = 0; i < 6; i++) {
@@ -265,9 +260,9 @@ function draw_subs(subscene) {
 
 function setup_scene_uniforms(subs, camera, shader) {
     var transient_sc_uniform_setters = shader.transient_sc_uniform_setters;
-    var j = transient_sc_uniform_setters.length;
-    while (j--) {
-        var setter = transient_sc_uniform_setters[j];
+    var i = transient_sc_uniform_setters.length;
+    while (i--) {
+        var setter = transient_sc_uniform_setters[i];
         setter.fun(_gl, setter.loc, subs, camera);
     }
 
@@ -432,9 +427,9 @@ function draw_bundle(subscene, obj_render, batch, shader) {
             assign_uniform_setters(shader);
 
         var permanent_uniform_setters = shader.permanent_uniform_setters;
-        var i = permanent_uniform_setters.length;
-        while (i--) {
-            var setter = permanent_uniform_setters[i];
+        var j = permanent_uniform_setters.length;
+        while (j--) {
+            var setter = permanent_uniform_setters[j];
             setter.fun(_gl, setter.loc, obj_render, batch);
         }
         shader.need_uniforms_update = false;
@@ -687,7 +682,7 @@ exports.clone_attribute_setters = function(setters) {
             divisor: setter.divisor
         };
 
-        setters_new.push(setter);
+        setters_new.push(setter_new);
     }
     return setters_new;
 }
@@ -853,6 +848,12 @@ function assign_uniform_setters(shader) {
         case "u_dof_bokeh_intensity":
             scene_fun = function(gl, loc, subscene, camera) {
                 gl.uniform1f(loc, camera.dof_bokeh_intensity);
+            }
+            transient_uni = true;
+            break;
+        case "u_camera_direction":
+            scene_fun = function(gl, loc, subscene, camera) {
+                gl.uniform3fv(loc, camera.direction);
             }
             transient_uni = true;
             break;
@@ -1288,8 +1289,7 @@ function assign_uniform_setters(shader) {
 
         case "au_center_pos":
             fun = function(gl, loc, obj_render, batch) {
-                // consider zeros by default
-                //gl.uniform3fv(loc, obj_render.center_pos);
+                gl.uniform3fv(loc, obj_render.center_pos);
             }
             transient_uni = true;
             break;
@@ -1546,12 +1546,6 @@ function assign_uniform_setters(shader) {
             }
             transient_uni = true;
             break;
-        case "u_line_points":
-            fun = function(gl, loc, obj_render, batch) {
-                gl.uniform3fv(loc, batch.line_points);
-            }
-            transient_uni = true;
-            break;
 
         // texture factors
         case "u_diffuse_color_factor":
@@ -1789,6 +1783,13 @@ function assign_uniform_setters(shader) {
             }
             transient_uni = true;
             break;
+
+        case "u_obj_info":
+            fun = function(gl, loc, obj_render, batch) {
+                gl.uniform3fv(loc, batch.obj_info_params);
+            }
+            transient_uni = true;
+            break;
         default:
             break;
         }
@@ -1845,8 +1846,9 @@ exports.assign_texture_uniforms = function(batch) {
     _gl.useProgram(shader.program);
 
     for (var i = 0; i < textures.length; i++) {
-        var tex = textures[i];
         var name = names[i];
+        // NOTE: may cause a bug if textures on different batches sharing
+        // the same shader are out of order
         _gl.uniform1i(shader.uniforms[name], i);
     }
 }
@@ -1876,11 +1878,11 @@ exports.read_pixels = read_pixels;
 function read_pixels(framebuffer, x, y, width, height, storage) {
 
     if (!width)
-        var width = 1;
+        width = 1;
     if (!height)
-        var height = 1;
+        height = 1;
     if (!storage)
-        var storage = new Uint8Array(4 * width * height);
+        storage = new Uint8Array(4 * width * height);
     if (storage.length != 4 * width * height)
         m_util.panic("read_pixels(): Wrong storage");
 
@@ -2057,24 +2059,24 @@ exports.set_draw_methods = function() {
     cfg_def.allow_vao_ext = vao_ext? true: false;
 
     if (inst_arr) {
-        _gl_draw_elems_inst = function(mode, count, type, offset, primcount) {
-            inst_arr.drawElementsInstanced(mode, count, type, offset, primcount);
+        _gl_draw_elems_inst = function(count, type, offset, primcount) {
+            inst_arr.drawElementsInstanced(_gl.TRIANGLES, count, type, offset, primcount);
         };
         _gl_vert_attr_div = function(loc, div) {
             inst_arr.vertexAttribDivisor(loc, div);
         };
-        _gl_draw_array = function(mode, first, count, primcount) {
-            inst_arr.drawArraysInstanced(mode, first, count, primcount);
+        _gl_draw_array = function(first, count, primcount) {
+            inst_arr.drawArraysInstanced(_gl.TRIANGLES, first, count, primcount);
         };
     } else {
-        _gl_draw_elems_inst = function(mode, count, type, offset) {
-            _gl.drawElements(mode, count, type, offset);
+        _gl_draw_elems_inst = function(count, type, offset) {
+            _gl.drawElements(_gl.TRIANGLES, count, type, offset);
         };
         _gl_vert_attr_div = function(loc, div) {
             //pass
         };
-        _gl_draw_array = function(mode, first, count, primcount) {
-            _gl.drawArrays(mode, first, count);
+        _gl_draw_array = function(first, count, primcount) {
+            _gl.drawArrays(_gl.TRIANGLES, first, count);
         };
     }
 
@@ -2088,11 +2090,10 @@ exports.set_draw_methods = function() {
 
             // draw
             if (bufs_data.ibo) {
-                _gl_draw_elems_inst(bufs_data.mode, bufs_data.count,
-                        bufs_data.ibo_type, 0, bufs_data.instance_count);
-            } else
-                _gl_draw_array(bufs_data.mode, 0, bufs_data.count,
+                _gl_draw_elems_inst(bufs_data.count, bufs_data.ibo_type, 0,
                         bufs_data.instance_count);
+            } else
+                _gl_draw_array(0, bufs_data.count, bufs_data.instance_count);
 
             _gl_bind_vertex_array(null);
         }
@@ -2121,11 +2122,10 @@ exports.set_draw_methods = function() {
             // draw
             if (bufs_data.ibo) {
                 _gl.bindBuffer(_gl.ELEMENT_ARRAY_BUFFER, bufs_data.ibo);
-                _gl_draw_elems_inst(bufs_data.mode, bufs_data.count,
-                        bufs_data.ibo_type, 0, bufs_data.instance_count);
-            } else
-                _gl_draw_array(bufs_data.mode, 0, bufs_data.count,
+                _gl_draw_elems_inst(bufs_data.count, bufs_data.ibo_type, 0,
                         bufs_data.instance_count);
+            } else
+                _gl_draw_array(0, bufs_data.count, bufs_data.instance_count);
 
             // cleanup attributes
             for (var i = 0; i < attr_setters.length; i++) {

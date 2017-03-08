@@ -119,7 +119,7 @@ To do this Python 3.x (it's better if it's the same version as in Blender) and a
 
 Paths relative to the repository root:
     - build script: ``csrc/b4w_bin/build.py``
-    - Blend4Web addon: ``blender_scripts/addons/blend4web/``
+    - Blend4Web addon: ``addons/blend4web/``
 
 The building process is started in the following way:
 
@@ -180,6 +180,8 @@ All dependencies are listed in the table below in order of decreasing importance
 +-------------------------------+-------------------------------+----------------------------+
 | TeX Live                      | texlive texlive-latex-extra   | building the manual        |
 |                               | texlive-lang-cyrillic         | (PDF version)              |
+|                               | texlive-lang-chinese          |                            |
+|                               | texlive-xetex                 |                            |
 +-------------------------------+-------------------------------+----------------------------+
 | JSDoc 3                       | installed with NPM            | building the API           |
 |                               | (npm install -g jsdoc)        | documentation              |

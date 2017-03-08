@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Blend4Web 16.08\n"
 "Report-Msgid-Bugs-To: https://www.blend4web.com/en/forums/forum/17/\n"
-"POT-Creation-Date: 2016-10-21 15:02+0300\n"
-"PO-Revision-Date: 2016-10-06 19:54+0800\n"
+"POT-Creation-Date: 2017-02-21 14:02+0300\n"
+"PO-Revision-Date: 2016-10-28 17:39+0800\n"
 "Last-Translator: Blend4Web Team <info [at] blend4web.com>\n"
 "Language-Team: Chinese <info [at] blend4web.com>\n"
 "MIME-Version: 1.0\n"
@@ -79,9 +79,8 @@ msgid "**Scene**"
 msgstr "**场景**"
 
 #: ../viewer.rst:40
-#, fuzzy
 msgid "The name of the loaded scene. Path to the file pops-up on mouse hover."
-msgstr "从 ``assets.json`` 文件加载场景名称. 文件路径可以由鼠标悬停弹出。"
+msgstr "加载的场景的名称。鼠标悬停时文件路径弹出。"
 
 #: ../viewer.rst:43
 msgid "**Loaded**"
@@ -451,7 +450,7 @@ msgid ""
 msgstr "动画控件。当观看动画模型时可以：选择一个物体，并使用下拉菜单切换的动画，循环切换动画模式，停止播放动画，设置所需的帧（动画应该被停止）。"
 
 #: ../viewer.rst:171 ../viewer.rst:216 ../viewer.rst:240 ../viewer.rst:258
-#: ../viewer.rst:292 ../viewer.rst:482
+#: ../viewer.rst:292 ../viewer.rst:500
 msgid "Available parameters:"
 msgstr "可用参数："
 
@@ -956,135 +955,165 @@ msgid ""
 msgstr ":ref:`室外渲染 <water>` 章节描述了用于水渲染的设置。场景查看器使用跟 Blend4Web 引擎本身相同的设置。"
 
 #: ../viewer.rst:390
+msgid "Mist"
+msgstr ""
+
+#: ../viewer.rst:392
+#, fuzzy
+msgid "Setup for fog parameters."
+msgstr "泛光效果参数设置。"
+
+#: ../viewer.rst:394
+msgid ""
+"Scene Viewer uses standard fog rendering settings that are described in "
+"the :ref:`dedicated chapter <fog>`."
+msgstr ""
+
+#: ../viewer.rst:399
 msgid "Wind"
 msgstr "风"
 
-#: ../viewer.rst:392
+#: ../viewer.rst:401
 msgid "Setup for wind parameters, including direction and strength."
 msgstr "设置风参数，包括方向和强度。"
 
-#: ../viewer.rst:394
+#: ../viewer.rst:403
 msgid ""
 "The same parameters as the ones used by Scene Viewer are available in "
 "Blender. These parameters are described in the :ref:`corresponding "
 "chapter <wind>`."
 msgstr "场景浏览器所使用的的和在Blender中使用的是相同的参数。参数在 :ref:`相应章节 <wind>` 描述。"
 
-#: ../viewer.rst:399
+#: ../viewer.rst:408
+msgid "Wind Bending"
+msgstr ""
+
+#: ../viewer.rst:410
+#, fuzzy
+msgid "Setup for wind bending effect parameters."
+msgstr "泛光效果参数设置。"
+
+#: ../viewer.rst:412
+msgid ""
+"The same set of wind bending parameters is available in Blender. It is "
+"described in the :ref:`Outdoor Rendering <wind_bending>` chapter."
+msgstr ""
+
+#: ../viewer.rst:417
 msgid "Screen Space Amb Occlus"
 msgstr "屏幕空间环境光遮蔽"
 
-#: ../viewer.rst:401
+#: ../viewer.rst:419
 msgid "Setup for ambient occlusion parameters."
 msgstr "环境光遮蔽参数的设置。"
 
-#: ../viewer.rst:403
+#: ../viewer.rst:421
 msgid ""
 "All available settings are described in the :ref:`Postprocessing Effects "
 "<ssao>` chapter."
 msgstr "所有参数设置在 :ref:`后期效果 <ssao>` 章节."
 
-#: ../viewer.rst:408
+#: ../viewer.rst:426
 msgid "God Rays"
 msgstr "上帝光芒"
 
-#: ../viewer.rst:410
+#: ../viewer.rst:428
 msgid "Setup for crepuscular ray effect parameters."
 msgstr "黄昏的光线效果参数设置。"
 
-#: ../viewer.rst:412
+#: ../viewer.rst:430
 msgid ""
 "All parameters for this effect are described in the :ref:`corresponding "
 "section <god_rays>`."
 msgstr "所有参数设置在 :ref:`相应 <god_rays>` 章节."
 
-#: ../viewer.rst:417
+#: ../viewer.rst:435
 msgid "Bloom"
 msgstr "泛光效果"
 
-#: ../viewer.rst:419
+#: ../viewer.rst:437
 msgid "Setup for bloom effect parameters."
 msgstr "泛光效果参数设置。"
 
-#: ../viewer.rst:421
+#: ../viewer.rst:439
 msgid ""
 "This effect uses the same set of parameters as it does in Blender. It is "
 "described in greater detail in the :ref:`corresponding section <bloom>`."
 msgstr "场景浏览器所使用的的和在Blender中使用的是相同的参数。参数在 :ref:`相应章节 <bloom>` 描述。"
 
-#: ../viewer.rst:426
+#: ../viewer.rst:444
 msgid "Motion Blur"
 msgstr "运动模糊"
 
-#: ../viewer.rst:428
+#: ../viewer.rst:446
 msgid "Motion blur effect settings."
 msgstr "运动模糊效果设置。"
 
-#: ../viewer.rst:430
+#: ../viewer.rst:448
 msgid ""
 "The parameters for adjusting Motion Blur effect are the same ones that "
 "are used in Blender. They are described in the :ref:`Postprocessing "
 "Effects <motion_blur>` chapter."
 msgstr "场景浏览器所使用的的和在Blender中使用的是相同的参数。参数在 :ref:`后期效果 <motion_blur>`  描述。"
 
-#: ../viewer.rst:435
+#: ../viewer.rst:453
 msgid "Glow Materials"
 msgstr "发光材质"
 
-#: ../viewer.rst:437
+#: ../viewer.rst:455
 msgid "Glow Material effect settings."
 msgstr "发光材质的效果设置。"
 
-#: ../viewer.rst:439
+#: ../viewer.rst:457
 msgid ""
 "The settings used for this effect are described in the "
 ":ref:`corresponding section <glow>`."
 msgstr "所有参数设置在 :ref:`相应 <glow>` 章节."
 
-#: ../viewer.rst:444
+#: ../viewer.rst:462
 msgid "Depth of Field"
 msgstr "景深"
 
-#: ../viewer.rst:446
+#: ../viewer.rst:464
 msgid "Setup for depth-of-field effect parameters."
 msgstr "设置景深效果的参数"
 
-#: ../viewer.rst:448
+#: ../viewer.rst:466
 msgid "The parameters are described in the :ref:`corresponding chapter <dof>`."
 msgstr "所有参数设置在 :ref:`相应 <dof>` 章节."
 
-#: ../viewer.rst:453
+#: ../viewer.rst:471
 msgid "Color correction"
 msgstr "颜色校正"
 
-#: ../viewer.rst:455
+#: ../viewer.rst:473
 msgid ""
 "Setup for color correction parameters, including brightness, contrast, "
 "exposure and saturation."
 msgstr "颜色校正参数，包括亮度、 对比度、 曝光和饱和度的设置。"
 
-#: ../viewer.rst:457
+#: ../viewer.rst:475
 msgid ""
 "The same set of parameters is used for color correction in Blender "
 "itself. The description of these parameters is available in the "
 ":ref:`Color Management <color_correction>` chapter."
 msgstr "场景浏览器所使用的的和在Blender中使用的是相同的参数。参数在 :ref:`颜色管理 <color_correction>` 描述。"
 
-#: ../viewer.rst:462
+#: ../viewer.rst:480
 msgid "Audio"
 msgstr "音频"
 
-#: ../viewer.rst:464
+#: ../viewer.rst:482
 msgid ""
 "There is a mixing mode switch on the panel. After it is enabled the mixer"
 " interface becomes visible (only for scenes with sound sources)."
 msgstr "在面板上的混合模式的切换。启用该功能后，混频器的界面变得可见（仅适用于具有声源的场景）。"
 
-#: ../viewer.rst:473
+#: ../viewer.rst:491
 msgid "*Mixer*"
 msgstr "*混合器*"
 
-#: ../viewer.rst:467
+#: ../viewer.rst:485
 msgid ""
 "Enables equalizer that shows various parameters (including volume, "
 "frequency, distance, attenuation and others) of the speakers present in "
@@ -1097,107 +1126,107 @@ msgstr ""
 "，发言者的均衡器，并允许用户通过使用数字键盘调整这些参数。更详细地介绍了可用的参数和可能性在  :ref:`声音篇 <audio>` 的  "
 ":ref:`相应章节 <mixer>` "
 
-#: ../viewer.rst:473
+#: ../viewer.rst:491
 msgid "This feature is disabled by default."
 msgstr "此功能默认是关闭的。"
 
-#: ../viewer.rst:478
+#: ../viewer.rst:496
 msgid "Stereo View"
 msgstr "立体视图"
 
-#: ../viewer.rst:480
+#: ../viewer.rst:498
 msgid "There is a stereoscopic mode switch on the panel."
 msgstr "有在面板上的立体模式的切换。"
 
-#: ../viewer.rst:493
+#: ../viewer.rst:511
 msgid "*Stereo Types*"
 msgstr "*立体类型*"
 
-#: ../viewer.rst:485
+#: ../viewer.rst:503
 msgid ""
 "A list of all available stereo rendering modes. As of today, three types "
 "are supported:"
 msgstr "列表中的所有可用的立体渲染模式。现在来说，支持三种类型︰"
 
-#: ../viewer.rst:487
+#: ../viewer.rst:505
 msgid "``NONE`` - stereo rendering is not used."
 msgstr "``NONE`` - 不使用立体渲染。"
 
-#: ../viewer.rst:489
+#: ../viewer.rst:507
 msgid "``ANAGLYPH`` - :ref:`anaglyph <anaglyph>` rendering is used."
 msgstr "``ANAGLYPH``  - :ref:`立体图 <anaglyph>` 渲染被使用。"
 
-#: ../viewer.rst:491
+#: ../viewer.rst:509
 msgid ""
 "``HMD`` - rendering for :ref:`Head-Mounted Displays <hmd>` is used. This "
 "option is only available if the system has access to an HMD device."
 msgstr "``HMD`` -  用于 :ref:`头戴式显示设备 <hmd>` 渲染 。如果系统具有访问的 HMD 设备此选项才是可用的。"
 
-#: ../viewer.rst:493
+#: ../viewer.rst:511
 msgid "Default setting is ``NONE``."
 msgstr "默认设置为 ``NONE`` 。"
 
-#: ../viewer.rst:496
+#: ../viewer.rst:514
 msgid "*HMD Settings*"
 msgstr "*HMD设置*"
 
-#: ../viewer.rst:496
+#: ../viewer.rst:514
 msgid "Shows the :ref:`HMD setup window <hmd_settings>`."
 msgstr "显示在 :ref:`HMD 设置窗口 <hmd_settings>`."
 
-#: ../viewer.rst:501
+#: ../viewer.rst:519
 msgid "Input Devices"
 msgstr "输入设备"
 
-#: ../viewer.rst:503
+#: ../viewer.rst:521
 msgid "This panel contains tools for setting up the input devices."
 msgstr "此面板包含用于设置输入设备的工具。"
 
-#: ../viewer.rst:506
+#: ../viewer.rst:524
 msgid "*Gyroscope use*"
 msgstr "*使用陀螺*"
 
-#: ../viewer.rst:506
+#: ../viewer.rst:524
 msgid "Enables the use of the gyroscope in the application. Disabled by default."
 msgstr "使在应用程序中使用陀螺仪。默认情况下禁用。"
 
-#: ../viewer.rst:513
+#: ../viewer.rst:531
 msgid "*Gamepad Settings*"
 msgstr "*游戏手柄设置*"
 
-#: ../viewer.rst:509
+#: ../viewer.rst:527
 msgid "Clicking this button shows the gamepad settings window."
 msgstr "单击此按钮显示了游戏手柄的设置窗口。"
 
-#: ../viewer.rst:518
+#: ../viewer.rst:536
 msgid "Indicators"
 msgstr "指标"
 
-#: ../viewer.rst:525
+#: ../viewer.rst:543
 msgid "**Frames per second counter**"
 msgstr "**每秒计数帧**"
 
-#: ../viewer.rst:525
+#: ../viewer.rst:543
 msgid ""
 "This is located in the top right corner. It displays the averaged and "
 "rounded value for the last 1.5 seconds."
 msgstr "这是位于右上角。这显示最后1.5秒的平均和四舍五入的值。"
 
-#: ../viewer.rst:528
+#: ../viewer.rst:546
 msgid "**Viewport dimensions**"
 msgstr "**视维**"
 
-#: ../viewer.rst:528
+#: ../viewer.rst:546
 msgid ""
 "This is located in the top left corner. It displays the viewport "
 "dimensions in pixels."
 msgstr "这是位于左上角。它显示像素视口的尺寸。"
 
-#: ../viewer.rst:531
+#: ../viewer.rst:549
 msgid "**Selected object and controlled object**"
 msgstr "**选定的物体和控制物体**"
 
-#: ../viewer.rst:531
+#: ../viewer.rst:549
 msgid ""
 "This is located in the bottom left corner. It displays the names of "
 "selected and controlled objects. Selecting an object is done with the "
@@ -1212,11 +1241,11 @@ msgstr ""
 "``W``, ``A``, ``S``, ``D`` 键执行。要退出控制模式下，按 ``Q`` "
 "键并单击一个空白的地方。该标示也显示所选物体的距离用Blender单位（相当于米）。"
 
-#: ../viewer.rst:534
+#: ../viewer.rst:552
 msgid "**Scene complexity indicator**"
 msgstr "**场景复杂度指标**"
 
-#: ../viewer.rst:534
+#: ../viewer.rst:552
 msgid ""
 "Is located in the top right corner of the rendering area. It displays the"
 " number of vertices, triangles, WebGL draw calls and shaders used in the "
@@ -1224,37 +1253,37 @@ msgid ""
 "example)."
 msgstr "位于渲染区域的右上角。它显示顶点的数目，三角形，WEBGL绘制调用，并在主渲染场景中使用的着色器（ 阴影渲染调用不包括，例如）。"
 
-#: ../viewer.rst:537
+#: ../viewer.rst:555
 msgid "**Video memory indicator**"
 msgstr "**显存指标**"
 
-#: ../viewer.rst:537
+#: ../viewer.rst:555
 msgid ""
 "Is located in the bottom right corner of the rendering area. It displays "
 "the amount of video memory used by geometry, textures, render targets, "
 "and also the total memory usage."
 msgstr "位于渲染区域的右下角。它显示视频存储器的使用的几何形状，纹理，渲染目标的量，并且还总的内存使用情况。"
 
-#: ../viewer.rst:542
+#: ../viewer.rst:560
 msgid "**Scene load error indicator**"
 msgstr "**场景负载误差指标**"
 
-#: ../viewer.rst:540
+#: ../viewer.rst:558
 msgid ""
 "Is located under the FPS counter. It shows errors and warnings which "
 "occur during scene load. Red light means errors, yellow - warnings and "
 "green means that the scene was loaded successfully."
 msgstr "位于FPS 计数器下 。它显示在场景加载期间出现的错误和警告。红灯表示错误，黄色-警告和绿色表示场景已成功加载。"
 
-#: ../viewer.rst:542
+#: ../viewer.rst:560
 msgid "Loading errors and warnings can be viewed in the web browser console."
 msgstr "装载错误和警告可以在Web浏览器的控制台中查看。"
 
-#: ../viewer.rst:547
+#: ../viewer.rst:565
 msgid "**Background Transparency Indicator**"
 msgstr "**背景透明度指标**"
 
-#: ../viewer.rst:545
+#: ../viewer.rst:563
 msgid ""
 "Is located in the top right corner of the screen, right below the Scene "
 "Complexity Indicator. This is a debug tool that can be used to find if "
@@ -1262,7 +1291,7 @@ msgid ""
 "square with a black and white checkerboard pattern."
 msgstr "位于屏幕的右上角，场景复杂度指标的右下面。这是一个调试工具，可用于以发现一个场景的背景是透明或没有。它显示为一个黑色和白色棋盘图案的小方块。"
 
-#: ../viewer.rst:547
+#: ../viewer.rst:565
 msgid ""
 "This indicator is visible only when the background of the application is "
 "transparent. It is shown on the picture above only to give the reader the"
@@ -1275,36 +1304,35 @@ msgstr "预览"
 
 #: ../viewer.rst:71
 msgid "tools"
-msgstr ""
+msgstr "工具"
 
 #: ../viewer.rst:71
 msgid "debug;"
-msgstr ""
+msgstr "调试;"
 
 #: ../viewer.rst:95
-#, fuzzy
 msgid "view"
 msgstr "预览"
 
 #: ../viewer.rst:95
 msgid "wireframe"
-msgstr ""
+msgstr "线框"
 
 #: ../viewer.rst:95
 msgid "boundings"
-msgstr ""
+msgstr "包围"
 
 #: ../viewer.rst:95
 msgid "cluster"
-msgstr ""
+msgstr "簇"
 
 #: ../viewer.rst:95
 msgid "batch"
-msgstr ""
+msgstr "批"
 
 #: ../viewer.rst:95
 msgid "render"
-msgstr ""
+msgstr "渲染"
 
 #~ msgid "Scenes"
 #~ msgstr "场景"

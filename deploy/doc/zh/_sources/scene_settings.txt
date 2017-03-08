@@ -56,7 +56,7 @@
 
     * 物理
 
-    * 簇批量
+    * 物体聚类
 
     * 选择物体
 
@@ -140,7 +140,7 @@
 [图片]
 
 *反射*
-   反射效果设置。可设置 "ON"，"OFF" 或 "AUTO"。默认设置为``ON``。
+   反射效果设置。可设置 "ON"，"OFF" 或 "AUTO"。默认设置为 "ON"。
 
 *折射*
    折射效果设置。可设置 "ON"，"OFF" 或 "AUTO"。默认设置为 "AUTO" 。
@@ -164,6 +164,10 @@
 晕光材质效果设置。  详尽的描述在 自己的章节.
 
 [图片]
+
+注解: For dynamically loaded objects, "AUTO" setting is interpreted
+  as "OFF", if no materials with glow are present in the scene. If you
+  are using dynamic loading, you should set this parameter to "ON".
 
 
 抗锯齿
@@ -392,18 +396,22 @@ Meta标签
    允许在应用程序中使用物理。默认情况下启用。
 
 
-簇批量
-------
+物体聚类
+--------
 
-该参数允许使用簇批量。它可用于优化目的。这是默认情况下禁用。
-
-注解: 如果禁用此参数，引擎将尝试将所有静态对象合二为一。
+物体集群的设置。它可用于优化目的。
 
 [图片]
 
 *簇大小*
-   簇的用于批量（米）的尺寸。默认设置为30。如果该参数被设置为零，对象
-   将不会被合并。
+   簇的用于批量（尺寸：米）的处理。如果该参数被设置为零，引擎将场景中
+   所有物体合并。默认设置为零。
+
+*LOD簇大小乘数*
+   该参数用于细分簇（基于每个物体指定的LOD距离）到较小的部分使得不同情
+   况的层次细节切换不被引起注意。小簇的大小是由物体的LOD距离乘以这个参
+   数的值定义。较高的值导致更大的簇，提高性能但使得过渡比较明显，而较
+   低的值让转换不被引起注意但是以性能降低为代价。默认设置为0.5。
 
 
 选择物体
@@ -492,11 +500,10 @@ Anchor 可见性检测设置。
 *只渲染反射*
    在渲染的反射时 *只* 渲染天空。
 
-*World Background*
-   Enables and disables "World Background" option (located under the
-   "Display" tab of the "3D View" panel). When this option is
-   activated, background colors are rendered in the viewport window
-   the same way they would be in the engine itself.
+*世界背景*
+   启用和禁用  "世界背景" （位于   "3D View" 面板下的 "Display" 选项卡
+   ）。当激活此选项，则背景颜色在视区窗口中渲染的方式跟在引擎里面渲染
+   是一样的。
 
 
 天光照明

@@ -38,7 +38,8 @@
     <div class="container-overview">
     
         
-            <div class="description">Input device API</div>
+            <div class="description">Low-level input device API.
+For more generic cases use <a href="module-controls.html">sensor-based API</a>.</div>
         
 
         
@@ -360,6 +361,10 @@
 
         
             
+<li> <a href="#.HMD_WEBVR1_1">HMD_WEBVR1_1</a></li>
+
+        
+            
 <li> <a href="#.HMD_WEBVR_DESKTOP">HMD_WEBVR_DESKTOP</a></li>
 
         
@@ -414,11 +419,15 @@
         <ul>
         
             
+<li> <a href="#.add_click_listener">add_click_listener<span class="signature">(element, callback)</span><span class="type-signature"></span></a></li>
+
+        
+            
 <li> <a href="#.attach_param_cb">attach_param_cb<span class="signature">(device, param, cb<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></a></li>
 
         
             
-<li> <a href="#.can_use_device">can_use_device<span class="signature">(type)</span><span class="type-signature"> &rarr; {Boolean}</span></a></li>
+<li> <a href="#.can_use_device">can_use_device<span class="signature">(type)</span><span class="type-signature"> &rarr; {boolean}</span></a></li>
 
         
             
@@ -430,11 +439,11 @@
 
         
             
-<li> <a href="#.disable_split_screen">disable_split_screen<span class="signature">()</span><span class="type-signature"> &rarr; {Boolean}</span></a></li>
+<li> <a href="#.disable_split_screen">disable_split_screen<span class="signature">()</span><span class="type-signature"> &rarr; {boolean}</span></a></li>
 
         
             
-<li> <a href="#.enable_split_screen">enable_split_screen<span class="signature">(camobj)</span><span class="type-signature"> &rarr; {Boolean}</span></a></li>
+<li> <a href="#.enable_split_screen">enable_split_screen<span class="signature">(camobj)</span><span class="type-signature"> &rarr; {boolean}</span></a></li>
 
         
             
@@ -442,23 +451,31 @@
 
         
             
-<li> <a href="#.get_moved_gmpd_axis">get_moved_gmpd_axis<span class="signature">(gamepad_id)</span><span class="type-signature"> &rarr; {Number}</span></a></li>
+<li> <a href="#.get_moved_gmpd_axis">get_moved_gmpd_axis<span class="signature">(gamepad_id)</span><span class="type-signature"> &rarr; {number}</span></a></li>
 
         
             
-<li> <a href="#.get_pressed_gmpd_btn">get_pressed_gmpd_btn<span class="signature">(gamepad_id)</span><span class="type-signature"> &rarr; {Number}</span></a></li>
+<li> <a href="#.get_pressed_gmpd_btn">get_pressed_gmpd_btn<span class="signature">(gamepad_id)</span><span class="type-signature"> &rarr; {number}</span></a></li>
 
         
             
-<li> <a href="#.get_value_param">get_value_param<span class="signature">(device, param)</span><span class="type-signature"> &rarr; {Number|Boolean}</span></a></li>
+<li> <a href="#.get_value_param">get_value_param<span class="signature">(device, param)</span><span class="type-signature"> &rarr; {number|boolean|null}</span></a></li>
 
         
             
-<li> <a href="#.get_vector_param">get_vector_param<span class="signature">(device, param, dest)</span><span class="type-signature"> &rarr; {Float32Array}</span></a></li>
+<li> <a href="#.get_vector_param">get_vector_param<span class="signature">(device, param, dest)</span><span class="type-signature"> &rarr; (nullable) {Float32Array}</span></a></li>
 
         
             
-<li> <a href="#.register_device">register_device<span class="signature">(device)</span><span class="type-signature"></span></a></li>
+<li> <a href="#.register_device">register_device<span class="signature">()</span><span class="type-signature"></span></a></li>
+
+        
+            
+<li> <a href="#.remove_click_listener">remove_click_listener<span class="signature">(element, callback)</span><span class="type-signature"></span></a></li>
+
+        
+            
+<li> <a href="#.request_fullscreen_hmd">request_fullscreen_hmd<span class="signature">()</span><span class="type-signature"></span></a></li>
 
         
             
@@ -612,7 +629,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line598">line 598</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line627">line 627</a>
     </li></ul></dd>
     
 
@@ -689,7 +706,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line604">line 604</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line633">line 633</a>
     </li></ul></dd>
     
 
@@ -766,7 +783,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line616">line 616</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line645">line 645</a>
     </li></ul></dd>
     
 
@@ -843,7 +860,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line610">line 610</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line639">line 639</a>
     </li></ul></dd>
     
 
@@ -920,7 +937,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line622">line 622</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line651">line 651</a>
     </li></ul></dd>
     
 
@@ -958,7 +975,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -997,7 +1014,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line199">line 199</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line200">line 200</a>
     </li></ul></dd>
     
 
@@ -1035,7 +1052,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1074,7 +1091,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line204">line 204</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line205">line 205</a>
     </li></ul></dd>
     
 
@@ -1112,7 +1129,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1151,7 +1168,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line209">line 209</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line210">line 210</a>
     </li></ul></dd>
     
 
@@ -1189,7 +1206,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1228,7 +1245,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line214">line 214</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line215">line 215</a>
     </li></ul></dd>
     
 
@@ -1266,7 +1283,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1305,7 +1322,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line219">line 219</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line220">line 220</a>
     </li></ul></dd>
     
 
@@ -1343,7 +1360,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1382,7 +1399,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line224">line 224</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line225">line 225</a>
     </li></ul></dd>
     
 
@@ -1420,7 +1437,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1459,7 +1476,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line229">line 229</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line230">line 230</a>
     </li></ul></dd>
     
 
@@ -1497,7 +1514,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1536,7 +1553,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line234">line 234</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line235">line 235</a>
     </li></ul></dd>
     
 
@@ -1574,7 +1591,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1613,7 +1630,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line239">line 239</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line240">line 240</a>
     </li></ul></dd>
     
 
@@ -1651,7 +1668,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1690,7 +1707,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line244">line 244</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line245">line 245</a>
     </li></ul></dd>
     
 
@@ -1728,7 +1745,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1767,7 +1784,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line249">line 249</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line250">line 250</a>
     </li></ul></dd>
     
 
@@ -1805,7 +1822,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1844,7 +1861,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line254">line 254</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line255">line 255</a>
     </li></ul></dd>
     
 
@@ -1882,7 +1899,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1921,7 +1938,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line94">line 94</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line95">line 95</a>
     </li></ul></dd>
     
 
@@ -1959,7 +1976,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -1998,7 +2015,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line99">line 99</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line100">line 100</a>
     </li></ul></dd>
     
 
@@ -2036,7 +2053,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2075,7 +2092,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line104">line 104</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line105">line 105</a>
     </li></ul></dd>
     
 
@@ -2113,7 +2130,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2152,7 +2169,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line89">line 89</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line90">line 90</a>
     </li></ul></dd>
     
 
@@ -2190,7 +2207,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2229,7 +2246,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line119">line 119</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line120">line 120</a>
     </li></ul></dd>
     
 
@@ -2267,7 +2284,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2306,7 +2323,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line109">line 109</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line110">line 110</a>
     </li></ul></dd>
     
 
@@ -2344,7 +2361,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2383,7 +2400,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line124">line 124</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line125">line 125</a>
     </li></ul></dd>
     
 
@@ -2421,7 +2438,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2460,7 +2477,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line114">line 114</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line115">line 115</a>
     </li></ul></dd>
     
 
@@ -2498,7 +2515,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2537,7 +2554,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line129">line 129</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line130">line 130</a>
     </li></ul></dd>
     
 
@@ -2575,7 +2592,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2614,7 +2631,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line134">line 134</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line135">line 135</a>
     </li></ul></dd>
     
 
@@ -2652,7 +2669,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2691,7 +2708,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line139">line 139</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line140">line 140</a>
     </li></ul></dd>
     
 
@@ -2729,7 +2746,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2768,7 +2785,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line144">line 144</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line145">line 145</a>
     </li></ul></dd>
     
 
@@ -2806,7 +2823,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2845,7 +2862,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line69">line 69</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line70">line 70</a>
     </li></ul></dd>
     
 
@@ -2883,7 +2900,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2922,7 +2939,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line74">line 74</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line75">line 75</a>
     </li></ul></dd>
     
 
@@ -2960,7 +2977,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -2999,7 +3016,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line84">line 84</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line85">line 85</a>
     </li></ul></dd>
     
 
@@ -3037,7 +3054,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3076,7 +3093,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line79">line 79</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line80">line 80</a>
     </li></ul></dd>
     
 
@@ -3114,7 +3131,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3153,7 +3170,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line149">line 149</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line150">line 150</a>
     </li></ul></dd>
     
 
@@ -3191,7 +3208,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3230,7 +3247,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line154">line 154</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line155">line 155</a>
     </li></ul></dd>
     
 
@@ -3268,7 +3285,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3307,7 +3324,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line159">line 159</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line160">line 160</a>
     </li></ul></dd>
     
 
@@ -3345,7 +3362,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3384,7 +3401,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line164">line 164</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line165">line 165</a>
     </li></ul></dd>
     
 
@@ -3422,7 +3439,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3461,7 +3478,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line169">line 169</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line170">line 170</a>
     </li></ul></dd>
     
 
@@ -3499,7 +3516,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3538,7 +3555,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line174">line 174</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line175">line 175</a>
     </li></ul></dd>
     
 
@@ -3576,7 +3593,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3615,7 +3632,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line179">line 179</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line180">line 180</a>
     </li></ul></dd>
     
 
@@ -3653,7 +3670,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3692,7 +3709,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line184">line 184</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line185">line 185</a>
     </li></ul></dd>
     
 
@@ -3730,7 +3747,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3769,7 +3786,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line189">line 189</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line190">line 190</a>
     </li></ul></dd>
     
 
@@ -3807,7 +3824,7 @@
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -3846,7 +3863,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line194">line 194</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line195">line 195</a>
     </li></ul></dd>
     
 
@@ -3923,7 +3940,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line405">line 405</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line412">line 412</a>
     </li></ul></dd>
     
 
@@ -4000,7 +4017,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line399">line 399</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line406">line 406</a>
     </li></ul></dd>
     
 
@@ -4077,7 +4094,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line315">line 315</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line322">line 322</a>
     </li></ul></dd>
     
 
@@ -4154,7 +4171,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line339">line 339</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line346">line 346</a>
     </li></ul></dd>
     
 
@@ -4231,7 +4248,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line309">line 309</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line316">line 316</a>
     </li></ul></dd>
     
 
@@ -4308,7 +4325,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line302">line 302</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line309">line 309</a>
     </li></ul></dd>
     
 
@@ -4385,7 +4402,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line290">line 290</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line291">line 291</a>
     </li></ul></dd>
     
 
@@ -4462,7 +4479,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line260">line 260</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line261">line 261</a>
     </li></ul></dd>
     
 
@@ -4539,7 +4556,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line266">line 266</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line267">line 267</a>
     </li></ul></dd>
     
 
@@ -4616,7 +4633,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line333">line 333</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line340">line 340</a>
     </li></ul></dd>
     
 
@@ -4693,7 +4710,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line321">line 321</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line328">line 328</a>
     </li></ul></dd>
     
 
@@ -4770,7 +4787,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line327">line 327</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line334">line 334</a>
     </li></ul></dd>
     
 
@@ -4847,7 +4864,84 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line296">line 296</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line297">line 297</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+</div>
+</div>
+
+        
+            
+<div class="item_container">
+<div class="item_name">
+<h4 class="name" id=".HMD_WEBVR1_1">HMD_WEBVR1_1</h4>
+
+</div>
+
+<div class="item_description">
+
+<div class="description">
+    WebVR API 1.1
+</div>
+
+
+
+    <h5>Type:</h5>
+    <ul>
+        <li>
+            
+<span class="param-type"><a href="module-input.html#~DeviceHMDType">DeviceHMDType</a></span>
+
+
+        </li>
+    </ul>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line303">line 303</a>
     </li></ul></dd>
     
 
@@ -4924,7 +5018,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line278">line 278</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line279">line 279</a>
     </li></ul></dd>
     
 
@@ -5001,7 +5095,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line284">line 284</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line285">line 285</a>
     </li></ul></dd>
     
 
@@ -5078,7 +5172,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line272">line 272</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line273">line 273</a>
     </li></ul></dd>
     
 
@@ -5155,7 +5249,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line375">line 375</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line382">line 382</a>
     </li></ul></dd>
     
 
@@ -5232,7 +5326,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line369">line 369</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line376">line 376</a>
     </li></ul></dd>
     
 
@@ -5309,7 +5403,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line351">line 351</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line358">line 358</a>
     </li></ul></dd>
     
 
@@ -5389,7 +5483,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line345">line 345</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line352">line 352</a>
     </li></ul></dd>
     
 
@@ -5466,7 +5560,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line357">line 357</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line364">line 364</a>
     </li></ul></dd>
     
 
@@ -5543,7 +5637,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line363">line 363</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line370">line 370</a>
     </li></ul></dd>
     
 
@@ -5620,7 +5714,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line393">line 393</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line400">line 400</a>
     </li></ul></dd>
     
 
@@ -5697,7 +5791,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line387">line 387</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line394">line 394</a>
     </li></ul></dd>
     
 
@@ -5774,7 +5868,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line381">line 381</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line388">line 388</a>
     </li></ul></dd>
     
 
@@ -5797,6 +5891,165 @@
 
     
         <h3 class="subsection-title">Methods</h3>
+        
+            
+<div class="item_container">
+<div class="item_name">
+
+    
+
+    <h4 class="name" id=".add_click_listener">add_click_listener<span class="signature">(element, callback)</span><span class="type-signature"></span></h4>
+
+    
+
+</div>
+<div class="item_description">
+
+<div class="description">
+    Register the listener on the click event. Callback is called on right
+after click on element (without 300ms delay).
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>element</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">DOM element.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Callback</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Callback.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line1001">line 1001</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+</div>
+</div>
         
             
 <div class="item_container">
@@ -6038,7 +6291,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line718">line 718</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line748">line 748</a>
     </li></ul></dd>
     
 
@@ -6060,7 +6313,7 @@
 
     
 
-    <h4 class="name" id=".can_use_device">can_use_device<span class="signature">(type)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".can_use_device">can_use_device<span class="signature">(type)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
 
     
 
@@ -6155,7 +6408,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -6195,7 +6448,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line628">line 628</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line657">line 657</a>
     </li></ul></dd>
     
 
@@ -6303,7 +6556,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line942">line 942</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line984">line 984</a>
     </li></ul></dd>
     
 
@@ -6559,7 +6812,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line738">line 738</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line768">line 768</a>
     </li></ul></dd>
     
 
@@ -6581,7 +6834,7 @@
 
     
 
-    <h4 class="name" id=".disable_split_screen">disable_split_screen<span class="signature">()</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".disable_split_screen">disable_split_screen<span class="signature">()</span><span class="type-signature"> &rarr; {boolean}</span></h4>
 
     
 
@@ -6627,7 +6880,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -6655,6 +6908,8 @@
     
 
     
+        <dt class="important tag-deprecated">Deprecated:</dt><dd><ul class="dummy"><li>Use <a href="module-screen.html#.exit_split_screen">module:screen.exit_split_screen</a> instead</li></ul></dd>
+    
 
     
 
@@ -6667,7 +6922,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line878">line 878</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line919">line 919</a>
     </li></ul></dd>
     
 
@@ -6689,7 +6944,7 @@
 
     
 
-    <h4 class="name" id=".enable_split_screen">enable_split_screen<span class="signature">(camobj)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".enable_split_screen">enable_split_screen<span class="signature">(camobj)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
 
     
 
@@ -6784,7 +7039,7 @@
     </dt>
     <dd>
         
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
     </dd>
@@ -6812,6 +7067,8 @@
     
 
     
+        <dt class="important tag-deprecated">Deprecated:</dt><dd><ul class="dummy"><li>Use <a href="module-screen.html#.request_split_screen">module:screen.request_split_screen</a> instead</li></ul></dd>
+    
 
     
 
@@ -6824,7 +7081,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line808">line 808</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line845">line 845</a>
     </li></ul></dd>
     
 
@@ -7025,7 +7282,7 @@ If device is not available, then return null.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line636">line 636</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line665">line 665</a>
     </li></ul></dd>
     
 
@@ -7047,7 +7304,7 @@ If device is not available, then return null.
 
     
 
-    <h4 class="name" id=".get_moved_gmpd_axis">get_moved_gmpd_axis<span class="signature">(gamepad_id)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".get_moved_gmpd_axis">get_moved_gmpd_axis<span class="signature">(gamepad_id)</span><span class="type-signature"> &rarr; {number}</span></h4>
 
     
 
@@ -7097,7 +7354,7 @@ If device is not available, then return null.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -7142,7 +7399,7 @@ If device is not available, then return null.
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -7182,7 +7439,7 @@ If device is not available, then return null.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line935">line 935</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line977">line 977</a>
     </li></ul></dd>
     
 
@@ -7204,7 +7461,7 @@ If device is not available, then return null.
 
     
 
-    <h4 class="name" id=".get_pressed_gmpd_btn">get_pressed_gmpd_btn<span class="signature">(gamepad_id)</span><span class="type-signature"> &rarr; {Number}</span></h4>
+    <h4 class="name" id=".get_pressed_gmpd_btn">get_pressed_gmpd_btn<span class="signature">(gamepad_id)</span><span class="type-signature"> &rarr; {number}</span></h4>
 
     
 
@@ -7254,7 +7511,7 @@ If device is not available, then return null.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -7299,7 +7556,7 @@ If device is not available, then return null.
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
     </dd>
@@ -7339,7 +7596,7 @@ If device is not available, then return null.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line928">line 928</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line970">line 970</a>
     </li></ul></dd>
     
 
@@ -7361,7 +7618,7 @@ If device is not available, then return null.
 
     
 
-    <h4 class="name" id=".get_value_param">get_value_param<span class="signature">(device, param)</span><span class="type-signature"> &rarr; {Number|Boolean}</span></h4>
+    <h4 class="name" id=".get_value_param">get_value_param<span class="signature">(device, param)</span><span class="type-signature"> &rarr; {number|boolean|null}</span></h4>
 
     
 
@@ -7480,10 +7737,13 @@ If device is not available, then return null.
     </dt>
     <dd>
         
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 |
 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
+|
+
+<span class="param-type">null</span>
 
 
     </dd>
@@ -7523,7 +7783,7 @@ If device is not available, then return null.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line702">line 702</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line730">line 730</a>
     </li></ul></dd>
     
 
@@ -7545,7 +7805,7 @@ If device is not available, then return null.
 
     
 
-    <h4 class="name" id=".get_vector_param">get_vector_param<span class="signature">(device, param, dest)</span><span class="type-signature"> &rarr; {Float32Array}</span></h4>
+    <h4 class="name" id=".get_vector_param">get_vector_param<span class="signature">(device, param, dest)</span><span class="type-signature"> &rarr; (nullable) {Float32Array}</span></h4>
 
     
 
@@ -7727,7 +7987,7 @@ If device is not available, then return null.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line685">line 685</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line712">line 712</a>
     </li></ul></dd>
     
 
@@ -7749,7 +8009,7 @@ If device is not available, then return null.
 
     
 
-    <h4 class="name" id=".register_device">register_device<span class="signature">(device)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".register_device">register_device<span class="signature">()</span><span class="type-signature"></span></h4>
 
     
 
@@ -7766,56 +8026,6 @@ If device is not available, then return null.
 
 
 
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>device</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Device object. Use
-<a href="module-input.html#.get_device_by_type_element">input.get_device_by_type_element</a> to obtain it.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
 
 
 
@@ -7865,7 +8075,254 @@ If device is not available, then return null.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line658">line 658</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line687">line 687</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+</div>
+</div>
+        
+            
+<div class="item_container">
+<div class="item_name">
+
+    
+
+    <h4 class="name" id=".remove_click_listener">remove_click_listener<span class="signature">(element, callback)</span><span class="type-signature"></span></h4>
+
+    
+
+</div>
+<div class="item_description">
+
+<div class="description">
+    Unregister the listener registered with
+ input.add_click_listener.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>element</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">HTMLElement</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">DOM element.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Callback</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Callback.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line1015">line 1015</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+</div>
+</div>
+        
+            
+<div class="item_container">
+<div class="item_name">
+
+    
+
+    <h4 class="name" id=".request_fullscreen_hmd">request_fullscreen_hmd<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+</div>
+<div class="item_description">
+
+<div class="description">
+    Request fullscreen mode.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <dt class="important tag-deprecated">Deprecated:</dt><dd><ul class="dummy"><li>Use <a href="module-screen.html#.request_fullscreen_hmd">module:screen.request_fullscreen_hmd</a> instead</li></ul></dd>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line796">line 796</a>
     </li></ul></dd>
     
 
@@ -8002,7 +8459,7 @@ Right now it should be used for DEVICE_HMD.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line669">line 669</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line696">line 696</a>
     </li></ul></dd>
     
 
@@ -8074,7 +8531,7 @@ Right now it should be used for DEVICE_HMD.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8097,7 +8554,7 @@ Right now it should be used for DEVICE_HMD.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8120,7 +8577,7 @@ Right now it should be used for DEVICE_HMD.
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -8183,7 +8640,7 @@ Right now it should be used for DEVICE_HMD.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line899">line 899</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line943">line 943</a>
     </li></ul></dd>
     
 
@@ -8279,7 +8736,7 @@ Right now it should be used for DEVICE_HMD.
             <td class="type">
             
                 
-<span class="param-type">Boolean</span>
+<span class="param-type">boolean</span>
 
 
             
@@ -8342,7 +8799,7 @@ Right now it should be used for DEVICE_HMD.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line646">line 646</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line675">line 675</a>
     </li></ul></dd>
     
 
@@ -8383,7 +8840,7 @@ Right now it should be used for DEVICE_HMD.
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -8422,7 +8879,7 @@ Right now it should be used for DEVICE_HMD.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line64">line 64</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line65">line 65</a>
     </li></ul></dd>
     
 
@@ -8460,7 +8917,7 @@ Right now it should be used for DEVICE_HMD.
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -8499,7 +8956,7 @@ Right now it should be used for DEVICE_HMD.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line59">line 59</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line60">line 60</a>
     </li></ul></dd>
     
 
@@ -8537,7 +8994,7 @@ Right now it should be used for DEVICE_HMD.
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -8576,7 +9033,7 @@ Right now it should be used for DEVICE_HMD.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line54">line 54</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line55">line 55</a>
     </li></ul></dd>
     
 
@@ -8614,7 +9071,7 @@ Right now it should be used for DEVICE_HMD.
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -8653,7 +9110,7 @@ Right now it should be used for DEVICE_HMD.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line593">line 593</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line622">line 622</a>
     </li></ul></dd>
     
 
@@ -8691,7 +9148,7 @@ Right now it should be used for DEVICE_HMD.
     <ul>
         <li>
             
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
         </li>
@@ -8730,7 +9187,7 @@ Right now it should be used for DEVICE_HMD.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line49">line 49</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line50">line 50</a>
     </li></ul></dd>
     
 
@@ -8807,7 +9264,7 @@ Right now it should be used for DEVICE_HMD.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line44">line 44</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line45">line 45</a>
     </li></ul></dd>
     
 
@@ -8946,7 +9403,7 @@ to the <a href="module-input.html#.GYRO_ORIENTATION_ANGLES">GYRO_ORIENTATION_ANG
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line580">line 580</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line607">line 607</a>
     </li></ul></dd>
     
 
@@ -8961,7 +9418,9 @@ to the <a href="module-input.html#.GYRO_ORIENTATION_ANGLES">GYRO_ORIENTATION_ANG
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var gyroscope_angles_cb = function(angles) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var gyroscope_angles_cb = function(angles) {
     console.log("Gyroscope orientation Euler angles are " + angles);
 };
 var device = m_input.get_device_by_type_element(m_input.DEVICE_GYRO);
@@ -9091,7 +9550,7 @@ to the <a href="module-input.html#.GYRO_ORIENTATION_QUAT">GYRO_ORIENTATION_QUAT<
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line567">line 567</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line592">line 592</a>
     </li></ul></dd>
     
 
@@ -9106,7 +9565,9 @@ to the <a href="module-input.html#.GYRO_ORIENTATION_QUAT">GYRO_ORIENTATION_QUAT<
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var gyroscope_quat_cb = function(quat) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var gyroscope_quat_cb = function(quat) {
     console.log("Gyroscope orientation quaternion is " + quat);
 };
 var device = m_input.get_device_by_type_element(m_input.DEVICE_GYRO);
@@ -9173,7 +9634,7 @@ m_input.attach_param_cb(device, m_input.GYRO_ORIENTATION_QUAT, gyroscope_quat_cb
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9237,7 +9698,7 @@ keyboard (use constants KEY_* from module <a href="module-controls.html">control
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line491">line 491</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line506">line 506</a>
     </li></ul></dd>
     
 
@@ -9252,7 +9713,9 @@ keyboard (use constants KEY_* from module <a href="module-controls.html">control
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var keyboard_down_cb = function(key_code) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var keyboard_down_cb = function(key_code) {
     console.log("Pressed keyboard button: " + key_code);
 };
 var device = m_input.get_device_by_type_element(m_input.DEVICE_KEYBOARD);
@@ -9319,7 +9782,7 @@ m_input.attach_param_cb(device, m_input.KEYBOARD_DOWN, keyboard_down_cb);</code>
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9383,7 +9846,7 @@ keyboard (use constants KEY_* from module <a href="module-controls.html">control
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line505">line 505</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line522">line 522</a>
     </li></ul></dd>
     
 
@@ -9398,7 +9861,9 @@ keyboard (use constants KEY_* from module <a href="module-controls.html">control
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var keyboard_up_cb = function(key_code) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var keyboard_up_cb = function(key_code) {
     console.log("Released keyboard button: " + key_code);
 };
 var device = m_input.get_device_by_type_element(m_input.DEVICE_KEYBOARD);
@@ -9465,7 +9930,7 @@ m_input.attach_param_cb(device, m_input.KEYBOARD_UP, keyboard_up_cb);</code></pr
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9529,7 +9994,7 @@ m_input.attach_param_cb(device, m_input.KEYBOARD_UP, keyboard_up_cb);</code></pr
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line450">line 450</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line459">line 459</a>
     </li></ul></dd>
     
 
@@ -9544,7 +10009,9 @@ m_input.attach_param_cb(device, m_input.KEYBOARD_UP, keyboard_up_cb);</code></pr
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var mouse_down_which_cb = function(which) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var mouse_down_which_cb = function(which) {
     console.log("Pressed button: " + which);
 };
 var device = m_input.get_device_by_type_element(m_input.DEVICE_MOUSE);
@@ -9675,7 +10142,7 @@ vertical mouse coordinate.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line435">line 435</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line442">line 442</a>
     </li></ul></dd>
     
 
@@ -9690,7 +10157,9 @@ vertical mouse coordinate.</td>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var mouse_location_cb = function(location) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var mouse_location_cb = function(location) {
     console.log("The horizontal location: " + location[0]);
     console.log("The vertical location: " + location[1]);
 };
@@ -9758,7 +10227,7 @@ m_input.attach_param_cb(device, m_input.MOUSE_LOCATION, mouse_location_cb);</cod
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9822,7 +10291,7 @@ m_input.attach_param_cb(device, m_input.MOUSE_LOCATION, mouse_location_cb);</cod
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line464">line 464</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line475">line 475</a>
     </li></ul></dd>
     
 
@@ -9837,7 +10306,9 @@ m_input.attach_param_cb(device, m_input.MOUSE_LOCATION, mouse_location_cb);</cod
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var mouse_up_which_cb = function(which) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var mouse_up_which_cb = function(which) {
     console.log("Released button: " + which);
 };
 var device = m_input.get_device_by_type_element(m_input.DEVICE_MOUSE);
@@ -9904,7 +10375,7 @@ m_input.attach_param_cb(device, m_input.MOUSE_UP_WHICH, mouse_up_which_cb);</cod
             <td class="type">
             
                 
-<span class="param-type">Number</span>
+<span class="param-type">number</span>
 
 
             
@@ -9967,7 +10438,7 @@ m_input.attach_param_cb(device, m_input.MOUSE_UP_WHICH, mouse_up_which_cb);</cod
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line478">line 478</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line491">line 491</a>
     </li></ul></dd>
     
 
@@ -9982,7 +10453,9 @@ m_input.attach_param_cb(device, m_input.MOUSE_UP_WHICH, mouse_up_which_cb);</cod
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var mouse_wheel_cb = function(delta) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var mouse_wheel_cb = function(delta) {
     console.log("Scroll amount: " + delta);
 };
 var device = m_input.get_device_by_type_element(m_input.DEVICE_MOUSE);
@@ -10113,7 +10586,7 @@ contacting with the touch surface points.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line551">line 551</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line574">line 574</a>
     </li></ul></dd>
     
 
@@ -10128,7 +10601,9 @@ contacting with the touch surface points.</td>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var touch_end_cb = function(touches) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var touch_end_cb = function(touches) {
     for (var i = 0; i &lt; touches.length; ++i)
          console.log("Touch contact " + touches[i].identifier + " has position" +
                  + " x: " + touches[i].clientX + " y: " + touches[i].clientY);
@@ -10261,7 +10736,7 @@ contacting with the touch surface points.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line535">line 535</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line556">line 556</a>
     </li></ul></dd>
     
 
@@ -10276,7 +10751,9 @@ contacting with the touch surface points.</td>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var touch_move_cb = function(touches) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var touch_move_cb = function(touches) {
     for (var i = 0; i &lt; touches.length; ++i)
          console.log("Touch contact " + touches[i].identifier + " has position" +
                  + " x: " + touches[i].clientX + " y: " + touches[i].clientY);
@@ -10409,7 +10886,7 @@ contacting with the touch surface points.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line519">line 519</a>
+        <a href="ext_input.js.html">ext/input.js</a>, <a href="ext_input.js.html#line538">line 538</a>
     </li></ul></dd>
     
 
@@ -10424,7 +10901,9 @@ contacting with the touch surface points.</td>
 
     <h5>Example</h5>
     
-    <pre class="prettyprint"><code>var touch_start_cb = function(touches) {
+    <pre class="prettyprint"><code>var m_input = require("input");
+
+var touch_start_cb = function(touches) {
     for (var i = 0; i &lt; touches.length; ++i)
          console.log("Touch contact " + touches[i].identifier + " has position" +
                  + " x: " + touches[i].clientX + " y: " + touches[i].clientY);
@@ -10449,13 +10928,13 @@ m_input.attach_param_cb(device, m_input.TOUCH_START, touch_start_cb);</code></pr
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gp_conf.html">gp_conf</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hmd_conf.html">hmd_conf</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-input.html">input</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-logic_nodes.html">logic_nodes</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-math.html">math</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-anchors.html">anchors</a></li><li><a href="module-animation.html">animation</a></li><li><a href="module-app.html">app</a></li><li><a href="module-armature.html">armature</a></li><li><a href="module-assets.html">assets</a></li><li><a href="module-camera.html">camera</a></li><li><a href="module-camera_anim.html">camera_anim</a></li><li><a href="module-config.html">config</a></li><li><a href="module-constraints.html">constraints</a></li><li><a href="module-container.html">container</a></li><li><a href="module-controls.html">controls</a></li><li><a href="module-data.html">data</a></li><li><a href="module-debug.html">debug</a></li><li><a href="module-fps.html">fps</a></li><li><a href="module-geometry.html">geometry</a></li><li><a href="module-gp_conf.html">gp_conf</a></li><li><a href="module-gyroscope.html">gyroscope</a></li><li><a href="module-hmd.html">hmd</a></li><li><a href="module-hmd_conf.html">hmd_conf</a></li><li><a href="module-hud.html">hud</a></li><li><a href="module-input.html">input</a></li><li><a href="module-lights.html">lights</a></li><li><a href="module-logic_nodes.html">logic_nodes</a></li><li><a href="module-main.html">main</a></li><li><a href="module-mat3.html">mat3</a></li><li><a href="module-mat4.html">mat4</a></li><li><a href="module-material.html">material</a></li><li><a href="module-math.html">math</a></li><li><a href="module-mixer.html">mixer</a></li><li><a href="module-mouse.html">mouse</a></li><li><a href="module-nla.html">nla</a></li><li><a href="module-npc_ai.html">npc_ai</a></li><li><a href="module-ns_compat.html">ns_compat</a></li><li><a href="module-objects.html">objects</a></li><li><a href="module-particles.html">particles</a></li><li><a href="module-physics.html">physics</a></li><li><a href="module-preloader.html">preloader</a></li><li><a href="module-quat.html">quat</a></li><li><a href="module-rgb.html">rgb</a></li><li><a href="module-rgba.html">rgba</a></li><li><a href="module-scenes.html">scenes</a></li><li><a href="module-screen.html">screen</a></li><li><a href="module-screenshooter.html">screenshooter</a></li><li><a href="module-sfx.html">sfx</a></li><li><a href="module-storage.html">storage</a></li><li><a href="module-textures.html">textures</a></li><li><a href="module-time.html">time</a></li><li><a href="module-transform.html">transform</a></li><li><a href="module-tsr.html">tsr</a></li><li><a href="module-util.html">util</a></li><li><a href="module-vec3.html">vec3</a></li><li><a href="module-vec4.html">vec4</a></li><li><a href="module-version.html">version</a></li></ul><h3>Namespaces</h3><ul><li><a href="b4w.html">b4w</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Blend4Web API Reference (generated by JSDoc 3.4.0 on Thu Oct 27 2016 16:42:35 GMT+0300 (MSK))
+    Blend4Web API Reference (generated by JSDoc 3.4.0 on Tue Mar 07 2017 11:35:19 GMT+0300 (MSK))
     <a href="https://www.blend4web.com">www.blend4web.com</a>
   <!-- Yandex.Metrika counter -->
   <script type="text/javascript">

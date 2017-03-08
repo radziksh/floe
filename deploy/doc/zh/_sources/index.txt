@@ -36,13 +36,19 @@
 
 * 工作流程
 
-  * 创作场景
+  * Creating a New Project
+
+  * Creating Scenes
+
+  * Preparing a Scene to Use in Blend4Web
 
   * 导出场景
 
-  * 在浏览器显示场景
-
   * 应用程序开发
+
+  * Project Building
+
+  * Project Deploying
 
 * 项目管理
 
@@ -124,6 +130,8 @@
 
   * 通过TSR矢量移动
 
+  * Line Rendering
+
 * 网格
 
   * 静态和动态网格
@@ -184,6 +192,10 @@
 
   * 光晕材质
 
+  * Material API
+
+  * Inherit Material
+
 * 材质库
 
   * 库结构
@@ -197,6 +209,8 @@
   * 标准节点
 
   * 游戏引擎特定节点
+
+  * Cycles 节点
 
 * 逻辑编辑器
 
@@ -372,6 +386,8 @@
 
   * 角色
 
+  * 导航网格
+
   * 在应用程序中的使用
 
 * 对应用程序开发人员
@@ -384,6 +400,8 @@
 
   * 示例代码
 
+  * 加载应用程序资产
+
   * 事件驱动模型
 
   * SDK文件结构
@@ -392,7 +410,9 @@
 
   * 品质配置
 
-  * 非全屏Web应用程序
+  * Non-Standard Canvas Position and Orientation
+
+  * Mobile Web Apps
 
 * 对于引擎开发者
 
@@ -449,6 +469,12 @@
   * 已知问题
 
 * 发布说明
+
+  * v17.02
+
+  * v16.12
+
+  * v16.11
 
   * v16.10
 

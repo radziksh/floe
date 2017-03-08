@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2016 Triumph LLC
+ * Copyright (C) 2014-2017 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,9 +41,9 @@ exports.NVIDIA_OLD_GPU_CUBEMAP_MAX_SIZE = 256;
 
 var cfg_anim = m_cfg.animation;
 var cfg_def = m_cfg.defaults;
+var cfg_dbg = m_cfg.debug_subs;
 var cfg_ctx = m_cfg.context;
 var cfg_lim = m_cfg.context_limits;
-var cfg_scs = m_cfg.scenes;
 var cfg_sfx = m_cfg.sfx;
 var cfg_phy = m_cfg.physics;
 var cfg_ldr = m_cfg.assets;
@@ -82,15 +82,25 @@ exports.set_hardware_defaults = function(gl, print_warnings) {
     cfg_lim.max_texture_size = gl.getParameter(gl.MAX_TEXTURE_SIZE);
     cfg_lim.max_viewport_dims = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
 
+    // NOTE: don't use gl.getParameter(gl.DEPTH_BITS)
+    cfg_lim.depth_bits = cfg_def.webgl2 ? 24 : 16;
+
+    if (cfg_def.webgl2 && !cfg_dbg.enabled)
+        cfg_def.compared_mode_depth = true;
+
     if (!cfg_def.webgl2)
         cfg_def.msaa_samples = 1;
     else {
         cfg_def.msaa_samples = Math.min(cfg_def.msaa_samples,
                 gl.getParameter(gl.MAX_SAMPLES));
         if (check_user_agent("Firefox")) {
-            warn("Firefox and WebGL 2 detected, applying framebuffer hack, disabling anchor visibility");
+            warn("Firefox and WebGL 2 detected, applying framebuffer hack.");
             cfg_def.check_framebuffer_hack = true;
-            cfg_def.ff_disable_anchor_vis_hack = true;
+        }
+        if (check_user_agent("Windows") && check_user_agent("Chrome")) {
+            warn("Windows, Chrome and WebGL 2 detected, applying " +
+                    "multisample hack, disabling MSAA.");
+            cfg_def.msaa_samples = 1;
         }
     }
 
@@ -125,6 +135,7 @@ exports.set_hardware_defaults = function(gl, print_warnings) {
             if (!cfg_ctx.alpha)
                 cfg_def.background_color[3] = 1.0;
             cfg_def.safari_glow_hack = true;
+            cfg_def.ios_copy_tex_hack = true;
             cfg_def.vert_anim_mix_normals_hack = true;
             cfg_def.smaa = false;
             cfg_def.ssao = false;
@@ -203,10 +214,22 @@ exports.set_hardware_defaults = function(gl, print_warnings) {
         cfg_def.quality_aa_method = false;
     }
 
+    // TODO: check mobile Firefox
     if (check_user_agent("UCBrowser") ||
-            (check_user_agent("Chrome") || check_user_agent("Firefox")) && cfg_def.is_mobile_device) {
-        warn("Mobile Firefox, mobile Chrome or UCBrowser detected, disable workers.");
+            check_user_agent("Chrome") && check_user_agent("Nexus") && cfg_def.is_mobile_device) {
+        warn("Mobile Nexus Chrome or UCBrowser detected, disable workers.");
         cfg_phy.use_workers = false;
+    }
+
+    if (check_user_agent("Firefox") && check_user_agent("Linux")) {
+        warn("Firefox and Linux detected, disable workers.");
+        cfg_phy.use_workers = false;
+    }
+
+    if (check_user_agent("Firefox") && check_user_agent("Windows")) {
+        warn("Firefox and Windows detected, use 16 bit depth.");
+        cfg_lim.depth_bits = 16;
+        cfg_def.amd_depth_hack = true;
     }
 
     // NOTE: check compatibility for particular device
@@ -215,6 +238,13 @@ exports.set_hardware_defaults = function(gl, print_warnings) {
         var vendor = gl.getParameter(rinfo.UNMASKED_VENDOR_WEBGL);
         var renderer = gl.getParameter(rinfo.UNMASKED_RENDERER_WEBGL);
         var mali_4x_re = /\b4\d{2}\b/;
+
+        if (renderer.indexOf("AMD") > -1 && check_user_agent("Windows") 
+                && check_user_agent("Chrome") && !(is_ie11() || check_user_agent("Edge"))) {
+            warn("AMD, Windows and Chrome detected, use 16 bit depth and applying depth hack.");
+            cfg_lim.depth_bits = 16;
+            cfg_def.amd_depth_hack = true;
+        }
 
         if (vendor.indexOf("ARM") > -1 && mali_4x_re.test(renderer)) {
             warn("ARM Mali-400 series detected, applying depth and frames blending hacks");
@@ -327,8 +357,10 @@ exports.set_hardware_defaults = function(gl, print_warnings) {
         cfg_def.ie11_edge_touchscreen_hack = true;
     }
 
-    if (is_ie11() || check_user_agent("Edge"))
+    if (is_ie11() || check_user_agent("Edge")) {
         cfg_def.ie_edge_anchors_floor_hack = true;
+        cfg_def.ie11_edge_mouseoffset_hack = true;
+    }
 
     if (detect_mobile() && check_user_agent("Firefox")) {
         m_print.log("Mobile firefox detected. Applying autoplay media hack."
@@ -337,11 +369,6 @@ exports.set_hardware_defaults = function(gl, print_warnings) {
         cfg_def.mobile_firefox_media_hack = true;
         cfg_lim.max_texture_size = 4096;
         cfg_lim.max_cube_map_texture_size = 4096;
-    }
-
-    if (check_user_agent("Edge")) {
-        warn("Microsoft Edge detected, set up new minimal texture size.");
-        cfg_def.edge_min_tex_size_hack = true;
     }
 }
 
@@ -358,13 +385,13 @@ function check_user_agent(str) {
 }
 exports.detect_mobile = detect_mobile;
 function detect_mobile() {
-    return navigator.userAgent.match(/Android/i)
+    return navigator.userAgent.match(/Windows Phone/i)
+        ||navigator.userAgent.match(/Android/i)
         || navigator.userAgent.match(/webOS/i)
         || navigator.userAgent.match(/iPhone/i)
         || navigator.userAgent.match(/iPad/i)
         || navigator.userAgent.match(/iPod/i)
-        || navigator.userAgent.match(/BlackBerry/i)
-        || navigator.userAgent.match(/Windows Phone/i);
+        || navigator.userAgent.match(/BlackBerry/i);
 }
 
 exports.apply_context_alpha_hack = function() {

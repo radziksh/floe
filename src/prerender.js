@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014-2016 Triumph LLC
+ * Copyright (C) 2014-2017 Triumph LLC
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@
  */
 b4w.module["__prerender"] = function(exports, require) {
 
-var m_cfg      = require("__config");
 var m_debug    = require("__debug");
 var m_geom     = require("__geometry");
 var m_obj_util = require("__obj_util");
@@ -33,8 +32,6 @@ var m_subs     = require("__subscene");
 var m_tsr      = require("__tsr");
 var m_util     = require("__util");
 var m_vec3     = require("__vec3");
-
-var cfg_def = m_cfg.defaults;
 
 var USE_FRUSTUM_CULLING = true;
 
@@ -61,6 +58,7 @@ var _vec3_tmp = new Float32Array(3);
  * Set do_render flag for subscenes/bundles
  */
 exports.prerender_subs = function(subs) {
+
     if (SUBS_UPDATE_DO_RENDER.indexOf(subs.type) > -1) {
         var has_render_bundles = false;
         var is_cube_subs = subs.type == m_subs.MAIN_CUBE_REFLECT
@@ -142,7 +140,7 @@ exports.prerender_subs = function(subs) {
 
 /**
  * Calculate LOD visibility and cull out-of-frustum/subscene-specific bundles.
- * @returns {Boolean} do_render flag for bundle
+ * @returns {boolean} do_render flag for bundle
  */
 function prerender_bundle(bundle, subs) {
 
@@ -186,7 +184,7 @@ function prerender_bundle(bundle, subs) {
         var use_be = obj_render.use_be;
     }
 
-    if (!obj_render.do_not_cull && USE_FRUSTUM_CULLING &&
+    if (!batch.do_not_cull && USE_FRUSTUM_CULLING &&
              is_out_of_frustum(cam.frustum_planes, bs, be, use_be))
         return false;
 
@@ -202,10 +200,10 @@ function is_out_of_frustum(planes, bs, be, use_be) {
     else if (!use_be)
         return false;
 
-    var pt = be.center;
     var axis_x = be.axis_x;
     var axis_y = be.axis_y;
     var axis_z = be.axis_z;
+    pt = be.center;
     var is_out = m_util.ellipsoid_is_out_of_frustum(pt, planes,
                                                       axis_x, axis_y, axis_z);
     return is_out;
@@ -213,7 +211,17 @@ function is_out_of_frustum(planes, bs, be, use_be) {
 
 function is_lod_visible(obj_render, eye) {
 
-    var center = obj_render.bs_world.center;
+    if (obj_render.type == "STATIC" && obj_render.is_lod) {
+        var center = obj_render.lod_center;
+        var radius = obj_render.lod_radius;
+    } else {
+        // DYNAMIC objects should use bs_world, because it is constantly 
+        // updated unlike the lod_center/lod_radius properties; non-lod objects 
+        // should use bs_world, because the lod_center/lod_radius scheme is a 
+        // culling deoptimization
+        var center = obj_render.bs_world.center;
+        var radius = obj_render.bs_world.radius;
+    }
 
     var dist_min = obj_render.lod_dist_min;
     var dist_max = obj_render.lod_dist_max;
@@ -227,7 +235,7 @@ function is_lod_visible(obj_render, eye) {
         return true;
 
     // additional interval for transition, fixes LOD flickering
-    var tr_int = obj_render.lod_transition_ratio * obj_render.bs_world.radius;
+    var tr_int = obj_render.lod_transition_ratio * radius;
 
     if (dist < (dist_max + tr_int))
         return true;
@@ -246,13 +254,13 @@ function update_particles_buffers(batch) {
 
     var pointers = pbuf.pointers;
 
-    var offset = pointers["a_position"].offset;
+    var pos_offset = pointers["a_position"].offset;
     m_geom.vbo_source_data_set_attr(pbuf.vbo_source_data, "a_position", 
-            pdata.positions_cache, offset);
+            pdata.positions_cache, pos_offset);
 
-    var offset = pointers["a_tbn_quat"].offset;
+    var tbn_offset = pointers["a_tbn_quat"].offset;
     m_geom.vbo_source_data_set_attr(pbuf.vbo_source_data, "a_tbn_quat", 
-            pdata.tbn_quats_cache, offset);
+            pdata.tbn_quats_cache, tbn_offset);
 
     m_geom.update_gl_buffers(pbuf);
 }

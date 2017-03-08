@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Node Materials &mdash; Blend4Web 16.10 User Manual</title>
+  <title>Node Materials &mdash; Blend4Web 17.02.1 User Manual</title>
   
 
   
@@ -32,7 +32,7 @@
   
         <link rel="author" title="About these documents"
               href="about.html"/>
-    <link rel="top" title="Blend4Web 16.10 User Manual" href="index.html"/>
+    <link rel="top" title="Blend4Web 17.02.1 User Manual" href="index.html"/>
         <link rel="next" title="Logic Editor" href="logic_editor.html"/>
         <link rel="prev" title="Material Library" href="material_library.html"/> 
 
@@ -61,7 +61,7 @@
           
           
             <div class="version">
-              v16.10
+              v17.02.1
             </div>
           
         
@@ -127,37 +127,37 @@
 <li class="toctree-l3"><a class="reference internal" href="#refraction-b4w-refraction">Refraction (B4W_REFRACTION)</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id10">Input Parameters</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#id11">Output Parameters</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id12">Output Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#replace-b4w-replace">Replace (B4W_REPLACE)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id13">Input Parameters</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id14">Output Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id12">Input Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id13">Output Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#smoothstep-b4w-smoothstep">Smoothstep (B4W_SMOOTHSTEP)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id15">Input Parameters</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id16">Output Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id14">Input Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id15">Output Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#time-b4w-time">Time (B4W_TIME)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id17">Input Parameters</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id18">Output Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id16">Input Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id17">Output Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#translucency-b4w-translucency">Translucency (B4W_TRANSLUCENCY)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id19">Input Parameters</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id20">Output Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id18">Input Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id19">Output Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#vector-view-b4w-vector-view">Vector View (B4W_VECTOR_VIEW)</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id21">Input Parameters</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id22">Output Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id20">Input Parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id21">Output Parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#linear-to-srgb-and-srgb-to-linear-deprecated">Linear to SRGB and SRGB to Linear (Deprecated)</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#cycles-nodes">Cycles Nodes</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="logic_editor.html">Logic Editor</a></li>
@@ -240,6 +240,7 @@
 <li><a class="reference internal" href="#linear-to-srgb-and-srgb-to-linear-deprecated" id="id37">Linear to SRGB and SRGB to Linear (Deprecated)</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#cycles-nodes" id="id38">Cycles Nodes</a></li>
 </ul>
 </li>
 </ul>
@@ -249,7 +250,7 @@
 <div class="section" id="standard-nodes">
 <span id="generic-node-materials"></span><h2><a class="toc-backref" href="#id24">Standard Nodes</a><a class="headerlink" href="#standard-nodes" title="Permalink to this headline">¶</a></h2>
 <p id="index-1">Blend4Web supports all standard Blender nodes, but some of them do not work fast enough and are not recommended to use in real time applications. Creating very complex materials, especially using large numbers of <code class="docutils literal"><span class="pre">Geometry</span></code> and <code class="docutils literal"><span class="pre">Texture</span></code> nodes, is also not recommended.</p>
-<p>Cycles nodes are only partially supported: in most cases they will not work in Blend4Web the same way they do in Blender. They also might not work at all or even cause material in which they are used to work incorrectly. However, using Cycles nodes will not cause instabilities in the application workflow.</p>
+<p>The engine also has partial support for some of the Cycles nodes. This subject is more thoroughly described in the <a class="reference internal" href="#cycles-nodes"><span>corresponding chapter</span></a>.</p>
 <p id="node-performance">Standard node performance and degree of support is described in the table.</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -634,21 +635,14 @@ Object coordinte spaces</td>
 <p class="last"><a class="reference internal" href="materials.html#alpha-blend"><span>Transparency</span></a></p>
 </div>
 </div>
-<div class="section" id="id12">
-<h4>Output Parameters<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h4>
-<dl class="docutils">
-<dt><em>Color</em></dt>
-<dd>Output color.</dd>
-</dl>
-</div>
 </div>
 <div class="section" id="replace-b4w-replace">
 <span id="node-replace"></span><h3><a class="toc-backref" href="#id32">Replace (B4W_REPLACE)</a><a class="headerlink" href="#replace-b4w-replace" title="Permalink to this headline">¶</a></h3>
 <p>The node replaces the inputs depending on the working environment (i.e. Blender viewport or Blend4Web). When working in Blender the <code class="docutils literal"><span class="pre">Color1</span></code> input is connected to the <code class="docutils literal"><span class="pre">Color</span></code> output and the <code class="docutils literal"><span class="pre">Color2</span></code> input is ignored. On the contrary when working in the engine the inputs are interchanged (the <code class="docutils literal"><span class="pre">Color1</span></code> one is ignored and the <code class="docutils literal"><span class="pre">Color2</span></code> one is connected to the output). The node is intended to display one node structure in the viewport and another - in the engine.</p>
 <a class="reference internal image-reference" href="_images/node_materials_replace.png"><img alt="_images/node_materials_replace.png" class="align-center" src="_images/node_materials_replace.png" style="width: 100%;" /></a>
 <p>As a rule it is used for normal mapping. Blender’s node materials do not support a tangent space of coordinates. Therefore, the only possible method to display normal maps in the viewport correctly is their usage inside the <code class="docutils literal"><span class="pre">Material</span></code> nodes.</p>
-<div class="section" id="id13">
-<h4>Input Parameters<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id12">
+<h4>Input Parameters<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt><em>Color1</em></dt>
 <dd>Node setup that will be visible in the Blender viewport.</dd>
@@ -656,8 +650,8 @@ Object coordinte spaces</td>
 <dd>Node setup that will be visible in the Blend4Web engine.</dd>
 </dl>
 </div>
-<div class="section" id="id14">
-<h4>Output Parameters<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id13">
+<h4>Output Parameters<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt><em>Color</em></dt>
 <dd>Should be connected to the <code class="docutils literal"><span class="pre">Color</span></code> socket of the <code class="docutils literal"><span class="pre">Material</span></code> or <code class="docutils literal"><span class="pre">Extended</span> <span class="pre">Material</span></code> node.</dd>
@@ -668,8 +662,8 @@ Object coordinte spaces</td>
 <span id="node-smoothstep"></span><h3><a class="toc-backref" href="#id33">Smoothstep (B4W_SMOOTHSTEP)</a><a class="headerlink" href="#smoothstep-b4w-smoothstep" title="Permalink to this headline">¶</a></h3>
 <p>Performs smooth interpolation between two input values based on first value.</p>
 <a class="reference internal image-reference" href="_images/node_materials_smoothstep.png"><img alt="_images/node_materials_smoothstep.png" class="align-center" src="_images/node_materials_smoothstep.png" style="width: 100%;" /></a>
-<div class="section" id="id15">
-<h4>Input Parameters<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id14">
+<h4>Input Parameters<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt><em>Value</em></dt>
 <dd>Value which determines interpolation smoothness.</dd>
@@ -679,8 +673,8 @@ Object coordinte spaces</td>
 <dd>Second interpolation value.</dd>
 </dl>
 </div>
-<div class="section" id="id16">
-<h4>Output Parameters<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id15">
+<h4>Output Parameters<a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt><em>Value</em></dt>
 <dd>Interpolated value.</dd>
@@ -695,12 +689,12 @@ Object coordinte spaces</td>
 <span id="node-time"></span><h3><a class="toc-backref" href="#id34">Time (B4W_TIME)</a><a class="headerlink" href="#time-b4w-time" title="Permalink to this headline">¶</a></h3>
 <p>Provides the timeline counting from the engine start (in seconds). Can be used for animating any parameters in node materials, such as UV coordinates, mixing factors, transparency etc.</p>
 <img alt="_images/node_time.png" class="align-center" src="_images/node_time.png" />
-<div class="section" id="id17">
-<h4>Input Parameters<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id16">
+<h4>Input Parameters<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h4>
 <p>None.</p>
 </div>
-<div class="section" id="id18">
-<h4>Output Parameters<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id17">
+<h4>Output Parameters<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt><em>Value</em></dt>
 <dd>Time (in seconds) elapsed from the engine startup.</dd>
@@ -715,8 +709,8 @@ Object coordinte spaces</td>
 <span id="node-translucency"></span><h3><a class="toc-backref" href="#id35">Translucency (B4W_TRANSLUCENCY)</a><a class="headerlink" href="#translucency-b4w-translucency" title="Permalink to this headline">¶</a></h3>
 <p>The node implements a translucency effect (with respect to light sources only) for thin objects such as cloth, leaves, paper etc. The effect consists of two parts: 1) brightening of the object side which is opposite to the light source and 2) appearance of a light spot right in the light source place.</p>
 <a class="reference internal image-reference" href="_images/node_materials_translucency.png"><img alt="_images/node_materials_translucency.png" class="align-center" src="_images/node_materials_translucency.png" style="width: 100%;" /></a>
-<div class="section" id="id19">
-<h4>Input Parameters<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id18">
+<h4>Input Parameters<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt><em>Color</em></dt>
 <dd>One-channel texture which defines material heterogeneity - the white color denotes maximum translucency effect while the black color denotes its absence. White color is used by default.</dd>
@@ -743,8 +737,8 @@ Object coordinte spaces</td>
 </dd>
 </dl>
 </div>
-<div class="section" id="id20">
-<h4>Output Parameters<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id19">
+<h4>Output Parameters<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt><em>Translucency</em></dt>
 <dd>The output should be connected to the <code class="docutils literal"><span class="pre">Translucency</span></code> input of the <code class="docutils literal"><span class="pre">Extended</span> <span class="pre">Material</span></code> node.</dd>
@@ -759,15 +753,15 @@ Object coordinte spaces</td>
 <span id="node-vector-view"></span><h3><a class="toc-backref" href="#id36">Vector View (B4W_VECTOR_VIEW)</a><a class="headerlink" href="#vector-view-b4w-vector-view" title="Permalink to this headline">¶</a></h3>
 <p>The node transforms a vector into the camera’s space of coordinates. Transformation is necessary because the engine defines most vectors in the world space of coordinates. If normal vector is being transformed by this node it should be used only for effects and not for connecting to the output of the <code class="docutils literal"><span class="pre">Material</span></code> or <code class="docutils literal"><span class="pre">Extended</span> <span class="pre">Material</span></code> nodes.</p>
 <a class="reference internal image-reference" href="_images/node_materials_vector_view.png"><img alt="_images/node_materials_vector_view.png" class="align-center" src="_images/node_materials_vector_view.png" style="width: 100%;" /></a>
-<div class="section" id="id21">
-<h4>Input Parameters<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id20">
+<h4>Input Parameters<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt><em>Vector</em></dt>
 <dd>Vector coordinates in the world-space.</dd>
 </dl>
 </div>
-<div class="section" id="id22">
-<h4>Output Parameters<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="id21">
+<h4>Output Parameters<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h4>
 <dl class="docutils">
 <dt><em>Vector</em></dt>
 <dd>Vector coordinates in the camera-space.</dd>
@@ -783,6 +777,36 @@ Object coordinte spaces</td>
 <p class="last"><a class="reference internal" href="colors.html#gamma-node-materials"><span>Gamma in Node Materials</span></a></p>
 </div>
 </div>
+</div>
+<div class="section" id="cycles-nodes">
+<span id="id22"></span><h2><a class="toc-backref" href="#id38">Cycles Nodes</a><a class="headerlink" href="#cycles-nodes" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>Cycles node support is an experimental feature that is not yet recommended for using in production enviroment.</p>
+<p class="last">It should also be noted that using Cycles nodes in Blend4Web will produce images similar, but not identical to the ones created using Cycles renderer itself.</p>
+</div>
+<p>The engine support the following <code class="docutils literal"><span class="pre">Cycles</span></code> nodes:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">Material</span> <span class="pre">Output</span></code> (only <code class="docutils literal"><span class="pre">Surface</span></code> and <code class="docutils literal"><span class="pre">Displacement</span></code> inputs are supported);</li>
+<li><code class="docutils literal"><span class="pre">BSDF</span> <span class="pre">Diffuse</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">BSDF</span> <span class="pre">Glossy</span></code> (only <code class="docutils literal"><span class="pre">GGX</span></code> distribution is supported; the <code class="docutils literal"><span class="pre">Roughness</span></code> parameter does not influence the reflections);</li>
+<li><code class="docutils literal"><span class="pre">Transparent</span> <span class="pre">BSDF</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Mix</span> <span class="pre">Shader</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Fresnel</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Layer</span> <span class="pre">Weight</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Image</span> <span class="pre">Texture</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Environment</span> <span class="pre">Texture</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Object</span> <span class="pre">Info</span></code>;</li>
+<li><code class="docutils literal"><span class="pre">Bump</span></code>.</li>
+</ul>
+<p>The following nodes are partially supported:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">Texture</span> <span class="pre">Coordinates</span></code> (<code class="docutils literal"><span class="pre">From</span> <span class="pre">Dupli</span></code> parameter is not supported);</li>
+<li><code class="docutils literal"><span class="pre">UV</span> <span class="pre">Map</span></code> (<code class="docutils literal"><span class="pre">From</span> <span class="pre">Dupli</span></code> parameter is not supported);</li>
+<li><code class="docutils literal"><span class="pre">Geometry</span></code> (the <code class="docutils literal"><span class="pre">Pointness</span></code> and <code class="docutils literal"><span class="pre">Parametric</span></code> parameters are not supported).</li>
+<li><code class="docutils literal"><span class="pre">Emission</span></code> (does not influence the lighting of the scene).</li>
+</ul>
+<p>Other <code class="docutils literal"><span class="pre">Cycles</span></code> nodes will not, in most cases, work in Blend4Web the same way they do in Blender. They also might not work at all or even cause material in which they are used to work incorrectly. However, using these nodes will not cause instabilities in the application workflow.</p>
 </div>
 </div>
 
@@ -806,7 +830,7 @@ Object coordinte spaces</td>
   <div role="contentinfo">
     <p>
         &copy; Copyright 2014-2016, Triumph.
-      Last updated on 2016-10-27.
+      Last updated on 2017-03-07.
 
     </p>
   </div>
@@ -862,7 +886,7 @@ Object coordinte spaces</td>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'v16.10',
+            VERSION:'v17.02.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
